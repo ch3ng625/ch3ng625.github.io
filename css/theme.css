@@ -661,6 +661,7 @@ pre.Code code {
   text-align: center;
   /* For image */
   border-radius: 3px;
+  filter: invert(1);
 }
 
 /* Image */
@@ -863,14 +864,15 @@ pre.Code code {
 
 .SemanticString__Fragment--Link,
 .SemanticString__Fragment--Resource > a {
-  color: inherit;
+  color: rgb(255,132,0);
   text-decoration: none;
-  border-bottom: 2px solid hsl(45, 8%, 85%);
+  border-bottom: 2px solid hsl(45, 8%, 50%);
 }
 
 .SemanticString__Fragment--Link:hover,
 .SemanticString__Fragment--Resource > a:hover {
-  border-bottom: 2px solid hsl(45, 8%, 55%);
+  border-bottom: 2px solid hsl(45, 8%, 75%);
+  color: inherit
 }
 
 .SemanticString__Fragment--Code {
