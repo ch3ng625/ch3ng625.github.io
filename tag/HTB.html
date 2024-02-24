@@ -102,6 +102,12 @@
   
     
   
+    
+  
+    
+  
+    
+  
 </nav>
 
   <header class="Header">
@@ -109,6 +115,40 @@
     <h1 class="Header__Title">#HTB</h1>
   </header>
   <article class="ArticleList">
+
+  <article class="Article">
+    <h3 class="Article__Title">
+      
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/a75ac8ed04e6e728547538bfa41cfc68.png"></span>
+      
+      <a href="visual">
+        HTB Machine — Visual
+      </a>
+    </h3>
+    
+      <p class="Article__Desc">
+        <span class="SemanticStringArray"><span class="SemanticString">This is an interesting box themed around .NET projects. The web application clones a user-provided git repository and attempts to build the project. Here, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">PreBuildEvent</code></span><span class="SemanticString"> property in MSBuild can be abused for running malicious OS commands and gaining a foothold on the box. For privilege escalation, I’ll recover default privileges for a service account, then exploit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString"> with a Potato attack.</span></span>
+      </p>
+    
+    <div class="DateTagBar">
+      
+        <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Feb 25, 2024</span>
+      
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+          <a href="tag/HTB">HTB</a>
+        </span>
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+          <a href="tag/Windows">Windows</a>
+        </span>
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+          <a href="tag/Medium">Medium</a>
+        </span>
+      
+    </div>
+  </article>
 
   <article class="Article">
     <h3 class="Article__Title">
@@ -121,7 +161,7 @@
     </h3>
     
       <p class="Article__Desc">
-        <span class="SemanticStringArray"><span class="SemanticString">Flight is a challenging Windows machine involving lots of steps, but once rooted, you’ll find out that it’s just repeating the same few exploits in different scenarios. In summary this box is a really nice learning experience for me, as it involves several exploit techniques I’ve never seen before.</span></span>
+        <span class="SemanticStringArray"><span class="SemanticString">Flight is a challenging Windows machine involving lots of steps, but once rooted, you’ll find out that it’s just repeating the same few exploits in different scenarios. I learned a lot from this box, as it involves several exploit techniques I’ve never seen before.</span></span>
       </p>
     
     <div class="DateTagBar">

