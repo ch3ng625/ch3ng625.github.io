@@ -118,6 +118,8 @@
   
     
   
+    
+  
 </nav>
 
   <header class="Header">
@@ -139,6 +141,40 @@
     
   </header>
   <article class="ArticleList">
+
+  <article class="Article">
+    <h3 class="Article__Title">
+      
+        <span><img class="inline-img-icon" src="https://htb-mp-prod-public-storage.s3.eu-central-1.amazonaws.com/avatars/d131f54a035866ca64f0aff0a8e1fc14.png"></span>
+      
+      <a href="hacknet">
+        HTB Machine — HackNet
+      </a>
+    </h3>
+    
+      <p class="Article__Desc">
+        <span class="SemanticStringArray"><span class="SemanticString">HackNet is all about exploiting a Django application. It starts with a server-side template injection in the username. While getting RCE directly is not possible, it does allow leaking internal context variables, which includes credentials that can be reused for SSH login. Once on the box, I’ll find the Django cache directory is world-writable, which enables a deserialization attack to get to another user. From there, I’ll find private keys to decrypt several GPG-encrypted database dumps, one of which contains the root password.</span></span>
+      </p>
+    
+    <div class="DateTagBar">
+      
+        <span class="DateTagBar__Item DateTagBar__Date">Posted on Sun, Jan 18, 2026</span>
+      
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--blue">
+          <a href="tag/HTB">HTB</a>
+        </span>
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--orange">
+          <a href="tag/Linux">Linux</a>
+        </span>
+      
+        <span class="DateTagBar__Item DateTagBar__Tag DateTagBar__Tag--yellow">
+          <a href="tag/Medium">Medium</a>
+        </span>
+      
+    </div>
+  </article>
 
   <article class="Article">
     <h3 class="Article__Title">
