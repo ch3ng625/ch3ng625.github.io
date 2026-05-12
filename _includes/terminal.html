@@ -1,0 +1,82 @@
+{% if include.wrap == "true" %}
+  {% assign _pre_style = "white-space: pre-wrap; word-break: break-all;" %}
+{% else %}
+  {% assign _pre_style = "white-space: pre; overflow-x: auto;" %}
+{% endif %}
+
+{% if include.theme == "blue" %}
+  {% assign _bg_main   = "#012456" %}
+  {% assign _bg_header = "#01173a" %}
+{% else %}
+  {% assign _bg_main   = "#0c0c0c" %}
+  {% assign _bg_header = "#1a1a1a" %}
+{% endif %}
+
+<style>
+.terminal-window {
+  background-color: #300a24;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+  margin: 1.5rem 0;
+  overflow: hidden;
+  font-family: "Ubuntu Mono", "Fira Code", Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #2d0922;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.terminal-btn {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.terminal-btn--close    { background: #ff5f57; }
+.terminal-btn--minimise { background: #febc2e; }
+.terminal-btn--expand   { background: #28c840; }
+
+.terminal-title {
+  flex: 1;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.78rem;
+  margin-left: -42px;
+}
+
+.terminal-body {
+  padding: 10px 16px 14px;
+  overflow-x: auto;
+}
+
+.terminal-body pre {
+  margin: 0;
+  background: transparent;
+  border: none;
+  color: #f0e6d3;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre-wrap;
+}
+</style>
+<div class="terminal-window" style="background-color: {{ _bg_main }};">
+  <div class="terminal-header" style="background-color: {{ _bg_header }};">
+    <span class="terminal-btn terminal-btn--close"></span>
+    <span class="terminal-btn terminal-btn--minimise"></span>
+    <span class="terminal-btn terminal-btn--expand"></span>
+    {% if include.title %}
+      <span class="terminal-title">{{ include.title }}</span>
+    {% endif %}
+  </div>
+  <div class="terminal-body">
+    <pre style="{{ _pre_style }}">{{ include.inner | strip }}</pre>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+---
+layout: base
+---
+<div class="topics-page">
+  <h1>Topics</h1>
+
+  <input type="text" id="topic-search" placeholder="Search..." autocomplete="off" />
+
+  {%- assign all_topics = site.posts | map: "topics" | flatten | uniq | sort -%}
+
+  {% comment %} Build a JSON map of topic -> posts for JS to use {% endcomment %}
+  <script>
+  var topicData = {
+    {%- for topic in all_topics %}
+    {{ topic | jsonify }}: [
+      {%- for post in site.posts -%}
+        {%- if post.topics contains topic -%}
+        { "title": {{ post.title | jsonify }}, "url": {{ post.url | relative_url | jsonify }}, "date": {{ post.date | date: "%b %-d, %Y" | jsonify }} },
+        {%- endif -%}
+      {%- endfor -%}
+    ],
+    {%- endfor %}
+  };
+  </script>
+
+  <div class="topic-list" id="topic-list">
+    {%- for topic in all_topics -%}
+    <div class="topic-entry" id="topic-{{ topic }}" data-topic="{{ topic }}">
+      <a class="topic-name" href="#topic-{{ topic }}" onclick="document.getElementById('topic-search').value='{{ topic }}'; document.getElementById('topic-search').dispatchEvent(new Event('input'));"># {{ topic }}</a>
+      <ul class="topic-posts" style="display:none;"></ul>
+    </div>
+    {%- endfor -%}
+  </div>
+</div>
+
+<style>
+#topic-search {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 1.5rem;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #f0e6d3;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+#topic-search:focus { outline: none; border-color: #5bc8f5; }
+
+.topic-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #222;
+}
+.topic-name {
+  color: #5bc8f5;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.topic-name:hover { text-decoration: underline; }
+
+.topic-posts {
+  margin: 4px 0 8px 1rem;
+  padding: 0;
+  list-style: none;
+}
+.topic-posts li { padding: 2px 0; }
+.topic-posts a { color: #f0e6d3; text-decoration: none; }
+.topic-posts a:hover { color: #5bc8f5; }
+.topic-posts .post-date { font-size: 0.8rem; color: #888; margin-left: 8px; }
+
+.topic-entry--hidden { display: none; }
+</style>
+
+<script>
+var searchInput = document.getElementById('topic-search');
+var entries     = document.querySelectorAll('.topic-entry');
+
+searchInput.addEventListener('input', function () {
+  var q = this.value.trim().toLowerCase();
+
+  entries.forEach(function (el) {
+    var topic = el.dataset.topic;
+    var postList = el.querySelector('.topic-posts');
+
+    if (q === '') {
+      // default: one line per topic, no posts shown
+      el.classList.remove('topic-entry--hidden');
+      postList.style.display = 'none';
+      postList.innerHTML = '';
+      return;
+    }
+
+    var match = topic.toLowerCase().includes(q);
+    el.classList.toggle('topic-entry--hidden', !match);
+
+    if (match) {
+      // populate and show posts
+      var posts = topicData[topic] || [];
+      postList.innerHTML = posts.map(function (p) {
+        return '<li><a href="' + p.url + '">' + p.title + '</a>'
+             + '<span class="post-date">' + p.date + '</span></li>';
+      }).join('');
+      postList.style.display = 'block';
+    } else {
+      postList.style.display = 'none';
+      postList.innerHTML = '';
+    }
+  });
+});
+</script>

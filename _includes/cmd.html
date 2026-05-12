@@ -1,0 +1,171 @@
+{%- comment -%}
+  _includes/cmd.html
+  Parameters:
+    type    - "kali" (default) | more types later
+    user    - username   (default "kali")
+    host    - hostname   (default "localhost")
+    path    - directory  (default "~")
+    home    - true/false
+    command - the command string
+    output  - command output (use capture for multiline / quotes)
+{%- endcomment -%}
+
+{%- assign _type = include.type | default: "kali" -%}
+{%- assign _user = include.user | default: "ch3ng" -%}
+{%- assign _host = include.host | default: "localhost" -%}
+{%- assign _path = include.path | default: "~" -%}
+{%- assign _home = include.home | default: "no" -%}
+
+{%- if _type == "kali" -%}
+
+<span class="kali-top">┌──(<span class="kali-user">{{ _user }}㉿{{ _host }}</span>)-[<span class="kali-path">{{ _path }}</span>]</span>
+<span class="kali-bottom">└─<span class="kali-char">$</span></span> <span class="cmd-bash">{{ include.command }}</span>
+{%- if include.output %}
+<span class="cmd-output">{{ include.output }}</span>
+{%- endif -%}
+
+<style>
+.kali-top,
+.kali-bottom       { color: #5bc8f5; font-weight: bold; }
+.kali-user         { color: #5bc8f5; font-weight: bold; }
+.kali-path         { color: #5bc8f5; font-weight: bold; }
+.kali-char         { color: #5bc8f5; font-weight: bold; }
+.cmd-output        { color: #f0e6d3; }
+
+/* syntax highlight classes applied by JS */
+.cmd-bash          { color: #f0e6d3; }
+.tok-bin           { color: #57c7ff; }   /* command binary  — cyan       */
+.tok-flag          { color: #5af78e; }   /* -x  --long      — green     */
+.tok-num           { color: #f0e6d3; }   /* numbers / IPs   — off-white    */
+.tok-str           { color: #f3f99d; }   /* "quoted string" — yellow      */
+.tok-arg           { color: #f0e6d3; }   /* plain arg       — off-white  */
+</style>
+
+<script>
+(function () {
+  var bins = document.querySelectorAll('.cmd-bash');
+  bins.forEach(function (el) {
+    var raw = el.textContent;
+    var tokens = raw.match(/"[^"]*"|'[^']*'|[^\s]+|\s+/g) || [];
+    var first = true;
+    var html = tokens.map(function (tok) {
+      if (/^\s+$/.test(tok)) return tok;
+      var cls;
+      if (first)                               { cls = 'tok-bin';  first = false; }
+      else if (/^--?[\w-]+/.test(tok))         { cls = 'tok-flag'; }
+      else if (/^["']/.test(tok))              { cls = 'tok-str';  }
+      else if (/^[\d.]+$/.test(tok))           { cls = 'tok-num';  }
+      else if (/^\d+\.\d+\.\d+\.\d+/.test(tok)){ cls = 'tok-num'; }
+      else                                     { cls = 'tok-arg';  }
+      return '<span class="' + cls + '">' + tok + '</span>';
+    });
+    el.innerHTML = html.join('');
+  });
+})();
+</script>
+
+{%- elsif _type == "linux" -%}
+
+{%- assign _linux_char = "$" -%}
+{%- if _user == "root" -%}
+{%- assign _linux_char = "#" -%}
+{%- endif -%}
+
+<span class="linux-prompt"><span class="linux-user">{{ _user }}@{{ _host }}</span>:<span class="linux-path">{{ _path }}</span><span class="linux-char">{{ _linux_char }}</span></span> <span class="linux-bash">{{ include.command }}</span>
+{{ "" }}
+{%- if include.output %}
+<span class="linux-output">{{ include.output | strip }}</span>
+{%- endif -%}
+{{ "" }}
+
+<style>
+.linux-prompt,
+.linux-user,
+.linux-path,
+.linux-char  { color: #4ce64c; font-weight: bold; }
+.linux-output { color: #f0e6d3; }
+.linux-bash   { color: #f0e6d3; }
+.linux-tok-bin  { color: #57c7ff; }
+.linux-tok-flag { color: #5af78e; }
+.linux-tok-num  { color: #f0e6d3; }
+.linux-tok-str  { color: #f3f99d; }
+.linux-tok-arg  { color: #f0e6d3; }
+</style>
+<script>
+(function () {
+  document.querySelectorAll('.linux-bash').forEach(function (el) {
+    var tokens = el.textContent.match(/"[^"]*"|'[^']*'|[^\s]+|\s+/g) || [];
+    var first = true;
+    el.innerHTML = tokens.map(function (tok) {
+      if (/^\s+$/.test(tok)) return tok;
+      var cls;
+      if (first)                                { cls = 'linux-tok-bin';  first = false; }
+      else if (/^--?[\w-]+/.test(tok))          { cls = 'linux-tok-flag'; }
+      else if (/^["']/.test(tok))               { cls = 'linux-tok-str';  }
+      else if (/^\d+\.\d+\.\d+\.\d+/.test(tok)) { cls = 'linux-tok-num'; }
+      else if (/^[\d.]+$/.test(tok))            { cls = 'linux-tok-num';  }
+      else                                      { cls = 'linux-tok-arg';  }
+      return '<span class="' + cls + '">' + tok + '</span>';
+    }).join('');
+  });
+})();
+</script>
+
+{%- elsif _type == "win" -%}
+
+{%- if _home == "yes" -%}
+{%- assign _prompt_color = "#5bc8f5" -%}
+{%- else -%}
+{%- assign _prompt_color = "#4ce64c" -%}
+{%- endif -%}
+
+<span class="win-prompt" style="color: {{ _prompt_color }}; font-weight: bold;"><span class="win-path">{{ _path }}</span><span class="win-char">&gt;</span></span> <span class="win-cmd">{{- include.command -}}</span>
+{{ "" }}
+{%- if include.output %}
+<span class="win-output">{{ include.output | strip }}</span>
+{%- endif -%}
+
+{{ "" }}
+<style>
+.win-output  { color: #f0e6d3; }
+.win-cmd    { color: #f0e6d3; }
+.cmd-tok-bin     { color: #f3f99d; }   /* executable  — yellow */
+.cmd-tok-flag    { color: #ffffff; }   /* /flag       — white  */
+.cmd-tok-num     { color: #ff6ac1; }   /* numbers/IPs — pink   */
+.cmd-tok-str     { color: #5bc8f5; }   /* "strings"   — cyan   */
+.cmd-tok-arg     { color: #ffffff; }   /* plain args  — white  */
+</style>
+<script>
+    (function () {
+      // CMD
+      document.querySelectorAll('.win-cmd').forEach(function (el) {
+        var tokens = el.textContent.match(/"[^"]*"|'[^']*'|[^\s]+|\s+/g) || [];
+        var first = true;
+        el.innerHTML = tokens.map(function (tok) {
+          if (/^\s+$/.test(tok)) return tok;
+          var cls;
+          if (first)                                 { cls = 'cmd-tok-bin';  first = false; }
+          else if (/^\/[\w]+/.test(tok))             { cls = 'cmd-tok-flag'; }
+          else if (/^-[\w]+/.test(tok))              { cls = 'cmd-tok-flag'; }
+          else if (/^["']/.test(tok))                { cls = 'cmd-tok-str';  }
+          else if (/^\d+\.\d+\.\d+\.\d+/.test(tok)) { cls = 'cmd-tok-num';  }
+          else if (/^[\d.]+$/.test(tok))             { cls = 'cmd-tok-num';  }
+          else                                       { cls = 'cmd-tok-arg';  }
+          return '<span class="' + cls + '">' + tok + '</span>';
+        }).join('');
+      });
+    })();
+    </script>
+
+{%- elsif _type == "custom" -%}
+
+{%- assign _color = include.color | default: "blue" -%}
+<span class="custom-prompt" style="color: {{ _color }}; font-weight: bold;"><span class="custom-path">{{ _path }}</span></span> <span class="custom-cmd">{{- include.command -}}</span>
+{{ "" }}
+{%- if include.output %}
+<span class="custom-output">{{ include.output | strip }}</span>
+{%- endif %}
+
+{{ "" }}
+
+{%- endif -%}

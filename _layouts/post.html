@@ -1,0 +1,140 @@
+---
+layout: base
+---
+<article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    {%- if page.icon -%}
+    <div class="post-icon">
+        <img src="{{ page.icon }}" style="width: 10em; height: auto;">
+    </div>
+    {%- endif -%}
+    <h1 class="post-title p-name" itemprop="name headline">{{ page.title | escape }}</h1>
+    <div class="post-tags">
+      {%- for tag in page.tags -%}
+      <span class="post-tag post-tag--{{ tag | downcase | replace: ' ', '-' }}">{{ tag }}</span> 
+      {%- endfor %}
+    </div>
+    <br>
+    <div class="post-meta">
+      {%- assign date_format = site.minima.date_format | default: "%b %-d, %Y" -%}
+      {% assign pdate = page.date | date_to_xmlschema %}
+      {%- if page.modified_date %}<span class="meta-label">Published:</span>{% endif %}
+      <time class="dt-published" datetime="{{ pdate }}" itemprop="datePublished">
+        {{ pdate | date: date_format }}
+      </time>
+      {%- if page.modified_date -%}
+        <span class="bullet-divider">•</span>
+        <span class="meta-label">Updated:</span>
+        {%- assign mdate = page.modified_date | date_to_xmlschema %}
+        <time class="dt-modified" datetime="{{ mdate }}" itemprop="dateModified">
+          {{ mdate | date: date_format }}
+        </time>
+      {%- endif -%}
+      {%- if page.author %}
+      <div class="{% unless page.modified_date %}force-inline {% endunless %}post-authors">
+        {%- for author in page.author %}
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">{{ author }}</span></span>
+          {%- if forloop.last == false %}, {% endif -%}
+        {% endfor %}
+      </div>
+      {%- endif %}
+    </div>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    {{ content }}
+  </div>
+
+  {% if jekyll.environment == 'production' -%}
+    {% if page.comments == false -%}
+    <div class="comments-disabled-message">
+      Comments have been disabled for this post.
+    </div>
+    {% else -%}
+      {%- include comments.html -%}
+    {% endif -%}
+  {% endif -%}
+
+  <a class="u-url" href="{{ page.url | relative_url }}" hidden></a>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const headings = document.querySelectorAll("h2[id], h3[id], h4[id]");
+    
+      headings.forEach(h => {
+        const id = h.getAttribute("id");
+        if (!id) return;
+    
+        // prevent double-wrapping
+        if (h.querySelector("a.heading-link")) return;
+    
+        const wrapper = document.createElement("a");
+        wrapper.href = "#" + id;
+        wrapper.className = "heading-link";
+    
+        // move all heading content into the link
+        while (h.firstChild) {
+          wrapper.appendChild(h.firstChild);
+        }
+    
+        h.appendChild(wrapper);
+      });
+    });
+  </script>
+</article>
+
+<style>
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 1rem;
+    justify-content: center;
+  }
+  
+  .post-tag {
+    font-size: 0.9rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    background: #333;
+    color: #ccc;
+  }
+  
+  .post-tag--htb              { background: #9fef00; color: #111; }
+  .post-tag--proving-grounds  { background: #0078d4; color: #fff; }
+  .post-tag--linux            { background: orange; color: #111; }
+  .post-tag--windows          { background: #ff6b6b; color: #fff; }
+  .post-tag--easy             { background: #00ff00; color: #111; }
+  .post-tag--medium           { background: yellow; color: #111; }
+  .post-tag--hard             { background: red; color: #fff; }
+  .post-tag--insane           { background: purple; color: #fff; }
+  .post-tag--misc             { background: grey; color: #fff; }
+
+  .heading-link {
+    color: inherit;
+    text-decoration: none;
+    display: inline-block;
+    width: 100%;
+  }
+
+  .heading-link:hover {
+    text-decoration: underline;
+  }
+
+  p code {
+    color: red;
+  }
+
+  h1 code,
+  h2 code,
+  h3 code,
+  h4 code,
+  h5 code,
+  h6 code {
+    color: red;
+    font-size: 1em !important;
+  }
+</style>
