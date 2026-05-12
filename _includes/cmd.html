@@ -75,8 +75,8 @@
 {{ "" }}
 {%- if include.output %}
 <span class="linux-output">{{ include.output | strip }}</span>
-{%- endif -%}
 {{ "" }}
+{%- endif -%}
 
 <style>
 .linux-prompt,
@@ -123,9 +123,9 @@
 {{ "" }}
 {%- if include.output %}
 <span class="win-output">{{ include.output | strip }}</span>
+{{ "" }}
 {%- endif -%}
 
-{{ "" }}
 <style>
 .win-output  { color: #f0e6d3; }
 .win-cmd    { color: #f0e6d3; }
