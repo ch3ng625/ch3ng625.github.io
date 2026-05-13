@@ -3,7 +3,7 @@ layout: post
 title: "HTB Machine - Brainfuck"
 date: 2024-06-03
 permalink: /brainfuck
-excerpt: First released in 2017, Brainfuck is one of the earleir HTB boxes. The difficulty is rated as insane, but by today’s standard, it’s probably just hard or even medium. It involves a WordPress privilege escalation exploit, interacting with mail protocols, and attacking two encryption algorithms. Escalating to root wasn’t in the intended path, but since the box is 7 years old now, there’s 2 ways to obtain a root shell.
+excerpt: First released in 2017, Brainfuck is one of the earlier HTB boxes. The difficulty is rated as insane, but by today’s standard, it’s probably just hard or even medium. It involves a WordPress privilege escalation exploit, interacting with mail protocols, and attacking two encryption algorithms. Escalating to root wasn’t in the intended path, but since the box is 7 years old now, there’s 2 ways to obtain a root shell.
 tags: [HTB, Linux, Insane]
 topics: [wordpress, wpscan, mail server, pop3, cryptography, cipher, vigenere cipher, ssh2john, john, rsa, pwnkit, cve-2021-4034, kernel exploit, lxd group, linux group abuse, containers, sudoers]
 icon: https://labs.hackthebox.com/storage/avatars/391b0f0a41832d21577824602f02b177.png
