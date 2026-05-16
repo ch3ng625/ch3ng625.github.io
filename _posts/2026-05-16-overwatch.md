@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "HTB Machine - Overwatch"
-date: 2026-05-17
+date: 2026-05-16
 permalink: /overwatch
 excerpt: Overwatch is pretty straightforward and evolves around attacking a simple .NET monitoring application. It starts with finding a .NET binary in an open SMB share, decompiling it gives credentials to access MSSQL. There’s a linked server configured but it points to a non-existing host, I’ll perform ADIDNS poisoning to capture another set of credentials, which can be used to get a shell via WinRM. From here, I’ll discover the monitoring app running locally with admin privileges, and identify from the decompiled source code that it’s vulnerable to OS command injection.
 tags: [HTB, Windows, Medium]
