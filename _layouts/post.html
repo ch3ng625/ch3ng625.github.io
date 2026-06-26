@@ -131,4 +131,40 @@ layout: base
     color: red;
     font-size: 1em !important;
   }
+
+  /* Code block styling, revert if it break things */
+  .highlight {
+    border: 2px solid #fff !important;
+    overflow-x: scroll !important;
+    margin: 1.5em 0 !important;
+  }
+
+  .highlight pre {
+    margin: 0 !important;
+    padding: 1em 1.2em !important;
+    border: none !important;
+  }
+
+  .highlight pre code {
+    color: inherit;
+    font-size: 0.9em;
+    line-height: 1.5;
+    background: none;
+  }
+
+  .highlight::-webkit-scrollbar {
+    height: 6px !important;
+    /* background: #000 !important; */
+  }
+
+  .highlight::-webkit-scrollbar-thumb {
+    background-color: #aaa !important;
+    border-radius: 6px !important;
+  }
+
+  /* .highlight {
+    scrollbar-width: auto !important;
+    /* scrollbar-color: #aaa #000 !important;
+  } */
+
 </style>
